@@ -5,6 +5,7 @@
 #include "CoreMinimal.h"
 #include "GameFramework/Character.h"
 #include "Logging/LogMacros.h"
+#include "MultiplayerGameMode.h"
 #include "MultiplayerCharacter.generated.h"
 
 class USpringArmComponent;
@@ -122,6 +123,9 @@ protected:
 
 	FTimerHandle FiringTimer;
 
+public:
+	UPROPERTY(EditAnywhere, BlueprintReadWrite)
+	ETeam CurrentTeam;
 };
 
 

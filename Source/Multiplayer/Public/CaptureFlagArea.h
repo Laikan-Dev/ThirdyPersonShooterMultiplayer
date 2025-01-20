@@ -4,7 +4,10 @@
 
 #include "CoreMinimal.h"
 #include "GameFramework/Actor.h"
+#include "Multiplayer/MultiplayerGameMode.h"
 #include "CaptureFlagArea.generated.h"
+
+class AMultiplayerCharacter;
 
 UCLASS()
 class MULTIPLAYER_API ACaptureFlagArea : public AActor
@@ -35,6 +38,12 @@ protected:
 	float MaxCaptureTime;
 	UPROPERTY(ReplicatedUsing = OnRep_CurrentCaptureTime)
 	float CurrentCaptureTime;
+	UPROPERTY(EditDefaultsOnly)
+	bool bCapturing;
+	bool bCaptured;
+	UPROPERTY(EditAnywhere, BlueprintReadWrite)
+	ETeam CurrentTeam;
+	
 
 	UFUNCTION()
 	void OnRep_CurrentCaptureTime();
@@ -51,7 +60,7 @@ public:
 	UFUNCTION(BlueprintPure, Category = "CaptureSettings")
 	FORCEINLINE float GetCurrentCaptureTime() const { return CurrentCaptureTime; }
 
-	UFUNCTION(BlueprintCallable, Category = "CaptureSettings")
+	UFUNCTION(Server, Reliable, Category = "CaptureSettings")
 	void SetCurrentCaptureTime(float CaptureTimeValue);
 	
 

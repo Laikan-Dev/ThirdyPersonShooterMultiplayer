@@ -5,6 +5,7 @@
 #include "Components/SphereComponent.h"
 #include "Net/UnrealNetwork.h"
 #include "Engine/Engine.h"
+#include "Multiplayer/MultiplayerCharacter.h"
 
 // Sets default values
 ACaptureFlagArea::ACaptureFlagArea()
@@ -54,48 +55,103 @@ void ACaptureFlagArea::OnCaptureTimeUpdate()
 	{
 		if(GEngine)
 		{
-			FString captureMessage = FString::Printf(TEXT("RedTeam Capture the flag!"));
-			GEngine->AddOnScreenDebugMessage(-1, 15.f, FColor::Green, captureMessage);
+			switch (CurrentTeam)
+			{
+			case ETeam::None:
+				break;
+			case ETeam::Red:
+			{
+				FString captureMessage = FString::Printf(TEXT("Red Team Capture the flag!"));
+				GEngine->AddOnScreenDebugMessage(-1, 15.f, FColor::Green, captureMessage);
+			}
+				break;
+			case ETeam::Blue:
+			{
+				FString captureMessage = FString::Printf(TEXT("Blue Team Capture the flag!"));
+				GEngine->AddOnScreenDebugMessage(-1, 15.f, FColor::Green, captureMessage);
+			}
+				break;
+			default:
+				break;
+			}
+			
+			bCaptured = true;
 		}
 	}
 }
 
-void ACaptureFlagArea::SetCurrentCaptureTime(float CaptureTimeValue)
+void ACaptureFlagArea::SetCurrentCaptureTime_Implementation(float CaptureTimeValue)
 {
 	CurrentCaptureTime = FMath::Clamp(CaptureTimeValue, 0.f, MaxCaptureTime);
 	OnCaptureTimeUpdate();
+
+	if (GEngine && CaptureTimeValue > 0)
+	{
+		switch (CurrentTeam)
+		{
+		case ETeam::None:
+			break;
+		case ETeam::Red:
+		{
+			FString CapturingMessage = FString::Printf(TEXT("Red Team Are capturing %f the flag"), CurrentCaptureTime);
+			GEngine->AddOnScreenDebugMessage(-1, 1.f, FColor::Red, CapturingMessage);
+		}
+			break;
+		case ETeam::Blue:
+		{
+			FString CapturingMessage = FString::Printf(TEXT("Blue Team Are capturing %f the flag"), CurrentCaptureTime);
+			GEngine->AddOnScreenDebugMessage(-1, 1.f, FColor::Blue, CapturingMessage);
+		}
+			break;
+		default:
+			break;
+		}
+		
+	}
 }
 
 // Called every frame
 void ACaptureFlagArea::Tick(float DeltaTime)
 {
 	Super::Tick(DeltaTime);
+	if (!bCaptured)
+	{
+		if (bCapturing)
+		{
+			float Capature = CurrentCaptureTime + 1;
+			SetCurrentCaptureTime(Capature);
+
+		}
+		else
+		{
+			float Capture = CurrentCaptureTime - 1;
+			SetCurrentCaptureTime(Capture);
+
+		}
+	}
 
 }
 
 void ACaptureFlagArea::OnOverlapCollision(UPrimitiveComponent* OverlappedComponent, AActor* OtherActor, UPrimitiveComponent* OtherComp, int32 OtherBodyIndex, bool bFromSweep, const FHitResult& SweepResult)
 {
-	
-	if (OtherActor)
-	{
-		float Capature = CurrentCaptureTime + 1 ;
-		SetCurrentCaptureTime(Capature);
-		if (GEngine)
-		{
-			FString CapturingMessage = FString::Printf(TEXT("Red Team Are capturing %f the flag"), Capature);
-			GEngine->AddOnScreenDebugMessage(-1, 1.f, FColor::Blue, CapturingMessage);
-		}
-	}
-	
 
+	AMultiplayerCharacter* Player = Cast<AMultiplayerCharacter>(OtherActor);
+
+	if (Player != nullptr)
+	{
+		CurrentTeam = Player->CurrentTeam;
+		bCapturing = true;
+	}
 }
 
 void ACaptureFlagArea::OnEndOverlapCollision(UPrimitiveComponent* OverlappedComponent, AActor* OtherActor, UPrimitiveComponent* OtherComp, int32 OtherBodyIndex)
 {
-	if (OtherActor)
+	AMultiplayerCharacter* Player = Cast<AMultiplayerCharacter>(OtherActor);
+	if (Player != nullptr)
 	{
-		float Capture = CurrentCaptureTime--;
-		SetCurrentCaptureTime(Capture);
+		bCapturing = false;
+		CurrentTeam = ETeam::None;
+		
 	}
 }
 
