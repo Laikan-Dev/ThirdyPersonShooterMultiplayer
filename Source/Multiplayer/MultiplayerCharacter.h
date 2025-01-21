@@ -61,7 +61,7 @@ protected:
 	UPROPERTY(EditDefaultsOnly, Category="Input")
 	UInputAction* FireInput;
 	
-			
+	
 
 protected:
 	// APawn interface
@@ -126,6 +126,10 @@ protected:
 public:
 	UPROPERTY(EditAnywhere, BlueprintReadWrite)
 	ETeam CurrentTeam;
+	UPROPERTY(EditDefaultsOnly)
+	UMaterial* Red;
+	UPROPERTY(EditDefaultsOnly)
+	UMaterial* Blue;
 };
 
 

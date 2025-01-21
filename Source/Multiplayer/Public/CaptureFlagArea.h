@@ -4,7 +4,7 @@
 
 #include "CoreMinimal.h"
 #include "GameFramework/Actor.h"
-#include "Multiplayer/MultiplayerGameMode.h"
+#include "Team.h"
 #include "CaptureFlagArea.generated.h"
 
 class AMultiplayerCharacter;
@@ -34,6 +34,10 @@ public:
 	class UParticleSystem* VFX;
 
 protected:
+	UPROPERTY(EditDefaultsOnly)
+	UMaterial* BlueTeamColor;
+	UPROPERTY(EditDefaultsOnly)
+	UMaterial* RedTeamColor;
 	UPROPERTY(EditDefaultsOnly, Category="CaptureSettings")
 	float MaxCaptureTime;
 	UPROPERTY(ReplicatedUsing = OnRep_CurrentCaptureTime)

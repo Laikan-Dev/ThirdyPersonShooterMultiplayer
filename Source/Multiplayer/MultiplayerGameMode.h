@@ -4,15 +4,9 @@
 
 #include "CoreMinimal.h"
 #include "GameFramework/GameModeBase.h"
+#include "Team.h"
 #include "MultiplayerGameMode.generated.h"
 
-UENUM(BlueprintType)
-enum class ETeam : uint8
-{
-	None UMETA(DisplayName="None"),
-	Red UMETA(DisplayName="RedTeam"),
-	Blue UMETA(DisplayName="BlueTeam"),
-};
 UCLASS(minimalapi)
 class AMultiplayerGameMode : public AGameModeBase
 {

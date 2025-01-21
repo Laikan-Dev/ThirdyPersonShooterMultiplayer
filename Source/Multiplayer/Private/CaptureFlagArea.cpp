@@ -5,6 +5,7 @@
 #include "Components/SphereComponent.h"
 #include "Net/UnrealNetwork.h"
 #include "Engine/Engine.h"
+#include "MultiplayerPlayerState.h"
 #include "Multiplayer/MultiplayerCharacter.h"
 
 // Sets default values
@@ -57,19 +58,29 @@ void ACaptureFlagArea::OnCaptureTimeUpdate()
 		{
 			switch (CurrentTeam)
 			{
-			case ETeam::None:
-				break;
-			case ETeam::Red:
+			case ETeam::ET_RedTeam:
 			{
 				FString captureMessage = FString::Printf(TEXT("Red Team Capture the flag!"));
 				GEngine->AddOnScreenDebugMessage(-1, 15.f, FColor::Green, captureMessage);
+				if (RedTeamColor)
+				{
+					Flag->SetMaterial(0, RedTeamColor);
+
+				}
 			}
 				break;
-			case ETeam::Blue:
+			case ETeam::ET_BlueTeam:
 			{
 				FString captureMessage = FString::Printf(TEXT("Blue Team Capture the flag!"));
 				GEngine->AddOnScreenDebugMessage(-1, 15.f, FColor::Green, captureMessage);
+				if (BlueTeamColor)
+				{
+					Flag->SetMaterial(0, BlueTeamColor);
+
+				}
 			}
+				break;
+			case ETeam::ET_NoTeam:
 				break;
 			default:
 				break;
@@ -89,19 +100,20 @@ void ACaptureFlagArea::SetCurrentCaptureTime_Implementation(float CaptureTimeVal
 	{
 		switch (CurrentTeam)
 		{
-		case ETeam::None:
-			break;
-		case ETeam::Red:
+		case ETeam::ET_RedTeam:
 		{
 			FString CapturingMessage = FString::Printf(TEXT("Red Team Are capturing %f the flag"), CurrentCaptureTime);
 			GEngine->AddOnScreenDebugMessage(-1, 1.f, FColor::Red, CapturingMessage);
+			
 		}
 			break;
-		case ETeam::Blue:
+		case ETeam::ET_BlueTeam:
 		{
 			FString CapturingMessage = FString::Printf(TEXT("Blue Team Are capturing %f the flag"), CurrentCaptureTime);
-			GEngine->AddOnScreenDebugMessage(-1, 1.f, FColor::Blue, CapturingMessage);
+			GEngine->AddOnScreenDebugMessage(-1, 1.f, FColor::Red, CapturingMessage);
 		}
+			break;
+		case ETeam::ET_NoTeam:
 			break;
 		default:
 			break;
@@ -136,11 +148,15 @@ void ACaptureFlagArea::OnOverlapCollision(UPrimitiveComponent* OverlappedCompone
 {
 
 	AMultiplayerCharacter* Player = Cast<AMultiplayerCharacter>(OtherActor);
-
+	
 	if (Player != nullptr)
 	{
-		CurrentTeam = Player->CurrentTeam;
-		bCapturing = true;
+		AMultiplayerPlayerState* PlayerState = Cast<AMultiplayerPlayerState>(Player->GetPlayerState());
+		if (PlayerState)
+		{
+			CurrentTeam = PlayerState->PlayerTeam;
+			bCapturing = true;
+		}
 	}
 }
 
@@ -150,7 +166,7 @@ void ACaptureFlagArea::OnEndOverlapCollision(UPrimitiveComponent* OverlappedComp
 	if (Player != nullptr)
 	{
 		bCapturing = false;
-		CurrentTeam = ETeam::None;
+		CurrentTeam = ETeam::ET_NoTeam;
 		
 	}
 }
