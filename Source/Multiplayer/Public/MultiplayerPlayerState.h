@@ -14,9 +14,4 @@ UCLASS()
 class MULTIPLAYER_API AMultiplayerPlayerState : public APlayerState
 {
 	GENERATED_BODY()
-	
-
-public:
-	UPROPERTY(EditAnywhere)
-	ETeam PlayerTeam;
 };

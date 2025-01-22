@@ -79,6 +79,17 @@ void AMultiplayerCharacter::OnRep_CurrentHealth()
 {
 	OnHealthUpdate();
 }
+void AMultiplayerCharacter::OnRep_PlayerTeam()
+{
+	if (CurrentTeam == ETeam::ET_RedTeam && Red)
+	{
+		GetMesh()->SetMaterial(0, Red);
+	}
+	else if (CurrentTeam == ETeam::ET_BlueTeam && Blue)
+	{
+		GetMesh()->SetMaterial(0, Blue);
+	}
+}
 //////////////////////////////////////////////////////////////////////////
 // Replicate Properties
 void AMultiplayerCharacter::GetLifetimeReplicatedProps(TArray<FLifetimeProperty>& OutLifetimeProps) const
@@ -87,6 +98,7 @@ void AMultiplayerCharacter::GetLifetimeReplicatedProps(TArray<FLifetimeProperty>
 
 	//Replicate Current Health
 	DOREPLIFETIME(AMultiplayerCharacter, CurrentHealth);
+	DOREPLIFETIME(AMultiplayerCharacter, CurrentTeam);
 }
 
 void AMultiplayerCharacter::OnHealthUpdate()
@@ -143,6 +155,16 @@ void AMultiplayerCharacter::StopFire()
 {
 	bIsFiringWeapon = false;
 }
+void AMultiplayerCharacter::ServerSetTeam_Implementation(ETeam NewTeam)
+{
+	CurrentTeam = NewTeam;
+	OnRep_PlayerTeam();
+}
+
+//bool AMultiplayerCharacter::ServerSetTeam_Validation(ETeam NewTeam)
+//{
+	//return NewTeam == ETeam::ET_RedTeam || NewTeam == ETeam::ET_BlueTeam;
+//}
 
 void AMultiplayerCharacter::HandleFire_Implementation()
 {
@@ -185,6 +207,9 @@ void AMultiplayerCharacter::SetupPlayerInputComponent(UInputComponent* PlayerInp
 
 		//Firing Projectiles
 		EnhancedInputComponent->BindAction(FireInput, ETriggerEvent::Started, this, &AMultiplayerCharacter::StartFire);
+
+		EnhancedInputComponent->BindAction(RedInput, ETriggerEvent::Started, this, &AMultiplayerCharacter::ChoseRed);
+		EnhancedInputComponent->BindAction(BlueInput, ETriggerEvent::Started, this, &AMultiplayerCharacter::ChoseBlue);
 	}
 	else
 	{
@@ -225,5 +250,29 @@ void AMultiplayerCharacter::Look(const FInputActionValue& Value)
 		// add yaw and pitch input to controller
 		AddControllerYawInput(LookAxisVector.X);
 		AddControllerPitchInput(LookAxisVector.Y);
+	}
+}
+
+void AMultiplayerCharacter::ChoseRed()
+{
+	if (HasAuthority())
+	{
+		ServerSetTeam(ETeam::ET_RedTeam);
+	}
+	else
+	{
+		ServerSetTeam(ETeam::ET_RedTeam);
+	}
+}
+
+void AMultiplayerCharacter::ChoseBlue()
+{
+	if (HasAuthority())
+	{
+		ServerSetTeam(ETeam::ET_BlueTeam);
+	}
+	else
+	{
+		ServerSetTeam(ETeam::ET_BlueTeam);
 	}
 }

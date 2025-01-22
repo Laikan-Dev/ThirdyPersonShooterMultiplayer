@@ -151,12 +151,9 @@ void ACaptureFlagArea::OnOverlapCollision(UPrimitiveComponent* OverlappedCompone
 	
 	if (Player != nullptr)
 	{
-		AMultiplayerPlayerState* PlayerState = Cast<AMultiplayerPlayerState>(Player->GetPlayerState());
-		if (PlayerState)
-		{
-			CurrentTeam = PlayerState->PlayerTeam;
-			bCapturing = true;
-		}
+		CurrentTeam = Player->CurrentTeam;
+		bCapturing = true;
+		
 	}
 }
 

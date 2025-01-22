@@ -15,9 +15,6 @@ class AMultiplayerGameMode : public AGameModeBase
 public:
 	AMultiplayerGameMode();
 
-public:
-	UFUNCTION(Client, Reliable, BlueprintCallable)
-	void ChooseTeam(AMultiplayerCharacter* CurrentPlayer, ETeam ChosenTeam);
 };
 
 

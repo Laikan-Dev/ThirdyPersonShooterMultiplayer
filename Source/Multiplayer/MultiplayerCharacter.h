@@ -45,6 +45,12 @@ class AMultiplayerCharacter : public ACharacter
 	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = Input, meta = (AllowPrivateAccess = "true"))
 	UInputAction* LookAction;
 
+	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = Input, meta = (AllowPrivateAccess = "true"))
+	UInputAction* BlueInput;
+
+	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = Input, meta = (AllowPrivateAccess = "true"))
+	UInputAction* RedInput;
+
 public:
 	AMultiplayerCharacter();
 	
@@ -56,6 +62,9 @@ protected:
 
 	/** Called for looking input */
 	void Look(const FInputActionValue& Value);
+
+	void ChoseRed();
+	void ChoseBlue();
 
 	//Inputs
 	UPROPERTY(EditDefaultsOnly, Category="Input")
@@ -75,6 +84,9 @@ public:
 	FORCEINLINE class USpringArmComponent* GetCameraBoom() const { return CameraBoom; }
 	/** Returns FollowCamera subobject **/
 	FORCEINLINE class UCameraComponent* GetFollowCamera() const { return FollowCamera; }
+
+	UPROPERTY(ReplicatedUsing = OnRep_PlayerTeam, BlueprintReadWrite)
+	ETeam CurrentTeam = ETeam::ET_NoTeam;
 protected:
 
 	UPROPERTY(EditDefaultsOnly, Category = "Health")
@@ -85,8 +97,12 @@ protected:
 
 	UFUNCTION()
 	void OnRep_CurrentHealth();
+	UFUNCTION()
+	void OnRep_PlayerTeam();
 	void GetLifetimeReplicatedProps(TArray<FLifetimeProperty>& OutLifetimeProps) const override;
 	void OnHealthUpdate();
+
+
 
 public:
 	//Getter for max health
@@ -121,11 +137,15 @@ protected:
 	UFUNCTION(Server, Reliable)
 	void HandleFire();
 
+	UFUNCTION(Server, Reliable)
+	void ServerSetTeam(ETeam NewTeam);
+	void ServerSetTeam_Implementation(ETeam NewTeam);
+	//bool ServerSetTeam_Validation(ETeam NewTeam);
+
+
 	FTimerHandle FiringTimer;
 
 public:
-	UPROPERTY(EditAnywhere, BlueprintReadWrite)
-	ETeam CurrentTeam;
 	UPROPERTY(EditDefaultsOnly)
 	UMaterial* Red;
 	UPROPERTY(EditDefaultsOnly)
