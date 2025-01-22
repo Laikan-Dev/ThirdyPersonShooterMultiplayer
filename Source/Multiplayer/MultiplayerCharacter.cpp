@@ -112,6 +112,7 @@ void AMultiplayerCharacter::OnHealthUpdate()
 		{
 			FString deathMessage = FString::Printf(TEXT("You have been killed"));
 			GEngine->AddOnScreenDebugMessage(-1, 15.f, FColor::Red, deathMessage);
+			ActiveRagdol();
 		}
 	}
 	if (GetLocalRole() == ROLE_Authority)
@@ -154,6 +155,11 @@ void AMultiplayerCharacter::StartFire()
 void AMultiplayerCharacter::StopFire()
 {
 	bIsFiringWeapon = false;
+}
+void AMultiplayerCharacter::ActiveRagdol_Implementation()
+{
+	GetMesh()->SetSimulatePhysics(true);
+	GetMesh()->SetAllBodiesSimulatePhysics(true);
 }
 void AMultiplayerCharacter::ServerSetTeam_Implementation(ETeam NewTeam)
 {

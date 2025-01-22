@@ -8,6 +8,8 @@
 #include "GameFramework/DamageType.h"
 #include "Particles/ParticleSystem.h"
 #include "Kismet/GameplayStatics.h"
+#include "Engine/Engine.h"
+#include "Multiplayer/MultiplayerCharacter.h"
 #include "UObject/ConstructorHelpers.h"
 
 
@@ -68,11 +70,38 @@ void AMPProjectile::Destroyed()
 
 void AMPProjectile::OnProjectileImpact(UPrimitiveComponent* HitComponent, AActor* OtherActor, UPrimitiveComponent* OtherComp, FVector NormalImpulse, const FHitResult& Hit)
 {
-	if (OtherActor)
+	AMultiplayerCharacter* Player = Cast<AMultiplayerCharacter>(OtherActor);
+	if (Player)
 	{
-		UGameplayStatics::ApplyPointDamage(OtherActor, Damage, NormalImpulse, Hit, GetInstigator()->Controller, this, DamageType);
+		if(TeamCheck(Player, Player->CurrentTeam))
+		{
+			UGameplayStatics::ApplyPointDamage(OtherActor, Damage, NormalImpulse, Hit, GetInstigator()->Controller, this, DamageType);
+		}
 	}
 	Destroy();
+}
+
+bool AMPProjectile::TeamCheck(AMultiplayerCharacter* TargetPlayer, ETeam TargetTeam)
+{
+	if (TargetPlayer)
+	{
+		if (TargetPlayer->CurrentTeam == TargetTeam)
+		{
+			AMultiplayerCharacter* OwningPlayer = Cast<AMultiplayerCharacter>(GetOwner());
+			if (OwningPlayer)
+			{
+				if (OwningPlayer->CurrentTeam == TargetTeam)
+				{
+					return false;
+				}
+				else
+				{
+					return true;
+				}
+			}
+		}
+	}
+	return false;
 }
 
 

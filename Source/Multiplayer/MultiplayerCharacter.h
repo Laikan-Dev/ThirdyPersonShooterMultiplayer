@@ -62,8 +62,9 @@ protected:
 
 	/** Called for looking input */
 	void Look(const FInputActionValue& Value);
-
+	UFUNCTION(BlueprintCallable)
 	void ChoseRed();
+	UFUNCTION(BlueprintCallable)
 	void ChoseBlue();
 
 	//Inputs
@@ -133,6 +134,9 @@ protected:
 
 	UFUNCTION(BlueprintCallable, Category="Gameplay")
 	void StopFire();
+
+	UFUNCTION(Server, Reliable)
+	void ActiveRagdol();
 
 	UFUNCTION(Server, Reliable)
 	void HandleFire();

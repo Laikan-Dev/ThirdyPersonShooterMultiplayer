@@ -4,6 +4,7 @@
 
 #include "CoreMinimal.h"
 #include "GameFramework/Actor.h"
+#include "Team.h"
 #include "MPProjectile.generated.h"
 
 UCLASS()
@@ -42,5 +43,7 @@ protected:
 	virtual void Destroyed() override;
 	UFUNCTION(Category = "Projectile")
 	void OnProjectileImpact(UPrimitiveComponent* HitComponent, AActor* OtherActor, UPrimitiveComponent* OtherComp, FVector NormalImpulse, const FHitResult& Hit);
+	UFUNCTION()
+	bool TeamCheck(AMultiplayerCharacter* TargetPlayer, ETeam TargetTeam);
 
 };
