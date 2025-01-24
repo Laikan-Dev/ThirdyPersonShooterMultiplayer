@@ -13,6 +13,8 @@
 #include "EnhancedInputComponent.h"
 #include "EnhancedInputSubsystems.h"
 #include "InputActionValue.h"
+#include "Blueprint/UserWidget.h"
+#include "Blueprint/WidgetBlueprintLibrary.h"
 
 
 DEFINE_LOG_CATEGORY(LogTemplateCharacter);
@@ -73,11 +75,28 @@ void AMultiplayerCharacter::BeginPlay()
 {
 	// Call the base class  
 	Super::BeginPlay();
+	SelectTeam();
 }
 
 void AMultiplayerCharacter::OnRep_CurrentHealth()
 {
 	OnHealthUpdate();
+}
+void AMultiplayerCharacter::OnRep_OnDeath()
+{
+	OnDeathUpdate();
+}
+void AMultiplayerCharacter::OnDeathUpdate()
+{
+	if (bIsDead == true)
+	{
+		GEngine->AddOnScreenDebugMessage(-1, 15.f, FColor::Emerald, FString(TEXT("Ragdol")));
+		ActiveRagdol();
+	}
+	else
+	{
+		GEngine->AddOnScreenDebugMessage(-1, 15.f, FColor::Emerald, FString(TEXT("NotRagdol")));
+	}
 }
 void AMultiplayerCharacter::OnRep_PlayerTeam()
 {
@@ -99,6 +118,7 @@ void AMultiplayerCharacter::GetLifetimeReplicatedProps(TArray<FLifetimeProperty>
 	//Replicate Current Health
 	DOREPLIFETIME(AMultiplayerCharacter, CurrentHealth);
 	DOREPLIFETIME(AMultiplayerCharacter, CurrentTeam);
+	DOREPLIFETIME(AMultiplayerCharacter, bIsDead);
 }
 
 void AMultiplayerCharacter::OnHealthUpdate()
@@ -112,7 +132,7 @@ void AMultiplayerCharacter::OnHealthUpdate()
 		{
 			FString deathMessage = FString::Printf(TEXT("You have been killed"));
 			GEngine->AddOnScreenDebugMessage(-1, 15.f, FColor::Red, deathMessage);
-			ActiveRagdol();
+			bIsDead = true;
 		}
 	}
 	if (GetLocalRole() == ROLE_Authority)
@@ -161,10 +181,25 @@ void AMultiplayerCharacter::ActiveRagdol_Implementation()
 	GetMesh()->SetSimulatePhysics(true);
 	GetMesh()->SetAllBodiesSimulatePhysics(true);
 }
+
 void AMultiplayerCharacter::ServerSetTeam_Implementation(ETeam NewTeam)
 {
 	CurrentTeam = NewTeam;
 	OnRep_PlayerTeam();
+}
+
+void AMultiplayerCharacter::SelectTeam_Implementation()
+{
+	APlayerController* PlayerController = Cast<APlayerController>(GetController());
+	if (SelectTeamWidget)
+	{
+		UUserWidget* WidgetInstance = CreateWidget<UUserWidget>(PlayerController, SelectTeamWidget);
+		if (WidgetInstance)
+		{
+			WidgetInstance->AddToViewport();
+			PlayerController->SetShowMouseCursor(true);
+		}
+	}
 }
 
 //bool AMultiplayerCharacter::ServerSetTeam_Validation(ETeam NewTeam)
@@ -261,24 +296,30 @@ void AMultiplayerCharacter::Look(const FInputActionValue& Value)
 
 void AMultiplayerCharacter::ChoseRed()
 {
-	if (HasAuthority())
+	if (CurrentTeam == ETeam::ET_NoTeam)
 	{
-		ServerSetTeam(ETeam::ET_RedTeam);
-	}
-	else
-	{
-		ServerSetTeam(ETeam::ET_RedTeam);
+		if (HasAuthority())
+		{
+			ServerSetTeam(ETeam::ET_RedTeam);
+		}
+		else
+		{
+			ServerSetTeam(ETeam::ET_RedTeam);
+		}
 	}
 }
 
 void AMultiplayerCharacter::ChoseBlue()
 {
-	if (HasAuthority())
+	if (CurrentTeam == ETeam::ET_NoTeam)
 	{
-		ServerSetTeam(ETeam::ET_BlueTeam);
-	}
-	else
-	{
-		ServerSetTeam(ETeam::ET_BlueTeam);
+		if (HasAuthority())
+		{
+			ServerSetTeam(ETeam::ET_BlueTeam);
+		}
+		else
+		{
+			ServerSetTeam(ETeam::ET_BlueTeam);
+		}
 	}
 }

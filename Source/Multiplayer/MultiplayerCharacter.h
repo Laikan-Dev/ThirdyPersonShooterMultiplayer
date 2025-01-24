@@ -14,6 +14,7 @@ class UInputMappingContext;
 class UInputAction;
 struct FInputActionValue;
 
+
 DECLARE_LOG_CATEGORY_EXTERN(LogTemplateCharacter, Log, All);
 
 UCLASS(config=Game)
@@ -96,8 +97,14 @@ protected:
 	UPROPERTY(ReplicatedUsing = OnRep_CurrentHealth)
 	float CurrentHealth;
 
+	UPROPERTY(ReplicatedUsing = OnRep_OnDeath)
+	bool bIsDead;
+
 	UFUNCTION()
 	void OnRep_CurrentHealth();
+	UFUNCTION()
+	void OnRep_OnDeath();
+	void OnDeathUpdate();
 	UFUNCTION()
 	void OnRep_PlayerTeam();
 	void GetLifetimeReplicatedProps(TArray<FLifetimeProperty>& OutLifetimeProps) const override;
@@ -144,8 +151,11 @@ protected:
 	UFUNCTION(Server, Reliable)
 	void ServerSetTeam(ETeam NewTeam);
 	void ServerSetTeam_Implementation(ETeam NewTeam);
+	
 	//bool ServerSetTeam_Validation(ETeam NewTeam);
 
+	UFUNCTION(Client, Unreliable)
+	void SelectTeam();
 
 	FTimerHandle FiringTimer;
 
@@ -154,6 +164,10 @@ public:
 	UMaterial* Red;
 	UPROPERTY(EditDefaultsOnly)
 	UMaterial* Blue;
+
+	//Widgets
+	UPROPERTY(EditDefaultsOnly)
+	TSubclassOf<UUserWidget> SelectTeamWidget;
 };
 
 
