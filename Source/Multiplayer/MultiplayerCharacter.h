@@ -2,7 +2,6 @@
 
 #pragma once
 
-#include "CoreMinimal.h"
 #include "GameFramework/Character.h"
 #include "Logging/LogMacros.h"
 #include "MultiplayerGameMode.h"
@@ -25,54 +24,45 @@ class AMultiplayerCharacter : public ACharacter
 	/** Camera boom positioning the camera behind the character */
 	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = Camera, meta = (AllowPrivateAccess = "true"))
 	USpringArmComponent* CameraBoom;
-
 	/** Follow camera */
 	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = Camera, meta = (AllowPrivateAccess = "true"))
 	UCameraComponent* FollowCamera;
-	
 	/** MappingContext */
 	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = Input, meta = (AllowPrivateAccess = "true"))
 	UInputMappingContext* DefaultMappingContext;
-
 	/** Jump Input Action */
 	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = Input, meta = (AllowPrivateAccess = "true"))
 	UInputAction* JumpAction;
-
 	/** Move Input Action */
 	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = Input, meta = (AllowPrivateAccess = "true"))
 	UInputAction* MoveAction;
-
 	/** Look Input Action */
 	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = Input, meta = (AllowPrivateAccess = "true"))
 	UInputAction* LookAction;
-
-	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = Input, meta = (AllowPrivateAccess = "true"))
-	UInputAction* BlueInput;
-
-	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = Input, meta = (AllowPrivateAccess = "true"))
-	UInputAction* RedInput;
+	//FireInputs
+	UPROPERTY(EditDefaultsOnly, Category = "Input")
+	UInputAction* FireInput;
+	UPROPERTY(EditDefaultsOnly, Category = "Input")
+	UInputAction* AimingInput;
+	//PickUpInput
+	UPROPERTY(EditDefaultsOnly, Category = "Input")
+	UInputAction* PickUpInput;
 
 public:
 	AMultiplayerCharacter();
-	
 
 protected:
-
 	/** Called for movement input */
 	void Move(const FInputActionValue& Value);
-
 	/** Called for looking input */
 	void Look(const FInputActionValue& Value);
+	//Aiming
+	void Aiming();
+	void StopAiming();
 	UFUNCTION(BlueprintCallable)
 	void ChoseRed();
 	UFUNCTION(BlueprintCallable)
 	void ChoseBlue();
-
-	//Inputs
-	UPROPERTY(EditDefaultsOnly, Category="Input")
-	UInputAction* FireInput;
-	
-	
 
 protected:
 	// APawn interface
@@ -89,28 +79,34 @@ public:
 
 	UPROPERTY(ReplicatedUsing = OnRep_PlayerTeam, BlueprintReadWrite)
 	ETeam CurrentTeam = ETeam::ET_NoTeam;
+	UPROPERTY(ReplicatedUsing = OnRep_CurrentWeapon)
+	TSubclassOf<class ABaseWeapon> CurrentWeaponClass;
 protected:
-
+//ReplicatedProperties
 	UPROPERTY(EditDefaultsOnly, Category = "Health")
 	float MaxHealth;
-
 	UPROPERTY(ReplicatedUsing = OnRep_CurrentHealth)
 	float CurrentHealth;
-
-	UPROPERTY(ReplicatedUsing = OnRep_OnDeath)
+	UPROPERTY(Replicated)
 	bool bIsDead;
-
+	UPROPERTY(Replicated, BlueprintReadOnly)
+	bool bIsAiming;
+//FunctionRep for Health
 	UFUNCTION()
 	void OnRep_CurrentHealth();
-	UFUNCTION()
-	void OnRep_OnDeath();
 	void OnDeathUpdate();
+	//FunctionRep for Death
+	UFUNCTION(Server, NetMulticast, Reliable)
+	void MulticastOnDeath();
+	//FunctionRep for Team
 	UFUNCTION()
 	void OnRep_PlayerTeam();
 	void GetLifetimeReplicatedProps(TArray<FLifetimeProperty>& OutLifetimeProps) const override;
 	void OnHealthUpdate();
-
-
+	//FunctionRep for Weapon
+	UFUNCTION()
+	void OnRep_CurrentWeapon();
+	void OnCurrentWeaponUpdate();
 
 public:
 	//Getter for max health
@@ -143,9 +139,6 @@ protected:
 	void StopFire();
 
 	UFUNCTION(Server, Reliable)
-	void ActiveRagdol();
-
-	UFUNCTION(Server, Reliable)
 	void HandleFire();
 
 	UFUNCTION(Server, Reliable)
@@ -154,7 +147,7 @@ protected:
 	
 	//bool ServerSetTeam_Validation(ETeam NewTeam);
 
-	UFUNCTION(Client, Unreliable)
+	UFUNCTION(Client, Reliable)
 	void SelectTeam();
 
 	FTimerHandle FiringTimer;
@@ -164,10 +157,14 @@ public:
 	UMaterial* Red;
 	UPROPERTY(EditDefaultsOnly)
 	UMaterial* Blue;
-
 	//Widgets
 	UPROPERTY(EditDefaultsOnly)
 	TSubclassOf<UUserWidget> SelectTeamWidget;
+	//Animation
+	UPROPERTY(EditDefaultsOnly, Category = "Montages")
+	UAnimMontage* AimingMontage;
+	UPROPERTY(EditDefaultsOnly, Category = "Montages")
+	UAnimMontage* ShootingMontage;
 };
 
 

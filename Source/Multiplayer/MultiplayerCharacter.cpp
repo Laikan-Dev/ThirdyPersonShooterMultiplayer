@@ -24,6 +24,8 @@ DEFINE_LOG_CATEGORY(LogTemplateCharacter);
 
 AMultiplayerCharacter::AMultiplayerCharacter()
 {
+	bReplicates = true;
+	SetReplicateMovement(true);
 	//Initial Health
 	MaxHealth = 100;
 	CurrentHealth = MaxHealth;
@@ -82,21 +84,18 @@ void AMultiplayerCharacter::OnRep_CurrentHealth()
 {
 	OnHealthUpdate();
 }
-void AMultiplayerCharacter::OnRep_OnDeath()
-{
-	OnDeathUpdate();
-}
 void AMultiplayerCharacter::OnDeathUpdate()
 {
-	if (bIsDead == true)
-	{
-		GEngine->AddOnScreenDebugMessage(-1, 15.f, FColor::Emerald, FString(TEXT("Ragdol")));
-		ActiveRagdol();
-	}
-	else
-	{
-		GEngine->AddOnScreenDebugMessage(-1, 15.f, FColor::Emerald, FString(TEXT("NotRagdol")));
-	}
+	
+		GetMesh()->SetSimulatePhysics(true);
+		GetMesh()->SetCollisionProfileName(TEXT("Ragdoll"));
+		MulticastOnDeath();
+
+}
+void AMultiplayerCharacter::MulticastOnDeath_Implementation()
+{
+	GetMesh()->SetSimulatePhysics(true);
+	GetMesh()->SetCollisionProfileName(TEXT("Ragdoll"));
 }
 void AMultiplayerCharacter::OnRep_PlayerTeam()
 {
@@ -119,10 +118,16 @@ void AMultiplayerCharacter::GetLifetimeReplicatedProps(TArray<FLifetimeProperty>
 	DOREPLIFETIME(AMultiplayerCharacter, CurrentHealth);
 	DOREPLIFETIME(AMultiplayerCharacter, CurrentTeam);
 	DOREPLIFETIME(AMultiplayerCharacter, bIsDead);
+	DOREPLIFETIME(AMultiplayerCharacter, CurrentWeaponClass);
 }
 
 void AMultiplayerCharacter::OnHealthUpdate()
 {
+	if (CurrentHealth <= 0)
+	{
+		bIsDead = true;
+		OnDeathUpdate();
+	}
 	if (IsLocallyControlled())
 	{
 		FString healthMessage = FString::Printf(TEXT("You now have %f Health remaining"), CurrentHealth);
@@ -132,7 +137,6 @@ void AMultiplayerCharacter::OnHealthUpdate()
 		{
 			FString deathMessage = FString::Printf(TEXT("You have been killed"));
 			GEngine->AddOnScreenDebugMessage(-1, 15.f, FColor::Red, deathMessage);
-			bIsDead = true;
 		}
 	}
 	if (GetLocalRole() == ROLE_Authority)
@@ -140,6 +144,16 @@ void AMultiplayerCharacter::OnHealthUpdate()
 		FString healthMessage = FString::Printf(TEXT("%s now has %f health remaining."), *GetFName().ToString(), CurrentHealth);
 		GEngine->AddOnScreenDebugMessage(-1, 5.f, FColor::Blue, healthMessage);
 	}
+}
+
+void AMultiplayerCharacter::OnRep_CurrentWeapon()
+{
+	OnCurrentWeaponUpdate();
+}
+
+void AMultiplayerCharacter::OnCurrentWeaponUpdate()
+{
+
 }
 
 void AMultiplayerCharacter::SetCurrentHealth(float healthValue)
@@ -176,12 +190,6 @@ void AMultiplayerCharacter::StopFire()
 {
 	bIsFiringWeapon = false;
 }
-void AMultiplayerCharacter::ActiveRagdol_Implementation()
-{
-	GetMesh()->SetSimulatePhysics(true);
-	GetMesh()->SetAllBodiesSimulatePhysics(true);
-}
-
 void AMultiplayerCharacter::ServerSetTeam_Implementation(ETeam NewTeam)
 {
 	CurrentTeam = NewTeam;
@@ -246,11 +254,11 @@ void AMultiplayerCharacter::SetupPlayerInputComponent(UInputComponent* PlayerInp
 		// Looking
 		EnhancedInputComponent->BindAction(LookAction, ETriggerEvent::Triggered, this, &AMultiplayerCharacter::Look);
 
+		//Aiming
+		EnhancedInputComponent->BindAction(AimingInput, ETriggerEvent::Triggered, this, &AMultiplayerCharacter::Aiming);
+		EnhancedInputComponent->BindAction(AimingInput, ETriggerEvent::Completed, this, &AMultiplayerCharacter::StopAiming);
 		//Firing Projectiles
 		EnhancedInputComponent->BindAction(FireInput, ETriggerEvent::Started, this, &AMultiplayerCharacter::StartFire);
-
-		EnhancedInputComponent->BindAction(RedInput, ETriggerEvent::Started, this, &AMultiplayerCharacter::ChoseRed);
-		EnhancedInputComponent->BindAction(BlueInput, ETriggerEvent::Started, this, &AMultiplayerCharacter::ChoseBlue);
 	}
 	else
 	{
@@ -291,6 +299,27 @@ void AMultiplayerCharacter::Look(const FInputActionValue& Value)
 		// add yaw and pitch input to controller
 		AddControllerYawInput(LookAxisVector.X);
 		AddControllerPitchInput(LookAxisVector.Y);
+	}
+}
+
+void AMultiplayerCharacter::Aiming()
+{
+	if (AimingMontage)
+	{
+		if (bIsAiming == false)
+		{
+			bIsAiming = true;
+		}
+	}
+}
+void AMultiplayerCharacter::StopAiming()
+{
+	if (AimingMontage)
+	{
+		if (bIsAiming == true)
+		{
+			bIsAiming = false;
+		}
 	}
 }
 
