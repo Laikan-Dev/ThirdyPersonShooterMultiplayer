@@ -15,6 +15,7 @@
 #include "InputActionValue.h"
 #include "Blueprint/UserWidget.h"
 #include "Blueprint/WidgetBlueprintLibrary.h"
+#include "BaseWeapon.h"
 
 
 DEFINE_LOG_CATEGORY(LogTemplateCharacter);
@@ -68,6 +69,13 @@ AMultiplayerCharacter::AMultiplayerCharacter()
 	FollowCamera = CreateDefaultSubobject<UCameraComponent>(TEXT("FollowCamera"));
 	FollowCamera->SetupAttachment(CameraBoom, USpringArmComponent::SocketName); // Attach the camera to the end of the boom and let the boom adjust to match the controller orientation
 	FollowCamera->bUsePawnControlRotation = false; // Camera does not rotate relative to arm
+
+	//Create a Weapon Socket
+	WeaponSocket = CreateDefaultSubobject<UStaticMeshComponent>(TEXT("HandSocket"));
+	WeaponSocket->SetupAttachment(GetMesh(), TEXT("hand_rSocket"));
+	WeaponSocket->SetIsReplicated(true);
+	
+
 
 	// Note: The skeletal mesh and anim blueprint references on the Mesh component (inherited from Character) 
 	// are set in the derived blueprint asset named ThirdPersonCharacter (to avoid direct content references in C++)
@@ -172,6 +180,11 @@ float AMultiplayerCharacter::TakeDamage(float DamageTaken, FDamageEvent const& D
 	return damageApplied;
 }
 
+void AMultiplayerCharacter::SetCurrentWeapon_Implementation(FWeaponInfo CurrentWeapon)
+{
+	WeaponSocket->SetStaticMesh(CurrentWeapon.Mesh);
+}
+
 void AMultiplayerCharacter::StartFire()
 {
 	if (!bIsFiringWeapon)
@@ -180,10 +193,7 @@ void AMultiplayerCharacter::StartFire()
 		UWorld* World = GetWorld();
 		World->GetTimerManager().SetTimer(FiringTimer, this, &AMultiplayerCharacter::StopFire, FireRate, false);
 		HandleFire();
-		
 	}
-	
-
 }
 
 void AMultiplayerCharacter::StopFire()
@@ -302,7 +312,7 @@ void AMultiplayerCharacter::Look(const FInputActionValue& Value)
 	}
 }
 
-void AMultiplayerCharacter::Aiming()
+void AMultiplayerCharacter::Aiming_Implementation()
 {
 	if (AimingMontage)
 	{
@@ -312,7 +322,8 @@ void AMultiplayerCharacter::Aiming()
 		}
 	}
 }
-void AMultiplayerCharacter::StopAiming()
+
+void AMultiplayerCharacter::StopAiming_Implementation()
 {
 	if (AimingMontage)
 	{

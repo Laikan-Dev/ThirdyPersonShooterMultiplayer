@@ -4,7 +4,6 @@
 
 #include "GameFramework/Actor.h"
 #include "BaseWeapon.generated.h"
-
 UCLASS()
 class MULTIPLAYER_API ABaseWeapon : public AActor
 {
@@ -13,7 +12,10 @@ class MULTIPLAYER_API ABaseWeapon : public AActor
 public:	
 	// Sets default values for this actor's properties
 	ABaseWeapon();
-
+	// Struct Information
+	// 
+	//UPROPERTY(EditAnywhere, BlueprintReadWrite)
+	//FWeaponInfo WeaponInformation;
 public:
 	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = "Components")
 	class USphereComponent* SphereComponent;

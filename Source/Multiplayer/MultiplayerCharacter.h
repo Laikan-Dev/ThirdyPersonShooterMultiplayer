@@ -27,6 +27,9 @@ class AMultiplayerCharacter : public ACharacter
 	/** Follow camera */
 	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = Camera, meta = (AllowPrivateAccess = "true"))
 	UCameraComponent* FollowCamera;
+	//WeaponSocket
+	UPROPERTY(EditDefaultsOnly, BlueprintReadOnly, Category = "Components", meta = (AllowPrivateAccess = "true"))
+	UStaticMeshComponent* WeaponSocket;
 	/** MappingContext */
 	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = Input, meta = (AllowPrivateAccess = "true"))
 	UInputMappingContext* DefaultMappingContext;
@@ -57,7 +60,9 @@ protected:
 	/** Called for looking input */
 	void Look(const FInputActionValue& Value);
 	//Aiming
+	UFUNCTION(Server, NetMulticast, Reliable)	
 	void Aiming();
+	UFUNCTION(Server, NetMulticast, Reliable)
 	void StopAiming();
 	UFUNCTION(BlueprintCallable)
 	void ChoseRed();
@@ -91,18 +96,22 @@ protected:
 	bool bIsDead;
 	UPROPERTY(Replicated, BlueprintReadOnly)
 	bool bIsAiming;
+
 //FunctionRep for Health
 	UFUNCTION()
 	void OnRep_CurrentHealth();
 	void OnDeathUpdate();
+
 	//FunctionRep for Death
 	UFUNCTION(Server, NetMulticast, Reliable)
 	void MulticastOnDeath();
+
 	//FunctionRep for Team
 	UFUNCTION()
 	void OnRep_PlayerTeam();
 	void GetLifetimeReplicatedProps(TArray<FLifetimeProperty>& OutLifetimeProps) const override;
 	void OnHealthUpdate();
+
 	//FunctionRep for Weapon
 	UFUNCTION()
 	void OnRep_CurrentWeapon();
@@ -122,6 +131,9 @@ public:
 
 	UFUNCTION(BlueprintCallable, Category = "Health")
 	float TakeDamage(float DamageTaken, struct FDamageEvent const& DamageEvent, AController* EventInstigator, AActor* DamageCauser) override;
+
+	UFUNCTION(Server, NetMulticast, Reliable)
+	void SetCurrentWeapon(FWeaponInformation CurrentWeapon);
 
 protected:
 	UPROPERTY(EditDefaultsOnly, Category="Gameplay|Projectile")

@@ -3,6 +3,7 @@
 #include "Components/SphereComponent.h"
 #include "Components/StaticMeshComponent.h"
 #include "Multiplayer/MultiplayerCharacter.h"
+#include "WeaponInformation.h"
 
 // Sets default values
 ABaseWeapon::ABaseWeapon()
@@ -16,6 +17,7 @@ ABaseWeapon::ABaseWeapon()
 	
 	StaticMesh = CreateDefaultSubobject<UStaticMeshComponent>(TEXT("WeaponMesh"));
 	StaticMesh->SetupAttachment(RootComponent);
+	StaticMesh->SetStaticMesh(WeaponInformation.Mesh);
 
 }
 
@@ -25,12 +27,11 @@ void ABaseWeapon::BeginPlay()
 	Super::BeginPlay();
 	
 }
-
 void ABaseWeapon::PickUp_Implementation(AMultiplayerCharacter* Player)
 {
 	if (Player)
 	{
-		Player->CurrentWeaponClass = ABaseWeapon::StaticClass();
+		Player->SetCurrentWeapon(WeaponInformation);
 		Destroy();
 	}
 	
