@@ -12,6 +12,7 @@ class UCameraComponent;
 class UInputMappingContext;
 class UInputAction;
 struct FInputActionValue;
+struct FWeaponInformation;
 
 
 DECLARE_LOG_CATEGORY_EXTERN(LogTemplateCharacter, Log, All);
@@ -60,9 +61,9 @@ protected:
 	/** Called for looking input */
 	void Look(const FInputActionValue& Value);
 	//Aiming
-	UFUNCTION(Server, NetMulticast, Reliable)	
-	void Aiming();
-	UFUNCTION(Server, NetMulticast, Reliable)
+	UFUNCTION()
+	void StartAiming();
+	UFUNCTION()
 	void StopAiming();
 	UFUNCTION(BlueprintCallable)
 	void ChoseRed();
@@ -94,8 +95,13 @@ protected:
 	float CurrentHealth;
 	UPROPERTY(Replicated)
 	bool bIsDead;
-	UPROPERTY(Replicated, BlueprintReadOnly)
+	UPROPERTY(ReplicatedUsing = OnRep_Aiming, BlueprintReadOnly)
 	bool bIsAiming;
+	UFUNCTION()
+	void OnRep_Aiming();
+	UFUNCTION(Server, Reliable)
+	void ServerSetAiming(bool bNewAiming);
+	void ServerSetAiming_Implementation(bool bNewAiming);
 
 //FunctionRep for Health
 	UFUNCTION()
@@ -173,7 +179,7 @@ public:
 	UPROPERTY(EditDefaultsOnly)
 	TSubclassOf<UUserWidget> SelectTeamWidget;
 	//Animation
-	UPROPERTY(EditDefaultsOnly, Category = "Montages")
+	UPROPERTY(EditDefaultsOnly, Replicated, Category = "Montages")
 	UAnimMontage* AimingMontage;
 	UPROPERTY(EditDefaultsOnly, Category = "Montages")
 	UAnimMontage* ShootingMontage;

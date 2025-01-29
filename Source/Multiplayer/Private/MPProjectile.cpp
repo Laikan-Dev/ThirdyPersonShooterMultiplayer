@@ -19,7 +19,7 @@ AMPProjectile::AMPProjectile()
 	bReplicates = true;
 
 	SphereComponent = CreateDefaultSubobject<USphereComponent>(TEXT("RootComponent"));
-	SphereComponent->InitSphereRadius(37.5f);
+	SphereComponent->InitSphereRadius(20.5f);
 	SphereComponent->SetCollisionProfileName(TEXT("BlockAllDynamic"));
 	RootComponent = SphereComponent;
 	if (GetLocalRole() == ROLE_Authority)

@@ -4,12 +4,13 @@
 #include "Components/StaticMeshComponent.h"
 #include "Multiplayer/MultiplayerCharacter.h"
 #include "WeaponInformation.h"
+#include "Multiplayer/MultiplayerGameMode.h"
 
 // Sets default values
 ABaseWeapon::ABaseWeapon()
 {
 	bReplicates = true;
-
+	
 	SphereComponent = CreateDefaultSubobject<USphereComponent>(TEXT("RootComponent"));
 	SphereComponent->OnComponentBeginOverlap.AddDynamic(this, &ABaseWeapon::OnComponentBeginOverlap);
 	SphereComponent->OnComponentEndOverlap.AddDynamic(this, &ABaseWeapon::OnComponentEndOverlap);
@@ -18,7 +19,6 @@ ABaseWeapon::ABaseWeapon()
 	StaticMesh = CreateDefaultSubobject<UStaticMeshComponent>(TEXT("WeaponMesh"));
 	StaticMesh->SetupAttachment(RootComponent);
 	StaticMesh->SetStaticMesh(WeaponInformation.Mesh);
-
 }
 
 // Called when the game starts or when spawned

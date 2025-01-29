@@ -27,6 +27,7 @@ AMultiplayerCharacter::AMultiplayerCharacter()
 {
 	bReplicates = true;
 	SetReplicateMovement(true);
+	
 	//Initial Health
 	MaxHealth = 100;
 	CurrentHealth = MaxHealth;
@@ -92,6 +93,7 @@ void AMultiplayerCharacter::OnRep_CurrentHealth()
 {
 	OnHealthUpdate();
 }
+
 void AMultiplayerCharacter::OnDeathUpdate()
 {
 	
@@ -100,11 +102,13 @@ void AMultiplayerCharacter::OnDeathUpdate()
 		MulticastOnDeath();
 
 }
+
 void AMultiplayerCharacter::MulticastOnDeath_Implementation()
 {
 	GetMesh()->SetSimulatePhysics(true);
 	GetMesh()->SetCollisionProfileName(TEXT("Ragdoll"));
 }
+
 void AMultiplayerCharacter::OnRep_PlayerTeam()
 {
 	if (CurrentTeam == ETeam::ET_RedTeam && Red)
@@ -126,6 +130,7 @@ void AMultiplayerCharacter::GetLifetimeReplicatedProps(TArray<FLifetimeProperty>
 	DOREPLIFETIME(AMultiplayerCharacter, CurrentHealth);
 	DOREPLIFETIME(AMultiplayerCharacter, CurrentTeam);
 	DOREPLIFETIME(AMultiplayerCharacter, bIsDead);
+	DOREPLIFETIME(AMultiplayerCharacter, bIsAiming);
 	DOREPLIFETIME(AMultiplayerCharacter, CurrentWeaponClass);
 }
 
@@ -161,7 +166,6 @@ void AMultiplayerCharacter::OnRep_CurrentWeapon()
 
 void AMultiplayerCharacter::OnCurrentWeaponUpdate()
 {
-
 }
 
 void AMultiplayerCharacter::SetCurrentHealth(float healthValue)
@@ -180,7 +184,7 @@ float AMultiplayerCharacter::TakeDamage(float DamageTaken, FDamageEvent const& D
 	return damageApplied;
 }
 
-void AMultiplayerCharacter::SetCurrentWeapon_Implementation(FWeaponInfo CurrentWeapon)
+void AMultiplayerCharacter::SetCurrentWeapon_Implementation(FWeaponInformation CurrentWeapon)
 {
 	WeaponSocket->SetStaticMesh(CurrentWeapon.Mesh);
 }
@@ -200,6 +204,7 @@ void AMultiplayerCharacter::StopFire()
 {
 	bIsFiringWeapon = false;
 }
+
 void AMultiplayerCharacter::ServerSetTeam_Implementation(ETeam NewTeam)
 {
 	CurrentTeam = NewTeam;
@@ -229,12 +234,16 @@ void AMultiplayerCharacter::HandleFire_Implementation()
 {
 	FVector spawnLocation = GetActorLocation() + (GetActorRotation().Vector() * 100.0f) + (GetActorUpVector() * 50.0f); 
 	FRotator spawnRotation = GetActorRotation();
+
+	
 	
 	FActorSpawnParameters spawnParameters;
 	spawnParameters.Instigator = GetInstigator();
 	spawnParameters.Owner = this;
-
-	AMPProjectile* spawnProjectile = GetWorld()->SpawnActor<AMPProjectile>(spawnLocation, spawnRotation, spawnParameters);
+	
+	FVector SpawnOnWeapon = WeaponSocket->GetSocketLocation(TEXT("FireSocket"));
+	
+	AMPProjectile* spawnProjectile = GetWorld()->SpawnActor<AMPProjectile>(SpawnOnWeapon, spawnRotation, spawnParameters);
 }
 
 //////////////////////////////////////////////////////////////////////////
@@ -265,7 +274,7 @@ void AMultiplayerCharacter::SetupPlayerInputComponent(UInputComponent* PlayerInp
 		EnhancedInputComponent->BindAction(LookAction, ETriggerEvent::Triggered, this, &AMultiplayerCharacter::Look);
 
 		//Aiming
-		EnhancedInputComponent->BindAction(AimingInput, ETriggerEvent::Triggered, this, &AMultiplayerCharacter::Aiming);
+		EnhancedInputComponent->BindAction(AimingInput, ETriggerEvent::Triggered, this, &AMultiplayerCharacter::StartAiming);
 		EnhancedInputComponent->BindAction(AimingInput, ETriggerEvent::Completed, this, &AMultiplayerCharacter::StopAiming);
 		//Firing Projectiles
 		EnhancedInputComponent->BindAction(FireInput, ETriggerEvent::Started, this, &AMultiplayerCharacter::StartFire);
@@ -312,25 +321,44 @@ void AMultiplayerCharacter::Look(const FInputActionValue& Value)
 	}
 }
 
-void AMultiplayerCharacter::Aiming_Implementation()
+void AMultiplayerCharacter::ServerSetAiming_Implementation(bool bNewAiming)
 {
-	if (AimingMontage)
+	bIsAiming = bNewAiming;
+}
+
+void AMultiplayerCharacter::OnRep_Aiming()
+{
+}
+
+void AMultiplayerCharacter::StartAiming()
+{
+	if (HasAuthority())
 	{
-		if (bIsAiming == false)
+		if (AimingMontage)
 		{
 			bIsAiming = true;
 		}
 	}
+	else
+	{
+		ServerSetAiming(true);
+	}
+
+	
 }
 
-void AMultiplayerCharacter::StopAiming_Implementation()
+void AMultiplayerCharacter::StopAiming()
 {
-	if (AimingMontage)
+	if (HasAuthority())
 	{
-		if (bIsAiming == true)
+		if (AimingMontage)
 		{
 			bIsAiming = false;
 		}
+	}
+	else
+	{
+		ServerSetAiming(false);
 	}
 }
 
@@ -361,5 +389,10 @@ void AMultiplayerCharacter::ChoseBlue()
 		{
 			ServerSetTeam(ETeam::ET_BlueTeam);
 		}
-	}
+	}   
+
+
+
+
+
 }

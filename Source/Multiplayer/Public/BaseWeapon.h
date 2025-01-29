@@ -4,18 +4,40 @@
 
 #include "GameFramework/Actor.h"
 #include "BaseWeapon.generated.h"
+USTRUCT(BlueprintType)
+struct FWeaponInformation
+{
+	GENERATED_BODY()
+
+	UPROPERTY(EditDefaultsOnly)
+	TSubclassOf<ABaseWeapon> WeaponClass;
+	UPROPERTY(EditDefaultsOnly)
+	FName Name;
+	UPROPERTY(EditDefaultsOnly)
+	FString Descryption;
+	UPROPERTY(EditDefaultsOnly)
+	UStaticMesh* Mesh;
+	UPROPERTY(EditDefaultsOnly)
+	UTexture2D* Icon;
+	UPROPERTY(EditDefaultsOnly)
+	float FireRate;
+	UPROPERTY(EditDefaultsOnly)
+	float Damage;
+	UPROPERTY(EditDefaultsOnly)
+	int AmmoCap;
+};
+
 UCLASS()
 class MULTIPLAYER_API ABaseWeapon : public AActor
 {
 	GENERATED_BODY()
-	
-public:	
+
+public:
 	// Sets default values for this actor's properties
 	ABaseWeapon();
 	// Struct Information
-	// 
-	//UPROPERTY(EditAnywhere, BlueprintReadWrite)
-	//FWeaponInfo WeaponInformation;
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Info")
+	FWeaponInformation WeaponInformation;
 public:
 	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = "Components")
 	class USphereComponent* SphereComponent;
@@ -30,10 +52,9 @@ protected:
 	UFUNCTION(Server, Reliable)
 	void PickUp(AMultiplayerCharacter* Player);
 
-public:	
+public:
 	UFUNCTION()
 	void OnComponentBeginOverlap(UPrimitiveComponent* OverlappedComponent, AActor* OtherActor, UPrimitiveComponent* OtherComp, int32 OtherBodyIndex, bool bFromSweep, const FHitResult& SweepResult);
 	UFUNCTION()
 	void OnComponentEndOverlap(UPrimitiveComponent* OverlappedComponent, AActor* OtherActor, UPrimitiveComponent* OtherComp, int32 OtherBodyIndex);
-
 };
