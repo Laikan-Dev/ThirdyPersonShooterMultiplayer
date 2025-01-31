@@ -65,6 +65,7 @@ void ACaptureFlagArea::OnCaptureTimeUpdate()
 				if (RedTeamColor)
 				{
 					Flag->SetMaterial(0, RedTeamColor);
+					AddScore();
 
 				}
 			}
@@ -76,6 +77,7 @@ void ACaptureFlagArea::OnCaptureTimeUpdate()
 				if (BlueTeamColor)
 				{
 					Flag->SetMaterial(0, BlueTeamColor);
+					AddScore();
 
 				}
 			}
@@ -120,6 +122,10 @@ void ACaptureFlagArea::SetCurrentCaptureTime_Implementation(float CaptureTimeVal
 		}
 		
 	}
+}
+
+void ACaptureFlagArea::AddScore_Implementation()
+{
 }
 
 // Called every frame

@@ -66,6 +66,9 @@ public:
 
 	UFUNCTION(Server, Reliable, Category = "CaptureSettings")
 	void SetCurrentCaptureTime(float CaptureTimeValue);
+
+	UFUNCTION(BlueprintCallable, BlueprintNativeEvent)
+	void AddScore();
 	
 
 	// Called every frame

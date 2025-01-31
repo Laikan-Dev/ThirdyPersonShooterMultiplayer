@@ -4,6 +4,8 @@
 #include "MultiplayerCharacter.h"
 #include "Kismet/GameplayStatics.h"
 #include "MultiplayerPlayerState.h"
+#include "Blueprint/UserWidget.h"
+#include "Blueprint/WidgetBlueprintLibrary.h"
 #include "UObject/ConstructorHelpers.h"
 
 AMultiplayerGameMode::AMultiplayerGameMode()
@@ -15,4 +17,26 @@ AMultiplayerGameMode::AMultiplayerGameMode()
 	{
 		DefaultPawnClass = PlayerPawnBPClass.Class;
 	}
+}
+
+void AMultiplayerGameMode::ScoreWidgetSpawn_Implementation()
+{
+	if (CaptureFlagWidget)
+	{
+		APlayerController* PlayerController = Cast<APlayerController>(PlayerControllerClass);
+		UUserWidget* Score = CreateWidget<UUserWidget>(PlayerController, CaptureFlagWidget);
+		if (Score)
+		{
+			Score->AddToViewport();
+
+		}
+	}
+}
+
+void AMultiplayerGameMode::BeginPlay()
+{
+	Super::BeginPlay();
+	ScoreWidgetSpawn();
+
+	
 }

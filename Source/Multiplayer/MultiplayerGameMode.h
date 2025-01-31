@@ -15,6 +15,16 @@ class AMultiplayerGameMode : public AGameModeBase
 public:
 	AMultiplayerGameMode();
 
+public:
+	UPROPERTY(EditDefaultsOnly,BlueprintReadOnly)
+	TSubclassOf<UUserWidget> CaptureFlagWidget;
+
+	UFUNCTION(Server, Reliable)
+	void ScoreWidgetSpawn();
+
+protected:
+	virtual void BeginPlay();
+
 };
 
 

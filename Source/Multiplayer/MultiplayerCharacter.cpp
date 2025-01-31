@@ -187,17 +187,22 @@ float AMultiplayerCharacter::TakeDamage(float DamageTaken, FDamageEvent const& D
 void AMultiplayerCharacter::SetCurrentWeapon_Implementation(FWeaponInformation CurrentWeapon)
 {
 	WeaponSocket->SetStaticMesh(CurrentWeapon.Mesh);
+	CurrentWeaponClass = CurrentWeapon.WeaponClass;
 }
 
 void AMultiplayerCharacter::StartFire()
 {
-	if (!bIsFiringWeapon)
+	if (CurrentWeaponClass)
 	{
-		bIsFiringWeapon = true;
-		UWorld* World = GetWorld();
-		World->GetTimerManager().SetTimer(FiringTimer, this, &AMultiplayerCharacter::StopFire, FireRate, false);
-		HandleFire();
+		if (!bIsFiringWeapon)
+		{
+			bIsFiringWeapon = true;
+			UWorld* World = GetWorld();
+			World->GetTimerManager().SetTimer(FiringTimer, this, &AMultiplayerCharacter::StopFire, FireRate, false);
+			HandleFire();
+		}
 	}
+	
 }
 
 void AMultiplayerCharacter::StopFire()
@@ -244,6 +249,7 @@ void AMultiplayerCharacter::HandleFire_Implementation()
 	FVector SpawnOnWeapon = WeaponSocket->GetSocketLocation(TEXT("FireSocket"));
 	
 	AMPProjectile* spawnProjectile = GetWorld()->SpawnActor<AMPProjectile>(SpawnOnWeapon, spawnRotation, spawnParameters);
+
 }
 
 //////////////////////////////////////////////////////////////////////////
@@ -332,17 +338,21 @@ void AMultiplayerCharacter::OnRep_Aiming()
 
 void AMultiplayerCharacter::StartAiming()
 {
-	if (HasAuthority())
+	if (CurrentWeaponClass)
 	{
-		if (AimingMontage)
+		if (HasAuthority())
 		{
-			bIsAiming = true;
+			if (AimingMontage)
+			{
+				bIsAiming = true;
+			}
+		}
+		else
+		{
+			ServerSetAiming(true);
 		}
 	}
-	else
-	{
-		ServerSetAiming(true);
-	}
+	
 
 	
 }
