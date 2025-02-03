@@ -16,15 +16,14 @@ public:
 	AMultiplayerGameMode();
 
 public:
-	UPROPERTY(EditDefaultsOnly,BlueprintReadOnly)
+	UPROPERTY(EditDefaultsOnly, BlueprintReadOnly)
 	TSubclassOf<UUserWidget> CaptureFlagWidget;
 
-	UFUNCTION(Server, Reliable)
-	void ScoreWidgetSpawn();
+	UFUNCTION(NetMulticast, Reliable)
+	void MulticastScoreWidgetSpawn(TSubclassOf<UUserWidget> WidgetClass);
 
 protected:
 	virtual void BeginPlay();
-
 };
 
 

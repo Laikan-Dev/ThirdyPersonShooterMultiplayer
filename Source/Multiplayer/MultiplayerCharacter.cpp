@@ -10,6 +10,7 @@
 #include "Engine/Engine.h"
 #include "MPProjectile.h"
 #include "GameFramework/Controller.h"
+#include "MultiplayerPlayerController.h"
 #include "EnhancedInputComponent.h"
 #include "EnhancedInputSubsystems.h"
 #include "InputActionValue.h"
@@ -218,7 +219,7 @@ void AMultiplayerCharacter::ServerSetTeam_Implementation(ETeam NewTeam)
 
 void AMultiplayerCharacter::SelectTeam_Implementation()
 {
-	APlayerController* PlayerController = Cast<APlayerController>(GetController());
+	AMultiplayerPlayerController* PlayerController = Cast<AMultiplayerPlayerController>(GetController());
 	if (SelectTeamWidget)
 	{
 		UUserWidget* WidgetInstance = CreateWidget<UUserWidget>(PlayerController, SelectTeamWidget);
@@ -258,7 +259,7 @@ void AMultiplayerCharacter::HandleFire_Implementation()
 void AMultiplayerCharacter::SetupPlayerInputComponent(UInputComponent* PlayerInputComponent)
 {
 	// Add Input Mapping Context
-	if (APlayerController* PlayerController = Cast<APlayerController>(GetController()))
+	if (AMultiplayerPlayerController* PlayerController = Cast<AMultiplayerPlayerController>(GetController()))
 	{
 		if (UEnhancedInputLocalPlayerSubsystem* Subsystem = ULocalPlayer::GetSubsystem<UEnhancedInputLocalPlayerSubsystem>(PlayerController->GetLocalPlayer()))
 		{
