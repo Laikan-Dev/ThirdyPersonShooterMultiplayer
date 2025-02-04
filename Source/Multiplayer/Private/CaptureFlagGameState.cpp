@@ -4,6 +4,8 @@
 #include "CaptureFlagGameState.h"
 #include "Net/UnrealNetwork.h"
 #include "Team.h"
+#include "MultiplayerPlayerState.h"
+#include "MultiplayerPlayerController.h"
 
 ACaptureFlagGameState::ACaptureFlagGameState()
 {
@@ -27,6 +29,23 @@ void ACaptureFlagGameState::GetLifetimeReplicatedProps(TArray<FLifetimeProperty>
 	DOREPLIFETIME(ACaptureFlagGameState, RedTeamScore);
 	DOREPLIFETIME(ACaptureFlagGameState, BlueTeamScore);
 
+}
+
+TArray<AMultiplayerPlayerController*> ACaptureFlagGameState::GetAllPlayerController()
+{
+	TArray<AMultiplayerPlayerController*> PlayerControllers;
+	for (APlayerState* PlayerState : PlayerArray)
+	{
+		if (PlayerState)
+		{
+			AMultiplayerPlayerController* PlayerController = Cast<AMultiplayerPlayerController>(PlayerState->GetOwner());
+			if (PlayerController)
+			{
+				PlayerControllers.Add(PlayerController);
+			}
+		}
+	}
+	return PlayerControllers;
 }
 
 void ACaptureFlagGameState::OnRep_TimeLeft()
@@ -74,6 +93,21 @@ void ACaptureFlagGameState::UpdateTimer()
 	SetTimeLeft(FMath::Max(TimeLeft - 1, 0));
 	if (TimeLeft <= 0)
 	{
+		for(AMultiplayerPlayerController* PC : GetAllPlayerController())
+		{
+			if (PC)
+			{
+				if (RedTeamScore > BlueTeamScore)
+				{
+					PC->AddMatchResultWidget(ETeam::ET_RedTeam);
+				}
+				else
+				{
+					PC->AddMatchResultWidget(ETeam::ET_BlueTeam);
+				}
 
+			}
+		}
+		
 	}
 }

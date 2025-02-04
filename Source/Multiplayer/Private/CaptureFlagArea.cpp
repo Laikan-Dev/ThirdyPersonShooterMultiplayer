@@ -100,29 +100,33 @@ void ACaptureFlagArea::SetCurrentCaptureTime_Implementation(float CaptureTimeVal
 	CurrentCaptureTime = FMath::Clamp(CaptureTimeValue, 0.f, MaxCaptureTime);
 	OnCaptureTimeUpdate();
 
-	if (GEngine && CaptureTimeValue > 0)
+	if (GEngine)
 	{
-		switch (CurrentTeam)
+		if (CaptureTimeValue > 0)
 		{
-		case ETeam::ET_RedTeam:
+			switch (CurrentTeam)
+			{
+			case ETeam::ET_RedTeam:
+			{
+				FString CapturingMessage = FString::Printf(TEXT("Red Team Are capturing %f the flag"), CurrentCaptureTime);
+				GEngine->AddOnScreenDebugMessage(-1, 1.f, FColor::Red, CapturingMessage);
+
+			}
+			break;
+			case ETeam::ET_BlueTeam:
+			{
+				FString CapturingMessage = FString::Printf(TEXT("Blue Team Are capturing %f the flag"), CurrentCaptureTime);
+				GEngine->AddOnScreenDebugMessage(-1, 1.f, FColor::Red, CapturingMessage);
+			}
+			break;
+			case ETeam::ET_NoTeam:
+				break;
+			}
+		}
+		else
 		{
-			FString CapturingMessage = FString::Printf(TEXT("Red Team Are capturing %f the flag"), CurrentCaptureTime);
-			GEngine->AddOnScreenDebugMessage(-1, 1.f, FColor::Red, CapturingMessage);
-			
+			CurrentTeam = ETeam::ET_NoTeam;
 		}
-			break;
-		case ETeam::ET_BlueTeam:
-		{
-			FString CapturingMessage = FString::Printf(TEXT("Blue Team Are capturing %f the flag"), CurrentCaptureTime);
-			GEngine->AddOnScreenDebugMessage(-1, 1.f, FColor::Red, CapturingMessage);
-		}
-			break;
-		case ETeam::ET_NoTeam:
-			break;
-		default:
-			break;
-		}
-		
 	}
 }
 
@@ -149,7 +153,8 @@ void ACaptureFlagArea::Tick(float DeltaTime)
 		}
 		else
 		{
-			float Capture = CurrentCaptureTime - 1;
+			
+			float Capture = CurrentCaptureTime - 0.1;
 			SetCurrentCaptureTime(Capture);
 
 		}
@@ -164,9 +169,11 @@ void ACaptureFlagArea::OnOverlapCollision(UPrimitiveComponent* OverlappedCompone
 	
 	if (Player != nullptr)
 	{
-		CurrentTeam = Player->CurrentTeam;
-		bCapturing = true;
-		
+		if (Player->CurrentTeam == CurrentTeam || CurrentTeam == ETeam::ET_NoTeam)
+		{
+			CurrentTeam = Player->CurrentTeam;
+			bCapturing = true;
+		}
 	}
 }
 
@@ -176,8 +183,10 @@ void ACaptureFlagArea::OnEndOverlapCollision(UPrimitiveComponent* OverlappedComp
 	if (Player != nullptr)
 	{
 		bCapturing = false;
-		CurrentTeam = ETeam::ET_NoTeam;
-		
+		if(CurrentCaptureTime <= 0)
+		{
+			CurrentTeam = ETeam::ET_NoTeam;
+		}
 	}
 }
 

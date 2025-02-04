@@ -20,9 +20,16 @@ public:
 	virtual void BeginPlay();
 	
 	UPROPERTY(EditDefaultsOnly, BlueprintReadOnly)
-	TSubclassOf<UUserWidget> Widget;
+	TSubclassOf<UUserWidget> CaptureFlagWidget;
+	UPROPERTY(EditDefaultsOnly, BlueprintReadOnly)
+	TSubclassOf<UUserWidget> MatchResultWidget;
+	UPROPERTY(BlueprintReadWrite, Category = "Game")
+	FString MatchResult;
+
 
 	UFUNCTION()
 	void AddCaptureFlagWidget(TSubclassOf<UUserWidget> CurrentWidget);
+	UFUNCTION()
+	void AddMatchResultWidget(ETeam VictoriusTeam);
 	
 };

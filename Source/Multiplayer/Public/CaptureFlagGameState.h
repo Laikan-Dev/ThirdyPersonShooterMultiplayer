@@ -31,6 +31,9 @@ public:
 	int32 BlueTeamScore;
 	UPROPERTY(ReplicatedUsing = OnRep_TimeLeft, BlueprintReadWrite, Category = "Game")
 	int32 RedTeamScore;
+	
+	UFUNCTION()
+	TArray<AMultiplayerPlayerController*> GetAllPlayerController();
 
 	UFUNCTION()
 	void OnRep_TimeLeft();
