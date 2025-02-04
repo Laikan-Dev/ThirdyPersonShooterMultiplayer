@@ -16,7 +16,13 @@ class MULTIPLAYER_API AMultiplayerPlayerController : public APlayerController
 
 
 public:
-	UFUNCTION(Client, Reliable)
+
+	virtual void BeginPlay();
+	
+	UPROPERTY(EditDefaultsOnly, BlueprintReadOnly)
+	TSubclassOf<UUserWidget> Widget;
+
+	UFUNCTION()
 	void AddCaptureFlagWidget(TSubclassOf<UUserWidget> CurrentWidget);
 	
 };

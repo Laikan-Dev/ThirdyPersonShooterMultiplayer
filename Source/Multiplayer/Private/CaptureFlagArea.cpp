@@ -6,6 +6,8 @@
 #include "Net/UnrealNetwork.h"
 #include "Engine/Engine.h"
 #include "MultiplayerPlayerState.h"
+#include "CaptureFlagGameState.h"
+#include "Kismet/GameplayStatics.h"
 #include "Multiplayer/MultiplayerCharacter.h"
 
 // Sets default values
@@ -65,7 +67,7 @@ void ACaptureFlagArea::OnCaptureTimeUpdate()
 				if (RedTeamColor)
 				{
 					Flag->SetMaterial(0, RedTeamColor);
-					AddScore();
+					AddTeamScore();
 
 				}
 			}
@@ -77,7 +79,7 @@ void ACaptureFlagArea::OnCaptureTimeUpdate()
 				if (BlueTeamColor)
 				{
 					Flag->SetMaterial(0, BlueTeamColor);
-					AddScore();
+					AddTeamScore();
 
 				}
 			}
@@ -124,8 +126,13 @@ void ACaptureFlagArea::SetCurrentCaptureTime_Implementation(float CaptureTimeVal
 	}
 }
 
-void ACaptureFlagArea::AddScore_Implementation()
+void ACaptureFlagArea::AddTeamScore_Implementation()
 {
+	ACaptureFlagGameState* GameState = Cast<ACaptureFlagGameState>(UGameplayStatics::GetGameState(GetWorld()));
+	if (GameState)
+	{
+		GameState->SetScore(CurrentTeam, 1);
+	}
 }
 
 // Called every frame

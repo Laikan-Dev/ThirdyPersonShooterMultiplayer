@@ -68,7 +68,7 @@ public:
 	void SetCurrentCaptureTime(float CaptureTimeValue);
 
 	UFUNCTION(BlueprintCallable, BlueprintNativeEvent)
-	void AddScore();
+	void AddTeamScore();
 	
 
 	// Called every frame

@@ -22,30 +22,8 @@ AMultiplayerGameMode::AMultiplayerGameMode()
 	}
 }
 
-void AMultiplayerGameMode::MulticastScoreWidgetSpawn_Implementation(TSubclassOf<UUserWidget> WidgetClass)
-{
-	for (FConstPlayerControllerIterator It = GetWorld()->GetPlayerControllerIterator(); It; ++It)
-	{
-		if (WidgetClass)
-		{
-			AMultiplayerPlayerController* PlayerController = Cast<AMultiplayerPlayerController>(*It);
-			if (PlayerController)
-			{
-				PlayerController->AddCaptureFlagWidget(WidgetClass);
-			}
-		}
-	}
-	
-}
-
 void AMultiplayerGameMode::BeginPlay()
 {
 	Super::BeginPlay();
-	if (HasAuthority())
-	{
-		MulticastScoreWidgetSpawn(CaptureFlagWidget);
-	}
-
-	
 }
 

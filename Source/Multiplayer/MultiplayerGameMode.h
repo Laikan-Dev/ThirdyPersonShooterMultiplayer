@@ -15,13 +15,6 @@ class AMultiplayerGameMode : public AGameModeBase
 public:
 	AMultiplayerGameMode();
 
-public:
-	UPROPERTY(EditDefaultsOnly, BlueprintReadOnly)
-	TSubclassOf<UUserWidget> CaptureFlagWidget;
-
-	UFUNCTION(NetMulticast, Reliable)
-	void MulticastScoreWidgetSpawn(TSubclassOf<UUserWidget> WidgetClass);
-
 protected:
 	virtual void BeginPlay();
 };

@@ -3,29 +3,33 @@
 #pragma once
 
 #include "CoreMinimal.h"
-#include "GameFramework/PlayerState.h"
-#include "Team.h"
-#include "MultiplayerPlayerState.generated.h"
+#include "GameFramework/GameStateBase.h"
+#include "CaptureFlagGameState.generated.h"
 
 /**
  * 
  */
 UCLASS()
-class MULTIPLAYER_API AMultiplayerPlayerState : public APlayerState
+class MULTIPLAYER_API ACaptureFlagGameState : public AGameStateBase
 {
 	GENERATED_BODY()
 
+public:
+	ACaptureFlagGameState();
+
 protected:
-	AMultiplayerPlayerState();
+
+	
+
 	virtual void BeginPlay();
 	void GetLifetimeReplicatedProps(TArray<FLifetimeProperty>& OutLifetimeProps) const override;
 
 public:
 	UPROPERTY(ReplicatedUsing = OnRep_TimeLeft, BlueprintReadOnly, Category = "Game")
 	int32 TimeLeft;
-	UPROPERTY(ReplicatedUsing = OnRep_TimeLeft, BlueprintReadOnly, Category = "Game")
+	UPROPERTY(ReplicatedUsing = OnRep_TimeLeft, BlueprintReadWrite, Category = "Game")
 	int32 BlueTeamScore;
-	UPROPERTY(ReplicatedUsing = OnRep_TimeLeft, BlueprintReadOnly, Category = "Game")
+	UPROPERTY(ReplicatedUsing = OnRep_TimeLeft, BlueprintReadWrite, Category = "Game")
 	int32 RedTeamScore;
 
 	UFUNCTION()
@@ -34,7 +38,7 @@ public:
 	void OnRep_TeamScore();
 	UFUNCTION()
 	void SetTimeLeft(int32 NewTime);
-	UFUNCTION()
+	UFUNCTION(BlueprintCallable)
 	void SetScore(ETeam Team, int32 NewScore);
 	UFUNCTION()
 	void UpdateTimer();
