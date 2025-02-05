@@ -50,6 +50,10 @@ TArray<AMultiplayerPlayerController*> ACaptureFlagGameState::GetAllPlayerControl
 
 void ACaptureFlagGameState::OnRep_TimeLeft()
 {
+	if (TimeLeft <= 0)
+	{
+		OnTimeFinished();
+	}
 }
 
 void ACaptureFlagGameState::OnRep_TeamScore()
@@ -90,24 +94,26 @@ void ACaptureFlagGameState::SetScore(ETeam Team, int32 NewScore)
 
 void ACaptureFlagGameState::UpdateTimer()
 {
-	SetTimeLeft(FMath::Max(TimeLeft - 1, 0));
-	if (TimeLeft <= 0)
+	if (!bContesting)
 	{
-		for(AMultiplayerPlayerController* PC : GetAllPlayerController())
-		{
-			if (PC)
-			{
-				if (RedTeamScore > BlueTeamScore)
-				{
-					PC->AddMatchResultWidget(ETeam::ET_RedTeam);
-				}
-				else
-				{
-					PC->AddMatchResultWidget(ETeam::ET_BlueTeam);
-				}
+		SetTimeLeft(FMath::Max(TimeLeft - 1, 0));
+	}
+}
 
+void ACaptureFlagGameState::OnTimeFinished()
+{
+	for (AMultiplayerPlayerController* PC : GetAllPlayerController())
+	{
+		if (PC)
+		{
+			if (RedTeamScore > BlueTeamScore)
+			{
+				PC->AddMatchResultWidget(ETeam::ET_RedTeam);
+			}
+			else
+			{
+				PC->AddMatchResultWidget(ETeam::ET_BlueTeam);
 			}
 		}
-		
 	}
 }

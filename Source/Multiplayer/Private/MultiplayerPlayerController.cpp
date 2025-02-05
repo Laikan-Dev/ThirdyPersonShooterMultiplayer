@@ -26,6 +26,7 @@ void AMultiplayerPlayerController::AddMatchResultWidget(ETeam VictoriusTeam)
 {
 	if (IsLocalController())
 	{
+		
 		if (MatchResultWidget) 
 		{
 			AMultiplayerCharacter* PlayerCharacter = Cast<AMultiplayerCharacter>(GetPawn());

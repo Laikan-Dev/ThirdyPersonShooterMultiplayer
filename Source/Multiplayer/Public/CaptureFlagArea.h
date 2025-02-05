@@ -45,9 +45,13 @@ protected:
 	UPROPERTY(EditDefaultsOnly)
 	bool bCapturing;
 	bool bCaptured;
+	bool bContesting;
 	UPROPERTY(EditAnywhere, BlueprintReadWrite)
 	ETeam CurrentTeam;
-	
+	UPROPERTY()
+	TArray<AMultiplayerCharacter*> RedTeamPlayersArray;
+	UPROPERTY()
+	TArray<AMultiplayerCharacter*> BlueTeamPlayersArray;
 
 	UFUNCTION()
 	void OnRep_CurrentCaptureTime();

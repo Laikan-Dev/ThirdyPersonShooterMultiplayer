@@ -25,12 +25,14 @@ protected:
 	void GetLifetimeReplicatedProps(TArray<FLifetimeProperty>& OutLifetimeProps) const override;
 
 public:
-	UPROPERTY(ReplicatedUsing = OnRep_TimeLeft, BlueprintReadOnly, Category = "Game")
+	UPROPERTY(ReplicatedUsing = OnRep_TimeLeft, BlueprintReadOnly)
 	int32 TimeLeft;
-	UPROPERTY(ReplicatedUsing = OnRep_TimeLeft, BlueprintReadWrite, Category = "Game")
+	UPROPERTY(ReplicatedUsing = OnRep_TimeLeft, BlueprintReadWrite)
 	int32 BlueTeamScore;
-	UPROPERTY(ReplicatedUsing = OnRep_TimeLeft, BlueprintReadWrite, Category = "Game")
+	UPROPERTY(ReplicatedUsing = OnRep_TimeLeft, BlueprintReadWrite)
 	int32 RedTeamScore;
+	UPROPERTY()
+	bool bContesting;
 	
 	UFUNCTION()
 	TArray<AMultiplayerPlayerController*> GetAllPlayerController();
@@ -45,5 +47,7 @@ public:
 	void SetScore(ETeam Team, int32 NewScore);
 	UFUNCTION()
 	void UpdateTimer();
+	UFUNCTION()
+	void OnTimeFinished();
 
 };

@@ -147,7 +147,7 @@ void ACaptureFlagArea::Tick(float DeltaTime)
 	{
 		if (bCapturing)
 		{
-			float Capature = CurrentCaptureTime + 1;
+			float Capature = CurrentCaptureTime + 0.1;
 			SetCurrentCaptureTime(Capature);
 
 		}
@@ -158,6 +158,11 @@ void ACaptureFlagArea::Tick(float DeltaTime)
 			SetCurrentCaptureTime(Capture);
 
 		}
+		if(bContesting)
+		{
+			FString ContestingMessage = FString::Printf(TEXT("Teams are contesting the flag"));
+			GEngine->AddOnScreenDebugMessage(-1, 1.f, FColor::Blue, ContestingMessage);
+		}
 	}
 
 }
@@ -166,13 +171,52 @@ void ACaptureFlagArea::OnOverlapCollision(UPrimitiveComponent* OverlappedCompone
 {
 
 	AMultiplayerCharacter* Player = Cast<AMultiplayerCharacter>(OtherActor);
+	ACaptureFlagGameState* GameState = Cast<ACaptureFlagGameState>(UGameplayStatics::GetGameState(GetWorld()));
 	
 	if (Player != nullptr)
 	{
 		if (Player->CurrentTeam == CurrentTeam || CurrentTeam == ETeam::ET_NoTeam)
 		{
-			CurrentTeam = Player->CurrentTeam;
-			bCapturing = true;
+			if (Player->CurrentTeam == ETeam::ET_RedTeam)
+			{
+				RedTeamPlayersArray.Add(Player);
+				if (BlueTeamPlayersArray.Num() <= 0)
+				{
+					CurrentTeam = Player->CurrentTeam;
+					bCapturing = true;
+					GameState->bContesting = false;
+					bContesting = false;
+				}
+				else
+				{
+					if (GameState)
+					{
+						GameState->bContesting = true;
+						bContesting = true;
+						bCapturing = false;
+					}
+				}
+			}
+			if(Player->CurrentTeam == ETeam::ET_BlueTeam)
+			{
+				BlueTeamPlayersArray.Add(Player);
+				if (RedTeamPlayersArray.Num() <= 0)
+				{
+					CurrentTeam = Player->CurrentTeam;
+					bCapturing = true;
+					GameState->bContesting = false;
+					bContesting = false;
+				}
+				else
+				{
+					if (GameState)
+					{
+						GameState->bContesting = true;
+						bContesting = true;
+						bCapturing = false;
+					}
+				}
+			}
 		}
 	}
 }
@@ -182,7 +226,21 @@ void ACaptureFlagArea::OnEndOverlapCollision(UPrimitiveComponent* OverlappedComp
 	AMultiplayerCharacter* Player = Cast<AMultiplayerCharacter>(OtherActor);
 	if (Player != nullptr)
 	{
-		bCapturing = false;
+		if (Player->CurrentTeam == ETeam::ET_RedTeam)
+		{
+			RedTeamPlayersArray.Remove(0);
+		}
+		else if (Player->CurrentTeam == ETeam::ET_BlueTeam)
+		{
+			BlueTeamPlayersArray.Remove(0);
+		}
+
+		
+		if (RedTeamPlayersArray.Num() && BlueTeamPlayersArray.Num() <= 0)
+		{
+			bCapturing = false;
+			CurrentTeam = ETeam::ET_NoTeam;
+		}
 		if(CurrentCaptureTime <= 0)
 		{
 			CurrentTeam = ETeam::ET_NoTeam;
