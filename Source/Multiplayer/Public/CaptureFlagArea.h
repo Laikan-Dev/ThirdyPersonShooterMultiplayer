@@ -48,9 +48,9 @@ protected:
 	bool bContesting;
 	UPROPERTY(EditAnywhere, BlueprintReadWrite)
 	ETeam CurrentTeam;
-	UPROPERTY()
+	UPROPERTY(VisibleAnywhere)
 	TArray<AMultiplayerCharacter*> RedTeamPlayersArray;
-	UPROPERTY()
+	UPROPERTY(VisibleAnywhere)
 	TArray<AMultiplayerCharacter*> BlueTeamPlayersArray;
 
 	UFUNCTION()

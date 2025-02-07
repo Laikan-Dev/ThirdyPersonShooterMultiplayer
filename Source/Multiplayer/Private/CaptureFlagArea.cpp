@@ -16,6 +16,7 @@ ACaptureFlagArea::ACaptureFlagArea()
 	//InitialStats
 	MaxCaptureTime = 100;
 	CurrentCaptureTime = 0;
+	CurrentTeam = ETeam::ET_NoTeam;
 
 	bReplicates = true;
 	TriggerCollision = CreateDefaultSubobject<USphereComponent>(TEXT("RootComponent"));
@@ -145,7 +146,7 @@ void ACaptureFlagArea::Tick(float DeltaTime)
 	Super::Tick(DeltaTime);
 	if (!bCaptured)
 	{
-		if (bCapturing)
+		if (bCapturing && CurrentTeam != ETeam::ET_NoTeam)
 		{
 			float Capature = CurrentCaptureTime + 0.1;
 			SetCurrentCaptureTime(Capature);
@@ -175,7 +176,7 @@ void ACaptureFlagArea::OnOverlapCollision(UPrimitiveComponent* OverlappedCompone
 	
 	if (Player != nullptr)
 	{
-		if (Player->CurrentTeam == CurrentTeam || CurrentTeam == ETeam::ET_NoTeam)
+		if (Player->CurrentTeam == CurrentTeam || CurrentTeam == ETeam::ET_NoTeam || bCaptured == false)
 		{
 			if (Player->CurrentTeam == ETeam::ET_RedTeam)
 			{
@@ -228,22 +229,39 @@ void ACaptureFlagArea::OnEndOverlapCollision(UPrimitiveComponent* OverlappedComp
 	{
 		if (Player->CurrentTeam == ETeam::ET_RedTeam)
 		{
-			RedTeamPlayersArray.Remove(0);
+			RedTeamPlayersArray.Remove(Player);
+			if (RedTeamPlayersArray.Num() <= 0)
+			{
+				if (BlueTeamPlayersArray.Num() > 0)
+				{
+					CurrentTeam = ETeam::ET_BlueTeam;
+					bCapturing = true;
+					bContesting = false;
+				}
+				else
+				{
+					bCapturing = false;
+					CurrentTeam = ETeam::ET_NoTeam;
+				}
+			}
 		}
-		else if (Player->CurrentTeam == ETeam::ET_BlueTeam)
+		if (Player->CurrentTeam == ETeam::ET_BlueTeam)
 		{
-			BlueTeamPlayersArray.Remove(0);
-		}
-
-		
-		if (RedTeamPlayersArray.Num() && BlueTeamPlayersArray.Num() <= 0)
-		{
-			bCapturing = false;
-			CurrentTeam = ETeam::ET_NoTeam;
-		}
-		if(CurrentCaptureTime <= 0)
-		{
-			CurrentTeam = ETeam::ET_NoTeam;
+			BlueTeamPlayersArray.Remove(Player);
+			if (BlueTeamPlayersArray.Num() <= 0)
+			{
+				if (RedTeamPlayersArray.Num() > 0)
+				{
+					CurrentTeam = ETeam::ET_RedTeam;
+					bCapturing = true;
+					bContesting = false;
+				}
+				else
+				{
+					bCapturing = false;
+					CurrentTeam = ETeam::ET_NoTeam;
+				}
+			}
 		}
 	}
 }
