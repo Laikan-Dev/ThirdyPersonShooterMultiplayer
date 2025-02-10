@@ -17,6 +17,7 @@
 #include "Blueprint/UserWidget.h"
 #include "Blueprint/WidgetBlueprintLibrary.h"
 #include "BaseWeapon.h"
+#include "CaptureFlagArea.h"
 
 
 DEFINE_LOG_CATEGORY(LogTemplateCharacter);
@@ -75,10 +76,8 @@ AMultiplayerCharacter::AMultiplayerCharacter()
 	//Create a Weapon Socket
 	WeaponSocket = CreateDefaultSubobject<UStaticMeshComponent>(TEXT("HandSocket"));
 	WeaponSocket->SetupAttachment(GetMesh(), TEXT("hand_rSocket"));
+	WeaponSocket->SetCollisionEnabled(ECollisionEnabled::NoCollision);
 	WeaponSocket->SetIsReplicated(true);
-	
-
-
 	// Note: The skeletal mesh and anim blueprint references on the Mesh component (inherited from Character) 
 	// are set in the derived blueprint asset named ThirdPersonCharacter (to avoid direct content references in C++)
 }
@@ -97,8 +96,8 @@ void AMultiplayerCharacter::OnRep_CurrentHealth()
 
 void AMultiplayerCharacter::OnDeathUpdate()
 {
-	
 		GetMesh()->SetSimulatePhysics(true);
+		GetCapsuleComponent()->SetCollisionResponseToChannel(ECollisionChannel::ECC_Vehicle, ECollisionResponse::ECR_Ignore);
 		GetMesh()->SetCollisionProfileName(TEXT("Ragdoll"));
 		MulticastOnDeath();
 
@@ -139,6 +138,9 @@ void AMultiplayerCharacter::OnHealthUpdate()
 {
 	if (CurrentHealth <= 0)
 	{
+		FString deathMessage = FString::Printf(TEXT("You have been killed"));
+		GEngine->AddOnScreenDebugMessage(-1, 15.f, FColor::Red, deathMessage);
+
 		bIsDead = true;
 		OnDeathUpdate();
 	}
@@ -146,12 +148,6 @@ void AMultiplayerCharacter::OnHealthUpdate()
 	{
 		FString healthMessage = FString::Printf(TEXT("You now have %f Health remaining"), CurrentHealth);
 		GEngine->AddOnScreenDebugMessage(-1, 15.f, FColor::Blue, healthMessage);
-
-		if (CurrentHealth <= 0)
-		{
-			FString deathMessage = FString::Printf(TEXT("You have been killed"));
-			GEngine->AddOnScreenDebugMessage(-1, 15.f, FColor::Red, deathMessage);
-		}
 	}
 	if (GetLocalRole() == ROLE_Authority)
 	{
@@ -189,11 +185,12 @@ void AMultiplayerCharacter::SetCurrentWeapon_Implementation(FWeaponInformation C
 {
 	WeaponSocket->SetStaticMesh(CurrentWeapon.Mesh);
 	CurrentWeaponClass = CurrentWeapon.WeaponClass;
+	FireRate = CurrentWeapon.FireRate;
 }
 
 void AMultiplayerCharacter::StartFire()
 {
-	if (CurrentWeaponClass)
+	if (bIsAiming)
 	{
 		if (!bIsFiringWeapon)
 		{
@@ -203,7 +200,6 @@ void AMultiplayerCharacter::StartFire()
 			HandleFire();
 		}
 	}
-	
 }
 
 void AMultiplayerCharacter::StopFire()
@@ -249,7 +245,7 @@ void AMultiplayerCharacter::HandleFire_Implementation()
 	
 	FVector SpawnOnWeapon = WeaponSocket->GetSocketLocation(TEXT("FireSocket"));
 	
-	AMPProjectile* spawnProjectile = GetWorld()->SpawnActor<AMPProjectile>(SpawnOnWeapon, spawnRotation, spawnParameters);
+	AMPProjectile* spawnProjectile = GetWorld()->SpawnActor<AMPProjectile>(spawnLocation, spawnRotation, spawnParameters);
 
 }
 
@@ -353,9 +349,6 @@ void AMultiplayerCharacter::StartAiming()
 			ServerSetAiming(true);
 		}
 	}
-	
-
-	
 }
 
 void AMultiplayerCharacter::StopAiming()

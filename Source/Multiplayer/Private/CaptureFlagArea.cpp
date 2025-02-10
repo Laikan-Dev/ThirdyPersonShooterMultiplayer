@@ -20,6 +20,7 @@ ACaptureFlagArea::ACaptureFlagArea()
 
 	bReplicates = true;
 	TriggerCollision = CreateDefaultSubobject<USphereComponent>(TEXT("RootComponent"));
+	TriggerCollision->SetCollisionObjectType(ECollisionChannel::ECC_Vehicle);
 	TriggerCollision->OnComponentBeginOverlap.AddDynamic(this, &ACaptureFlagArea::OnOverlapCollision);
 	TriggerCollision->OnComponentEndOverlap.AddDynamic(this, &ACaptureFlagArea::OnEndOverlapCollision);
 	RootComponent = TriggerCollision;
@@ -160,12 +161,12 @@ bool ACaptureFlagArea::CanIncreseCapture(AMultiplayerCharacter* CurrentPlayer, E
 {
 	if (RedTeamPlayersArray.Num() > 0 && !bContesting)
 	{
-		CurrentTeam = PlayerTeam;
+		CurrentTeam = ETeam::ET_RedTeam;
 		return true;
 	}
 	if (BlueTeamPlayersArray.Num() > 0 && !bContesting)
 	{
-		CurrentTeam = PlayerTeam;
+		CurrentTeam = ETeam::ET_BlueTeam;
 		return true;
 	}
 	if (CurrentTeam == ETeam::ET_NoTeam)

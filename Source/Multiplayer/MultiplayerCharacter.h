@@ -85,7 +85,7 @@ public:
 
 	UPROPERTY(ReplicatedUsing = OnRep_PlayerTeam, BlueprintReadWrite)
 	ETeam CurrentTeam = ETeam::ET_NoTeam;
-	UPROPERTY(ReplicatedUsing = OnRep_CurrentWeapon)
+	UPROPERTY(VisibleAnywhere, ReplicatedUsing = OnRep_CurrentWeapon)
 	TSubclassOf<class ABaseWeapon> CurrentWeaponClass;
 protected:
 //ReplicatedProperties
