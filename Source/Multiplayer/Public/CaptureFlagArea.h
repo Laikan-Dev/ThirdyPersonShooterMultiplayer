@@ -23,36 +23,41 @@ protected:
 	virtual void BeginPlay() override;
 
 public:
-
+	//Components
 	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = "Components")
 	class USphereComponent* TriggerCollision;
-
 	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = "Components")
 	class UStaticMeshComponent* Flag;
-
 	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = "Components")
 	class UParticleSystem* VFX;
 
 protected:
+	//TeamColor
 	UPROPERTY(EditDefaultsOnly)
 	UMaterial* BlueTeamColor;
 	UPROPERTY(EditDefaultsOnly)
 	UMaterial* RedTeamColor;
+
+	//Timer
 	UPROPERTY(EditDefaultsOnly, Category="CaptureSettings")
 	float MaxCaptureTime;
 	UPROPERTY(ReplicatedUsing = OnRep_CurrentCaptureTime)
 	float CurrentCaptureTime;
+
+	//CheckBools
 	UPROPERTY(EditDefaultsOnly)
 	bool bCapturing;
 	bool bCaptured;
 	bool bContesting;
+
+	//TeamConfig
 	UPROPERTY(EditAnywhere, BlueprintReadWrite)
 	ETeam CurrentTeam;
 	UPROPERTY(VisibleAnywhere)
 	TArray<AMultiplayerCharacter*> RedTeamPlayersArray;
 	UPROPERTY(VisibleAnywhere)
 	TArray<AMultiplayerCharacter*> BlueTeamPlayersArray;
-
+	//ReplicateFunctions
 	UFUNCTION()
 	void OnRep_CurrentCaptureTime();
 	void GetLifetimeReplicatedProps(TArray<FLifetimeProperty>& OutLifetimeProps) const override;
@@ -68,21 +73,32 @@ public:
 	UFUNCTION(BlueprintPure, Category = "CaptureSettings")
 	FORCEINLINE float GetCurrentCaptureTime() const { return CurrentCaptureTime; }
 
+	//Set Capture Time
 	UFUNCTION(Server, Reliable, Category = "CaptureSettings")
 	void SetCurrentCaptureTime(float CaptureTimeValue);
 
+	//SetScore to GameState
 	UFUNCTION(BlueprintCallable, BlueprintNativeEvent)
 	void AddTeamScore();
-	
 
+	//Contest The Flag
+	UFUNCTION()
+	void ContestingFlagArea();
+
+	//CheckFunction
+	UFUNCTION(BlueprintPure)
+	bool CanIncreseCapture(AMultiplayerCharacter* CurrentPlayer, ETeam PlayerTeam);
+	UFUNCTION()
+	void AddPlayerToTeamArray(AMultiplayerCharacter* CurrentPlayer, ETeam PlayerTeam);
+	UFUNCTION()
+	void RemovePlayerToTeamArray(AMultiplayerCharacter* CurrentPlayer, ETeam PlayerTeam);
+	
 	// Called every frame
 	virtual void Tick(float DeltaTime) override;
 
+	//Collision Functions
 	UFUNCTION()
 	void OnOverlapCollision(UPrimitiveComponent* OverlappedComponent, AActor* OtherActor, UPrimitiveComponent* OtherComp, int32 OtherBodyIndex, bool bFromSweep, const FHitResult& SweepResult);
 	UFUNCTION()
 	void OnEndOverlapCollision(UPrimitiveComponent* OverlappedComponent, AActor* OtherActor, UPrimitiveComponent* OtherComp, int32 OtherBodyIndex);
-
-
-
 };

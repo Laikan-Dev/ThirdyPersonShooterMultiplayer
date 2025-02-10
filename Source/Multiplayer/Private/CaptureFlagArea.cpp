@@ -140,21 +140,125 @@ void ACaptureFlagArea::AddTeamScore_Implementation()
 	}
 }
 
+void ACaptureFlagArea::ContestingFlagArea()
+{
+	ACaptureFlagGameState* GameState = Cast<ACaptureFlagGameState>(UGameplayStatics::GetGameState(GetWorld()));
+	if (GameState)
+	{
+		if (bContesting)
+		{
+			GameState->bContesting = true;
+		}
+		else
+		{
+			GameState->bContesting = false;
+		}
+	}
+}
+
+bool ACaptureFlagArea::CanIncreseCapture(AMultiplayerCharacter* CurrentPlayer, ETeam PlayerTeam)
+{
+	if (RedTeamPlayersArray.Num() > 0 && !bContesting)
+	{
+		CurrentTeam = PlayerTeam;
+		return true;
+	}
+	if (BlueTeamPlayersArray.Num() > 0 && !bContesting)
+	{
+		CurrentTeam = PlayerTeam;
+		return true;
+	}
+	if (CurrentTeam == ETeam::ET_NoTeam)
+	{
+		return false;
+	}
+	return false;
+}
+
+void ACaptureFlagArea::AddPlayerToTeamArray(AMultiplayerCharacter* CurrentPlayer, ETeam PlayerTeam)
+{
+	if (CurrentPlayer)
+	{
+		switch (PlayerTeam)
+		{
+		case ETeam::ET_RedTeam:
+			{
+				RedTeamPlayersArray.Add(CurrentPlayer);
+				if (BlueTeamPlayersArray.Num() > 0)
+				{
+					bContesting = true;
+					ContestingFlagArea();
+				}
+			
+			}
+			break;
+		case ETeam::ET_BlueTeam:
+			{
+				BlueTeamPlayersArray.Add(CurrentPlayer);
+				if (RedTeamPlayersArray.Num() > 0)
+				{
+					bContesting = true;
+					ContestingFlagArea();
+				}
+			}
+			break;
+		}
+	}
+}
+
+void ACaptureFlagArea::RemovePlayerToTeamArray(AMultiplayerCharacter* CurrentPlayer, ETeam PlayerTeam)
+{
+	if (CurrentPlayer)
+	{
+		switch (PlayerTeam)
+		{
+		case ETeam::ET_RedTeam:
+		{
+			RedTeamPlayersArray.Remove(CurrentPlayer);
+
+			if (RedTeamPlayersArray.Num() <= 0 && CurrentTeam == ETeam::ET_RedTeam)
+			{
+				CurrentTeam = ETeam::ET_NoTeam;
+			}
+			if (RedTeamPlayersArray.Num() <= 0)
+			{
+				bContesting = false;
+				ContestingFlagArea();
+			}
+		}
+		break;
+		case ETeam::ET_BlueTeam:
+		{
+			BlueTeamPlayersArray.Remove(CurrentPlayer);
+			if (BlueTeamPlayersArray.Num() <= 0 && CurrentTeam == ETeam::ET_BlueTeam)
+			{
+				CurrentTeam = ETeam::ET_NoTeam;
+			}
+			if (BlueTeamPlayersArray.Num() <= 0)
+			{
+				bContesting = false;
+				ContestingFlagArea();
+			}
+		}
+		break;
+		}
+	}
+}
+
 // Called every frame
 void ACaptureFlagArea::Tick(float DeltaTime)
 {
 	Super::Tick(DeltaTime);
 	if (!bCaptured)
 	{
-		if (bCapturing && CurrentTeam != ETeam::ET_NoTeam)
+		if (bCapturing)
 		{
-			float Capature = CurrentCaptureTime + 0.1;
-			SetCurrentCaptureTime(Capature);
+			float Capture = CurrentCaptureTime + 0.1;
+			SetCurrentCaptureTime(Capture);
 
 		}
 		else
-		{
-			
+		{	
 			float Capture = CurrentCaptureTime - 0.1;
 			SetCurrentCaptureTime(Capture);
 
@@ -165,59 +269,21 @@ void ACaptureFlagArea::Tick(float DeltaTime)
 			GEngine->AddOnScreenDebugMessage(-1, 1.f, FColor::Blue, ContestingMessage);
 		}
 	}
-
 }
 
 void ACaptureFlagArea::OnOverlapCollision(UPrimitiveComponent* OverlappedComponent, AActor* OtherActor, UPrimitiveComponent* OtherComp, int32 OtherBodyIndex, bool bFromSweep, const FHitResult& SweepResult)
 {
-
 	AMultiplayerCharacter* Player = Cast<AMultiplayerCharacter>(OtherActor);
-	ACaptureFlagGameState* GameState = Cast<ACaptureFlagGameState>(UGameplayStatics::GetGameState(GetWorld()));
-	
 	if (Player != nullptr)
 	{
-		if (Player->CurrentTeam == CurrentTeam || CurrentTeam == ETeam::ET_NoTeam || bCaptured == false)
+		AddPlayerToTeamArray(Player, Player->CurrentTeam);
+		if (CanIncreseCapture(Player, Player->CurrentTeam))
 		{
-			if (Player->CurrentTeam == ETeam::ET_RedTeam)
-			{
-				RedTeamPlayersArray.Add(Player);
-				if (BlueTeamPlayersArray.Num() <= 0)
-				{
-					CurrentTeam = Player->CurrentTeam;
-					bCapturing = true;
-					GameState->bContesting = false;
-					bContesting = false;
-				}
-				else
-				{
-					if (GameState)
-					{
-						GameState->bContesting = true;
-						bContesting = true;
-						bCapturing = false;
-					}
-				}
-			}
-			if(Player->CurrentTeam == ETeam::ET_BlueTeam)
-			{
-				BlueTeamPlayersArray.Add(Player);
-				if (RedTeamPlayersArray.Num() <= 0)
-				{
-					CurrentTeam = Player->CurrentTeam;
-					bCapturing = true;
-					GameState->bContesting = false;
-					bContesting = false;
-				}
-				else
-				{
-					if (GameState)
-					{
-						GameState->bContesting = true;
-						bContesting = true;
-						bCapturing = false;
-					}
-				}
-			}
+			bCapturing = true;
+		}
+		else
+		{
+			bCapturing = false;
 		}
 	}
 }
@@ -227,41 +293,14 @@ void ACaptureFlagArea::OnEndOverlapCollision(UPrimitiveComponent* OverlappedComp
 	AMultiplayerCharacter* Player = Cast<AMultiplayerCharacter>(OtherActor);
 	if (Player != nullptr)
 	{
-		if (Player->CurrentTeam == ETeam::ET_RedTeam)
+		RemovePlayerToTeamArray(Player, Player->CurrentTeam);
+		if (CanIncreseCapture(Player, Player->CurrentTeam))
 		{
-			RedTeamPlayersArray.Remove(Player);
-			if (RedTeamPlayersArray.Num() <= 0)
-			{
-				if (BlueTeamPlayersArray.Num() > 0)
-				{
-					CurrentTeam = ETeam::ET_BlueTeam;
-					bCapturing = true;
-					bContesting = false;
-				}
-				else
-				{
-					bCapturing = false;
-					CurrentTeam = ETeam::ET_NoTeam;
-				}
-			}
+			bCapturing = true;
 		}
-		if (Player->CurrentTeam == ETeam::ET_BlueTeam)
+		else
 		{
-			BlueTeamPlayersArray.Remove(Player);
-			if (BlueTeamPlayersArray.Num() <= 0)
-			{
-				if (RedTeamPlayersArray.Num() > 0)
-				{
-					CurrentTeam = ETeam::ET_RedTeam;
-					bCapturing = true;
-					bContesting = false;
-				}
-				else
-				{
-					bCapturing = false;
-					CurrentTeam = ETeam::ET_NoTeam;
-				}
-			}
+			bCapturing = false;
 		}
 	}
 }
