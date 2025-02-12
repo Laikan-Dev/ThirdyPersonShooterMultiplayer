@@ -40,6 +40,9 @@ class AMultiplayerCharacter : public ACharacter
 	/** Move Input Action */
 	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = Input, meta = (AllowPrivateAccess = "true"))
 	UInputAction* MoveAction;
+	//** Running Input Action */
+	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = Input, meta = (AllowPrivateAccess = "true"))
+	UInputAction* RunningAction;
 	/** Look Input Action */
 	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = Input, meta = (AllowPrivateAccess = "true"))
 	UInputAction* LookAction;
@@ -56,19 +59,33 @@ public:
 	AMultiplayerCharacter();
 
 protected:
+	//Commands
 	/** Called for movement input */
 	void Move(const FInputActionValue& Value);
 	/** Called for looking input */
 	void Look(const FInputActionValue& Value);
+
 	//Aiming
 	UFUNCTION()
 	void StartAiming();
 	UFUNCTION()
 	void StopAiming();
+
+	//Select Team
 	UFUNCTION(BlueprintCallable)
 	void ChoseRed();
 	UFUNCTION(BlueprintCallable)
 	void ChoseBlue();
+
+	//Movement
+	UFUNCTION()
+	void Running();
+	UFUNCTION()
+	void StopRunning();
+	UFUNCTION()
+	void Crounch();
+	UFUNCTION()
+	void StopCrounch();
 
 protected:
 	// APawn interface
@@ -89,19 +106,31 @@ public:
 	TSubclassOf<class ABaseWeapon> CurrentWeaponClass;
 protected:
 //ReplicatedProperties
+	//Health
 	UPROPERTY(EditDefaultsOnly, Category = "Health")
 	float MaxHealth;
 	UPROPERTY(ReplicatedUsing = OnRep_CurrentHealth)
 	float CurrentHealth;
+
+	//Death
 	UPROPERTY(Replicated)
 	bool bIsDead;
+
+	//Movement
+	UPROPERTY()
+	bool bIsCrounch;
 	UPROPERTY(ReplicatedUsing = OnRep_Aiming, BlueprintReadOnly)
 	bool bIsAiming;
+	//Rep Functions for Aiming
 	UFUNCTION()
 	void OnRep_Aiming();
 	UFUNCTION(Server, Reliable)
 	void ServerSetAiming(bool bNewAiming);
 	void ServerSetAiming_Implementation(bool bNewAiming);
+
+	UFUNCTION(Server, Reliable)
+	void ServerSetRuning();
+	void ServerSetRuning_Implementation();
 
 //FunctionRep for Health
 	UFUNCTION()
@@ -171,18 +200,33 @@ protected:
 	FTimerHandle FiringTimer;
 
 public:
+	//TeamColor
 	UPROPERTY(EditDefaultsOnly)
 	UMaterial* Red;
 	UPROPERTY(EditDefaultsOnly)
 	UMaterial* Blue;
+
 	//Widgets
 	UPROPERTY(EditDefaultsOnly)
 	TSubclassOf<UUserWidget> SelectTeamWidget;
+
 	//Animation
 	UPROPERTY(EditDefaultsOnly, Replicated, Category = "Montages")
 	UAnimMontage* AimingMontage;
 	UPROPERTY(EditDefaultsOnly, Category = "Montages")
 	UAnimMontage* ShootingMontage;
+
+	//Movement Properties
+	UPROPERTY(EditDefaultsOnly, BlueprintReadWrite, Category = "Movement")
+	float NormalVelocity = 500.f;
+	UPROPERTY(EditDefaultsOnly, BlueprintReadWrite, Category = "Movement")
+	float AimingVelocity = 250.f;
+	UPROPERTY(EditDefaultsOnly, BlueprintReadWrite, Category = "Movement")
+	float RunningVelocity = 700.f;
+	UPROPERTY(EditDefaultsOnly, BlueprintReadWrite, Category = "Movement")
+	float CrounchVelocity = 200.f;
+	
+
 };
 
 

@@ -27,6 +27,7 @@ DEFINE_LOG_CATEGORY(LogTemplateCharacter);
 
 AMultiplayerCharacter::AMultiplayerCharacter()
 {
+	//Replicate
 	bReplicates = true;
 	SetReplicateMovement(true);
 	
@@ -57,7 +58,7 @@ AMultiplayerCharacter::AMultiplayerCharacter()
 	// instead of recompiling to adjust them
 	GetCharacterMovement()->JumpZVelocity = 700.f;
 	GetCharacterMovement()->AirControl = 0.35f;
-	GetCharacterMovement()->MaxWalkSpeed = 500.f;
+	GetCharacterMovement()->MaxWalkSpeed = NormalVelocity;
 	GetCharacterMovement()->MinAnalogWalkSpeed = 20.f;
 	GetCharacterMovement()->BrakingDecelerationWalking = 2000.f;
 	GetCharacterMovement()->BrakingDecelerationFalling = 1500.0f;
@@ -67,6 +68,7 @@ AMultiplayerCharacter::AMultiplayerCharacter()
 	CameraBoom->SetupAttachment(RootComponent);
 	CameraBoom->TargetArmLength = 400.0f; // The camera follows at this distance behind the character	
 	CameraBoom->bUsePawnControlRotation = true; // Rotate the arm based on the controller
+	CameraBoom->SocketOffset.Set(75.0, 68.0, 10.0);
 
 	// Create a follow camera
 	FollowCamera = CreateDefaultSubobject<UCameraComponent>(TEXT("FollowCamera"));
@@ -272,6 +274,9 @@ void AMultiplayerCharacter::SetupPlayerInputComponent(UInputComponent* PlayerInp
 
 		// Moving
 		EnhancedInputComponent->BindAction(MoveAction, ETriggerEvent::Triggered, this, &AMultiplayerCharacter::Move);
+		//Running
+		EnhancedInputComponent->BindAction(RunningAction, ETriggerEvent::Triggered, this, &AMultiplayerCharacter::Running);
+		EnhancedInputComponent->BindAction(RunningAction, ETriggerEvent::Completed, this, &AMultiplayerCharacter::StopRunning);
 
 		// Looking
 		EnhancedInputComponent->BindAction(LookAction, ETriggerEvent::Triggered, this, &AMultiplayerCharacter::Look);
@@ -327,10 +332,55 @@ void AMultiplayerCharacter::Look(const FInputActionValue& Value)
 void AMultiplayerCharacter::ServerSetAiming_Implementation(bool bNewAiming)
 {
 	bIsAiming = bNewAiming;
+
+	if (bIsAiming)
+	{
+		CameraBoom->SocketOffset.Set(170, 73.0, 40.0);
+		GetCharacterMovement()->MaxWalkSpeed = AimingVelocity;
+		GetCharacterMovement()->bOrientRotationToMovement = false;
+		GetCharacterMovement()->bUseControllerDesiredRotation = true;
+
+	}
+	else
+	{
+		CameraBoom->SocketOffset.Set(75.0, 68.0, 10.0);
+		GetCharacterMovement()->MaxWalkSpeed = NormalVelocity;
+		GetCharacterMovement()->bOrientRotationToMovement = true;
+		GetCharacterMovement()->bUseControllerDesiredRotation = false;
+	}
+}
+
+void AMultiplayerCharacter::ServerSetRuning_Implementation()
+{
+	if (GetCharacterMovement()->MaxWalkSpeed == RunningVelocity)
+	{
+		GetCharacterMovement()->MaxWalkSpeed = RunningVelocity;
+		CameraBoom->SocketOffset.Set(30.0, 68.0, 10.0);
+	}
+	else
+	{
+		GetCharacterMovement()->MaxWalkSpeed = NormalVelocity;
+		CameraBoom->SocketOffset.Set(75.0, 68.0, 10.0);
+	}
 }
 
 void AMultiplayerCharacter::OnRep_Aiming()
 {
+	if (bIsAiming)
+	{
+		CameraBoom->SocketOffset.Set(170, 73.0, 40.0);
+		GetCharacterMovement()->MaxWalkSpeed = AimingVelocity;
+		GetCharacterMovement()->bOrientRotationToMovement = false;
+		GetCharacterMovement()->bUseControllerDesiredRotation = true;
+
+	}
+	else
+	{
+		CameraBoom->SocketOffset.Set(75.0, 68.0, 10.0);
+		GetCharacterMovement()->MaxWalkSpeed = NormalVelocity;
+		GetCharacterMovement()->bOrientRotationToMovement = true;
+		GetCharacterMovement()->bUseControllerDesiredRotation = false;
+	}
 }
 
 void AMultiplayerCharacter::StartAiming()
@@ -399,4 +449,36 @@ void AMultiplayerCharacter::ChoseBlue()
 
 
 
+}
+
+void AMultiplayerCharacter::Running()
+{
+	if (HasAuthority())
+	{
+		GetCharacterMovement()->MaxWalkSpeed = RunningVelocity;
+		CameraBoom->SocketOffset.Set(30.0, 68.0, 10.0);
+	}
+	ServerSetRuning();
+}
+
+void AMultiplayerCharacter::StopRunning()
+{
+	if (HasAuthority())
+	{
+		GetCharacterMovement()->MaxWalkSpeed = NormalVelocity;
+		CameraBoom->SocketOffset.Set(75.0, 68.0, 10.0);
+	}
+	ServerSetRuning();
+}
+
+void AMultiplayerCharacter::Crounch()
+{
+	GetCharacterMovement()->MaxWalkSpeed = CrounchVelocity;
+	CameraBoom->SocketOffset.Set(100.f, 68.0, 10.0);
+}
+
+void AMultiplayerCharacter::StopCrounch()
+{
+	GetCharacterMovement()->MaxWalkSpeed = NormalVelocity;
+	CameraBoom->SocketOffset.Set(75.0, 68.0, 10.0);
 }
