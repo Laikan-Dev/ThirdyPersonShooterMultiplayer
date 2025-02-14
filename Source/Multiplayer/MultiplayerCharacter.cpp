@@ -277,6 +277,9 @@ void AMultiplayerCharacter::SetupPlayerInputComponent(UInputComponent* PlayerInp
 		//Running
 		EnhancedInputComponent->BindAction(RunningAction, ETriggerEvent::Triggered, this, &AMultiplayerCharacter::Running);
 		EnhancedInputComponent->BindAction(RunningAction, ETriggerEvent::Completed, this, &AMultiplayerCharacter::StopRunning);
+		//Crounch
+		EnhancedInputComponent->BindAction(CrounchAction, ETriggerEvent::Triggered, this, &AMultiplayerCharacter::StartCrounch);
+		EnhancedInputComponent->BindAction(CrounchAction, ETriggerEvent::Completed, this, &AMultiplayerCharacter::StopCrounch);
 
 		// Looking
 		EnhancedInputComponent->BindAction(LookAction, ETriggerEvent::Triggered, this, &AMultiplayerCharacter::Look);
@@ -350,12 +353,26 @@ void AMultiplayerCharacter::ServerSetAiming_Implementation(bool bNewAiming)
 	}
 }
 
-void AMultiplayerCharacter::ServerSetRuning_Implementation()
+void AMultiplayerCharacter::ServerSetRuning_Implementation(bool bIsRunning)
 {
-	if (GetCharacterMovement()->MaxWalkSpeed == RunningVelocity)
+	if (bIsRunning)
 	{
 		GetCharacterMovement()->MaxWalkSpeed = RunningVelocity;
 		CameraBoom->SocketOffset.Set(30.0, 68.0, 10.0);
+	}
+	else
+	{
+		GetCharacterMovement()->MaxWalkSpeed = NormalVelocity;
+		CameraBoom->SocketOffset.Set(75.0, 68.0, 10.0);
+	}
+}
+
+void AMultiplayerCharacter::ServerSetCrounch_Implementation(bool bIsCrouching)
+{
+	if (bIsCrouching)
+	{
+		GetCharacterMovement()->MaxWalkSpeed = CrounchVelocity;
+		CameraBoom->SocketOffset.Set(100.f, 68.0, 10.0);
 	}
 	else
 	{
@@ -453,32 +470,31 @@ void AMultiplayerCharacter::ChoseBlue()
 
 void AMultiplayerCharacter::Running()
 {
-	if (HasAuthority())
-	{
+	
 		GetCharacterMovement()->MaxWalkSpeed = RunningVelocity;
 		CameraBoom->SocketOffset.Set(30.0, 68.0, 10.0);
-	}
-	ServerSetRuning();
+		ServerSetRuning(true);
 }
 
 void AMultiplayerCharacter::StopRunning()
 {
-	if (HasAuthority())
-	{
+	
 		GetCharacterMovement()->MaxWalkSpeed = NormalVelocity;
 		CameraBoom->SocketOffset.Set(75.0, 68.0, 10.0);
-	}
-	ServerSetRuning();
+		ServerSetRuning(false);
 }
 
-void AMultiplayerCharacter::Crounch()
+void AMultiplayerCharacter::StartCrounch()
 {
 	GetCharacterMovement()->MaxWalkSpeed = CrounchVelocity;
 	CameraBoom->SocketOffset.Set(100.f, 68.0, 10.0);
+	ServerSetCrounch(true);
 }
 
 void AMultiplayerCharacter::StopCrounch()
 {
 	GetCharacterMovement()->MaxWalkSpeed = NormalVelocity;
 	CameraBoom->SocketOffset.Set(75.0, 68.0, 10.0);
+	ServerSetCrounch(false);
+
 }

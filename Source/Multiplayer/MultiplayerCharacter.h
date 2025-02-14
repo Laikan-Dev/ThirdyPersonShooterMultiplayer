@@ -43,6 +43,9 @@ class AMultiplayerCharacter : public ACharacter
 	//** Running Input Action */
 	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = Input, meta = (AllowPrivateAccess = "true"))
 	UInputAction* RunningAction;
+	//** Crounch Input Action */
+	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = Input, meta = (AllowPrivateAccess = "true"))
+	UInputAction* CrounchAction;
 	/** Look Input Action */
 	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = Input, meta = (AllowPrivateAccess = "true"))
 	UInputAction* LookAction;
@@ -83,7 +86,7 @@ protected:
 	UFUNCTION()
 	void StopRunning();
 	UFUNCTION()
-	void Crounch();
+	void StartCrounch();
 	UFUNCTION()
 	void StopCrounch();
 
@@ -129,8 +132,11 @@ protected:
 	void ServerSetAiming_Implementation(bool bNewAiming);
 
 	UFUNCTION(Server, Reliable)
-	void ServerSetRuning();
-	void ServerSetRuning_Implementation();
+	void ServerSetRuning(bool bIsRunning);
+	void ServerSetRuning_Implementation(bool bIsRunning);
+	UFUNCTION(Server, Reliable)
+	void ServerSetCrounch(bool bIsCrouching);
+	void ServerSetCrounch_Implementation(bool bIsRunning);
 
 //FunctionRep for Health
 	UFUNCTION()

@@ -33,6 +33,8 @@ public:
 	int32 RedTeamScore;
 	UPROPERTY()
 	bool bContesting;
+	UPROPERTY(BlueprintReadWrite)
+	float CaptureTimeGS;
 	
 	UFUNCTION()
 	TArray<AMultiplayerPlayerController*> GetAllPlayerController();

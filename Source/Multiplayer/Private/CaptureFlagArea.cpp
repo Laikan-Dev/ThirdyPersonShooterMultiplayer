@@ -101,6 +101,11 @@ void ACaptureFlagArea::SetCurrentCaptureTime_Implementation(float CaptureTimeVal
 {
 	CurrentCaptureTime = FMath::Clamp(CaptureTimeValue, 0.f, MaxCaptureTime);
 	OnCaptureTimeUpdate();
+	ACaptureFlagGameState* GameState = Cast<ACaptureFlagGameState>(UGameplayStatics::GetGameState(GetWorld()));
+	if (GameState)
+	{
+		GameState->CaptureTimeGS = CurrentCaptureTime;
+	}
 
 	if (GEngine)
 	{
