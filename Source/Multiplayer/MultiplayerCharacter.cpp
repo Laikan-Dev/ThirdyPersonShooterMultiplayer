@@ -338,14 +338,15 @@ void AMultiplayerCharacter::ServerSetAiming_Implementation(bool bNewAiming)
 
 	if (bIsAiming)
 	{
+		CurrentState = EPlayerOverlayState::EPS_Rifle;
 		CameraBoom->SocketOffset.Set(170, 73.0, 40.0);
 		GetCharacterMovement()->MaxWalkSpeed = AimingVelocity;
 		GetCharacterMovement()->bOrientRotationToMovement = false;
 		GetCharacterMovement()->bUseControllerDesiredRotation = true;
-
 	}
 	else
 	{
+		CurrentState = EPlayerOverlayState::EPS_Unarmed;
 		CameraBoom->SocketOffset.Set(75.0, 68.0, 10.0);
 		GetCharacterMovement()->MaxWalkSpeed = NormalVelocity;
 		GetCharacterMovement()->bOrientRotationToMovement = true;
@@ -385,6 +386,7 @@ void AMultiplayerCharacter::OnRep_Aiming()
 {
 	if (bIsAiming)
 	{
+		CurrentState = EPlayerOverlayState::EPS_Rifle;
 		CameraBoom->SocketOffset.Set(170, 73.0, 40.0);
 		GetCharacterMovement()->MaxWalkSpeed = AimingVelocity;
 		GetCharacterMovement()->bOrientRotationToMovement = false;
@@ -393,6 +395,7 @@ void AMultiplayerCharacter::OnRep_Aiming()
 	}
 	else
 	{
+		CurrentState = EPlayerOverlayState::EPS_Unarmed;
 		CameraBoom->SocketOffset.Set(75.0, 68.0, 10.0);
 		GetCharacterMovement()->MaxWalkSpeed = NormalVelocity;
 		GetCharacterMovement()->bOrientRotationToMovement = true;

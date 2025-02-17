@@ -5,6 +5,7 @@
 #include "GameFramework/Character.h"
 #include "Logging/LogMacros.h"
 #include "MultiplayerGameMode.h"
+#include "PlayerOverlayStates.h"
 #include "MultiplayerCharacter.generated.h"
 
 class USpringArmComponent;
@@ -107,6 +108,9 @@ public:
 	ETeam CurrentTeam = ETeam::ET_NoTeam;
 	UPROPERTY(VisibleAnywhere, ReplicatedUsing = OnRep_CurrentWeapon)
 	TSubclassOf<class ABaseWeapon> CurrentWeaponClass;
+
+	UPROPERTY(EditAnywhere, BlueprintReadWrite)
+	EPlayerOverlayState CurrentState;
 protected:
 //ReplicatedProperties
 	//Health
