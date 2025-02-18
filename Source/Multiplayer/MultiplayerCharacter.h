@@ -109,7 +109,7 @@ public:
 	UPROPERTY(VisibleAnywhere, ReplicatedUsing = OnRep_CurrentWeapon)
 	TSubclassOf<class ABaseWeapon> CurrentWeaponClass;
 
-	UPROPERTY(EditAnywhere, BlueprintReadWrite)
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Replicated)
 	EPlayerOverlayState CurrentState;
 protected:
 //ReplicatedProperties

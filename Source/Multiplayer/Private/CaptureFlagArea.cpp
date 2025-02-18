@@ -9,6 +9,9 @@
 #include "CaptureFlagGameState.h"
 #include "Kismet/GameplayStatics.h"
 #include "Multiplayer/MultiplayerCharacter.h"
+#include "Blueprint/WidgetBlueprintLibrary.h"
+#include "Blueprint/UserWidget.h"
+#include "Components/WidgetComponent.h"
 
 // Sets default values
 ACaptureFlagArea::ACaptureFlagArea()
@@ -28,7 +31,10 @@ ACaptureFlagArea::ACaptureFlagArea()
 	Flag->SetupAttachment(RootComponent);
 	
 
-
+	ProgressBar = CreateDefaultSubobject<UWidgetComponent>(TEXT("WidgetComponent"));
+	ProgressBar->SetupAttachment(RootComponent);
+	ProgressBar->SetIsReplicated(true);
+	
  	// Set this actor to call Tick() every frame.  You can turn this off to improve performance if you don't need it.
 	PrimaryActorTick.bCanEverTick = true;
 
@@ -104,7 +110,7 @@ void ACaptureFlagArea::SetCurrentCaptureTime_Implementation(float CaptureTimeVal
 	ACaptureFlagGameState* GameState = Cast<ACaptureFlagGameState>(UGameplayStatics::GetGameState(GetWorld()));
 	if (GameState)
 	{
-		GameState->CaptureTimeGS = CurrentCaptureTime;
+		AddProgressToWidget(CaptureTimeValue);
 	}
 
 	if (GEngine)
@@ -144,6 +150,11 @@ void ACaptureFlagArea::AddTeamScore_Implementation()
 	{
 		GameState->SetScore(CurrentTeam, 1);
 	}
+}
+
+void ACaptureFlagArea::AddProgressToWidget_Implementation(float value)
+{
+
 }
 
 void ACaptureFlagArea::ContestingFlagArea()

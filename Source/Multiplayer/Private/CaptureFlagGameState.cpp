@@ -6,6 +6,7 @@
 #include "Team.h"
 #include "MultiplayerPlayerState.h"
 #include "MultiplayerPlayerController.h"
+#include "CaptureFlagArea.h"
 
 ACaptureFlagGameState::ACaptureFlagGameState()
 {
@@ -116,4 +117,9 @@ void ACaptureFlagGameState::OnTimeFinished()
 			}
 		}
 	}
+}
+
+void ACaptureFlagGameState::UpdateBar(ACaptureFlagArea* CurrentArea, float value)
+{
+	CaptureTimeGS = value;
 }

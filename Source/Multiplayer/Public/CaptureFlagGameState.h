@@ -35,6 +35,8 @@ public:
 	bool bContesting;
 	UPROPERTY(BlueprintReadWrite)
 	float CaptureTimeGS;
+	UPROPERTY(BlueprintReadWrite)
+	float MaxCaptureTimeGS;
 	
 	UFUNCTION()
 	TArray<AMultiplayerPlayerController*> GetAllPlayerController();
@@ -51,5 +53,7 @@ public:
 	void UpdateTimer();
 	UFUNCTION()
 	void OnTimeFinished();
+	UFUNCTION(BlueprintCallable)
+	void UpdateBar(ACaptureFlagArea* CurrentArea, float value);
 
 };

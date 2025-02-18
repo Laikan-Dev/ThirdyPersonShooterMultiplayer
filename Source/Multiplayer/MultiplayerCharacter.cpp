@@ -128,12 +128,13 @@ void AMultiplayerCharacter::GetLifetimeReplicatedProps(TArray<FLifetimeProperty>
 {
 	Super::GetLifetimeReplicatedProps(OutLifetimeProps);
 
-	//Replicate Current Health
-	DOREPLIFETIME(AMultiplayerCharacter, CurrentHealth);
-	DOREPLIFETIME(AMultiplayerCharacter, CurrentTeam);
+
+	DOREPLIFETIME(AMultiplayerCharacter, CurrentHealth); 	//Replicate Current Health
+	DOREPLIFETIME(AMultiplayerCharacter, CurrentTeam);	    //Replicate Current Team
 	DOREPLIFETIME(AMultiplayerCharacter, bIsDead);
 	DOREPLIFETIME(AMultiplayerCharacter, bIsAiming);
 	DOREPLIFETIME(AMultiplayerCharacter, CurrentWeaponClass);
+	DOREPLIFETIME(AMultiplayerCharacter, CurrentState);
 }
 
 void AMultiplayerCharacter::OnHealthUpdate()

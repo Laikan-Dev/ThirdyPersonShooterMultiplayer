@@ -30,6 +30,10 @@ public:
 	class UStaticMeshComponent* Flag;
 	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = "Components")
 	class UParticleSystem* VFX;
+	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = "Components")
+	class UWidgetComponent* ProgressBar;
+	UPROPERTY(EditDefaultsOnly, BlueprintReadOnly, Category = "Components")
+	class UUserWidget* Widget;
 
 protected:
 	//TeamColor
@@ -39,7 +43,7 @@ protected:
 	UMaterial* RedTeamColor;
 
 	//Timer
-	UPROPERTY(EditDefaultsOnly, Category="CaptureSettings")
+	UPROPERTY(EditDefaultsOnly, BlueprintReadOnly, Category="CaptureSettings")
 	float MaxCaptureTime;
 	UPROPERTY(ReplicatedUsing = OnRep_CurrentCaptureTime)
 	float CurrentCaptureTime;
@@ -80,6 +84,10 @@ public:
 	//SetScore to GameState
 	UFUNCTION(BlueprintCallable, BlueprintNativeEvent)
 	void AddTeamScore();
+	UFUNCTION(BlueprintCallable, BlueprintNativeEvent)
+	void AddProgressToWidget(float value);
+
+
 
 	//Contest The Flag
 	UFUNCTION()
