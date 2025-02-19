@@ -11,6 +11,7 @@
 #include "Multiplayer/MultiplayerCharacter.h"
 #include "Blueprint/WidgetBlueprintLibrary.h"
 #include "Blueprint/UserWidget.h"
+#include "WidgetCaptureProgressBar.h"
 #include "Components/WidgetComponent.h"
 
 // Sets default values
@@ -62,6 +63,7 @@ void ACaptureFlagArea::GetLifetimeReplicatedProps(TArray<FLifetimeProperty>& Out
 
 void ACaptureFlagArea::OnCaptureTimeUpdate()
 {
+	AddProgressToWidget(CurrentCaptureTime);
 	if (CurrentCaptureTime >= MaxCaptureTime)
 	{
 		if(GEngine)
@@ -107,11 +109,7 @@ void ACaptureFlagArea::SetCurrentCaptureTime_Implementation(float CaptureTimeVal
 {
 	CurrentCaptureTime = FMath::Clamp(CaptureTimeValue, 0.f, MaxCaptureTime);
 	OnCaptureTimeUpdate();
-	ACaptureFlagGameState* GameState = Cast<ACaptureFlagGameState>(UGameplayStatics::GetGameState(GetWorld()));
-	if (GameState)
-	{
-		AddProgressToWidget(CaptureTimeValue);
-	}
+	AddProgressToWidget(CaptureTimeValue);
 
 	if (GEngine)
 	{
@@ -154,7 +152,20 @@ void ACaptureFlagArea::AddTeamScore_Implementation()
 
 void ACaptureFlagArea::AddProgressToWidget_Implementation(float value)
 {
-
+	UWidgetCaptureProgressBar* ProgressBarWidget = Cast<UWidgetCaptureProgressBar>(ProgressBar->GetUserWidgetObject());
+	
+	if (ProgressBarWidget)
+	{
+		ProgressBarWidget->UpdateBar(value, MaxCaptureTime, CurrentTeam);
+		if (CurrentCaptureTime > 0)
+		{
+			ProgressBarWidget->SetVisibility(ESlateVisibility::Visible);
+		}
+		else
+		{
+			ProgressBarWidget->SetVisibility(ESlateVisibility::Hidden);
+		}
+	}
 }
 
 void ACaptureFlagArea::ContestingFlagArea()

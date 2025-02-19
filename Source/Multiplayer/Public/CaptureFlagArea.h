@@ -84,9 +84,10 @@ public:
 	//SetScore to GameState
 	UFUNCTION(BlueprintCallable, BlueprintNativeEvent)
 	void AddTeamScore();
-	UFUNCTION(BlueprintCallable, BlueprintNativeEvent)
+	UFUNCTION(NetMulticast, Server, Reliable)
 	void AddProgressToWidget(float value);
 
+	
 
 
 	//Contest The Flag
