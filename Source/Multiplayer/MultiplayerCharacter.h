@@ -98,6 +98,12 @@ protected:
 	// To add mapping context
 	virtual void BeginPlay();
 
+	//To Check Camera
+	virtual void Tick(float DeltaTime) override;
+
+	//Camera Update
+	void UpdateCamera();
+
 public:
 	/** Returns CameraBoom subobject **/
 	FORCEINLINE class USpringArmComponent* GetCameraBoom() const { return CameraBoom; }

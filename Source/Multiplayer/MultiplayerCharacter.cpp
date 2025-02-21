@@ -91,6 +91,24 @@ void AMultiplayerCharacter::BeginPlay()
 	SelectTeam();
 }
 
+void AMultiplayerCharacter::Tick(float DeltaTime)
+{
+	Super::Tick(DeltaTime);
+	UpdateCamera();
+}
+
+void AMultiplayerCharacter::UpdateCamera()
+{
+	if (GetCharacterMovement()->Velocity.Length() > 0 && !bIsAiming)
+	{
+		GetCharacterMovement()->bUseControllerDesiredRotation = true;
+	}
+	else
+	{
+		GetCharacterMovement()->bUseControllerDesiredRotation = false;
+	}
+}
+
 void AMultiplayerCharacter::OnRep_CurrentHealth()
 {
 	OnHealthUpdate();
@@ -340,18 +358,16 @@ void AMultiplayerCharacter::ServerSetAiming_Implementation(bool bNewAiming)
 	if (bIsAiming)
 	{
 		CurrentState = EPlayerOverlayState::EPS_Rifle;
-		CameraBoom->SocketOffset.Set(170, 73.0, 40.0);
+		CameraBoom->SocketOffset.Set(250.0, 73.0, 60.0);
 		GetCharacterMovement()->MaxWalkSpeed = AimingVelocity;
-		GetCharacterMovement()->bOrientRotationToMovement = false;
-		GetCharacterMovement()->bUseControllerDesiredRotation = true;
+		
 	}
 	else
 	{
 		CurrentState = EPlayerOverlayState::EPS_Unarmed;
 		CameraBoom->SocketOffset.Set(75.0, 68.0, 10.0);
 		GetCharacterMovement()->MaxWalkSpeed = NormalVelocity;
-		GetCharacterMovement()->bOrientRotationToMovement = true;
-		GetCharacterMovement()->bUseControllerDesiredRotation = false;
+		
 	}
 }
 
@@ -388,19 +404,16 @@ void AMultiplayerCharacter::OnRep_Aiming()
 	if (bIsAiming)
 	{
 		CurrentState = EPlayerOverlayState::EPS_Rifle;
-		CameraBoom->SocketOffset.Set(170, 73.0, 40.0);
+		CameraBoom->SocketOffset.Set(250.0, 73.0, 60.0);
 		GetCharacterMovement()->MaxWalkSpeed = AimingVelocity;
-		GetCharacterMovement()->bOrientRotationToMovement = false;
-		GetCharacterMovement()->bUseControllerDesiredRotation = true;
-
+		
 	}
 	else
 	{
 		CurrentState = EPlayerOverlayState::EPS_Unarmed;
 		CameraBoom->SocketOffset.Set(75.0, 68.0, 10.0);
 		GetCharacterMovement()->MaxWalkSpeed = NormalVelocity;
-		GetCharacterMovement()->bOrientRotationToMovement = true;
-		GetCharacterMovement()->bUseControllerDesiredRotation = false;
+		
 	}
 }
 
@@ -410,10 +423,7 @@ void AMultiplayerCharacter::StartAiming()
 	{
 		if (HasAuthority())
 		{
-			if (AimingMontage)
-			{
-				bIsAiming = true;
-			}
+			bIsAiming = true;
 		}
 		else
 		{
@@ -426,10 +436,7 @@ void AMultiplayerCharacter::StopAiming()
 {
 	if (HasAuthority())
 	{
-		if (AimingMontage)
-		{
-			bIsAiming = false;
-		}
+		bIsAiming = false;
 	}
 	else
 	{
