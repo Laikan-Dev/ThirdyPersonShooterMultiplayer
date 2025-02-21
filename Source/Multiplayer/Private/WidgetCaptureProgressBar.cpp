@@ -1,9 +1,8 @@
 // Fill out your copyright notice in the Description page of Project Settings.
 
-
+#include "WidgetCaptureProgressBar.h"
 #include "Blueprint/WidgetLayoutLibrary.h"
 #include "Components/ProgressBar.h"
-#include "WidgetCaptureProgressBar.h"
 #include "Animation/WidgetAnimation.h"
 
 void UWidgetCaptureProgressBar::UpdateBar(float CurrentValue, float MaxValue, ETeam Team)
@@ -34,16 +33,6 @@ void UWidgetCaptureProgressBar::UpdateBar(float CurrentValue, float MaxValue, ET
 		}
 	}
 }
-
-void UWidgetCaptureProgressBar::Contesting(bool bIsContesting)
+void UWidgetCaptureProgressBar::Contesting_Implementation(bool bIsContesting)
 {
-	if (bIsContesting && ContestingAnimationIcon)
-	{
-		
-		UUserWidget::PlayAnimation(ContestingAnimationIcon, 0);
-	}
-	else
-	{
-		UUserWidget::StopAnimation(ContestingAnimationIcon);
-	}
 }

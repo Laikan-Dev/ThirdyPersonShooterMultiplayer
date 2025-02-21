@@ -12,6 +12,7 @@
 #include "Blueprint/WidgetBlueprintLibrary.h"
 #include "Blueprint/UserWidget.h"
 #include "WidgetCaptureProgressBar.h"
+#include "Components/ProgressBar.h"
 #include "Components/WidgetComponent.h"
 
 // Sets default values
@@ -159,27 +160,28 @@ void ACaptureFlagArea::AddProgressToWidget_Implementation(float value)
 		ProgressBarWidget->UpdateBar(value, MaxCaptureTime, CurrentTeam);
 		if (CurrentCaptureTime > 0)
 		{
-			ProgressBarWidget->SetVisibility(ESlateVisibility::Visible);
+			ProgressBarWidget->ProgressBar->SetVisibility(ESlateVisibility::Visible);
 		}
 		else
 		{
-			ProgressBarWidget->SetVisibility(ESlateVisibility::Hidden);
+			ProgressBarWidget->ProgressBar->SetVisibility(ESlateVisibility::Hidden);
 		}
 	}
 }
 
 void ACaptureFlagArea::ContestingFlagArea()
 {
-	ACaptureFlagGameState* GameState = Cast<ACaptureFlagGameState>(UGameplayStatics::GetGameState(GetWorld()));
-	if (GameState)
+	UWidgetCaptureProgressBar* ProgressBarWidget = Cast<UWidgetCaptureProgressBar>(ProgressBar->GetUserWidgetObject());
+
+	if (ProgressBarWidget)
 	{
 		if (bContesting)
 		{
-			GameState->bContesting = true;
+			ProgressBarWidget->Contesting(true);
 		}
 		else
 		{
-			GameState->bContesting = false;
+			ProgressBarWidget->Contesting(false);
 		}
 	}
 }
