@@ -5,6 +5,7 @@
 #include "GameFramework/Character.h"
 #include "Logging/LogMacros.h"
 #include "MultiplayerGameMode.h"
+#include "MPProjectile.h"
 #include "PlayerOverlayStates.h"
 #include "MultiplayerCharacter.generated.h"
 
@@ -58,6 +59,7 @@ class AMultiplayerCharacter : public ACharacter
 	//PickUpInput
 	UPROPERTY(EditDefaultsOnly, Category = "Input")
 	UInputAction* PickUpInput;
+
 
 public:
 	AMultiplayerCharacter();
@@ -202,7 +204,7 @@ protected:
 	void StopFire();
 
 	UFUNCTION(Server, Reliable)
-	void HandleFire();
+	void HandleFire(FVector MuzzleVector, FRotator MuzzleRotation);
 
 	UFUNCTION(Server, Reliable)
 	void ServerSetTeam(ETeam NewTeam);

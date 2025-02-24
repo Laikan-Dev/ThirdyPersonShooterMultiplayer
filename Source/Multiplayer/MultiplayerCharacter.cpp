@@ -8,7 +8,8 @@
 #include "GameFramework/SpringArmComponent.h"
 #include "Net/UnrealNetwork.h"
 #include "Engine/Engine.h"
-#include "MPProjectile.h"
+#include "Sockets.h"
+#include "Engine/StaticMeshSocket.h"
 #include "GameFramework/Controller.h"
 #include "MultiplayerPlayerController.h"
 #include "EnhancedInputComponent.h"
@@ -41,7 +42,6 @@ AMultiplayerCharacter::AMultiplayerCharacter()
 	//Init FireRate
 	FireRate = 0.25f;
 	bIsFiringWeapon = false;
-
 	// Set size for collision capsule
 	GetCapsuleComponent()->InitCapsuleSize(42.f, 96.0f);
 		
@@ -80,6 +80,8 @@ AMultiplayerCharacter::AMultiplayerCharacter()
 	WeaponSocket->SetupAttachment(GetMesh(), TEXT("hand_rSocket"));
 	WeaponSocket->SetCollisionEnabled(ECollisionEnabled::NoCollision);
 	WeaponSocket->SetIsReplicated(true);
+	
+
 	// Note: The skeletal mesh and anim blueprint references on the Mesh component (inherited from Character) 
 	// are set in the derived blueprint asset named ThirdPersonCharacter (to avoid direct content references in C++)
 }
@@ -99,7 +101,7 @@ void AMultiplayerCharacter::Tick(float DeltaTime)
 
 void AMultiplayerCharacter::UpdateCamera()
 {
-	if (GetCharacterMovement()->Velocity.Length() > 0 && !bIsAiming)
+	if (GetCharacterMovement()->Velocity.Length() > 0)
 	{
 		GetCharacterMovement()->bUseControllerDesiredRotation = true;
 	}
@@ -107,6 +109,18 @@ void AMultiplayerCharacter::UpdateCamera()
 	{
 		GetCharacterMovement()->bUseControllerDesiredRotation = false;
 	}
+	if (!bIsAiming)
+	{
+			GetCharacterMovement()->bUseControllerDesiredRotation = false;
+			GEngine->AddOnScreenDebugMessage(-1, 15.f, FColor::Blue, TEXT("yES"));
+	}
+	else
+	{
+			GEngine->AddOnScreenDebugMessage(-1, 15.f, FColor::Blue, TEXT("NO"));
+			GetCharacterMovement()->bUseControllerDesiredRotation = true;
+	}
+	
+	
 }
 
 void AMultiplayerCharacter::OnRep_CurrentHealth()
@@ -184,6 +198,7 @@ void AMultiplayerCharacter::OnRep_CurrentWeapon()
 
 void AMultiplayerCharacter::OnCurrentWeaponUpdate()
 {
+
 }
 
 void AMultiplayerCharacter::SetCurrentHealth(float healthValue)
@@ -207,18 +222,32 @@ void AMultiplayerCharacter::SetCurrentWeapon_Implementation(FWeaponInformation C
 	WeaponSocket->SetStaticMesh(CurrentWeapon.Mesh);
 	CurrentWeaponClass = CurrentWeapon.WeaponClass;
 	FireRate = CurrentWeapon.FireRate;
+
 }
 
 void AMultiplayerCharacter::StartFire()
 {
 	if (bIsAiming)
 	{
+		FTransform MuzzleTranform = WeaponSocket->GetSocketTransform(TEXT("FireSocket"));
+		MuzzleTranform.SetToRelativeTransform(WeaponSocket->GetRelativeTransform());
+
 		if (!bIsFiringWeapon)
 		{
-			bIsFiringWeapon = true;
-			UWorld* World = GetWorld();
-			World->GetTimerManager().SetTimer(FiringTimer, this, &AMultiplayerCharacter::StopFire, FireRate, false);
-			HandleFire();
+			if (HasAuthority())
+			{
+				bIsFiringWeapon = true;
+				UWorld* World = GetWorld();
+				World->GetTimerManager().SetTimer(FiringTimer, this, &AMultiplayerCharacter::StopFire, FireRate, false);
+				HandleFire(MuzzleTranform.GetLocation(), MuzzleTranform.GetRotation().Rotator());
+			}
+			else
+			{
+				bIsFiringWeapon = true;
+				UWorld* World = GetWorld();
+				World->GetTimerManager().SetTimer(FiringTimer, this, &AMultiplayerCharacter::StopFire, FireRate, false);
+				HandleFire(MuzzleTranform.GetLocation(), MuzzleTranform.GetRotation().Rotator());
+			}
 		}
 	}
 }
@@ -253,21 +282,12 @@ void AMultiplayerCharacter::SelectTeam_Implementation()
 	//return NewTeam == ETeam::ET_RedTeam || NewTeam == ETeam::ET_BlueTeam;
 //}
 
-void AMultiplayerCharacter::HandleFire_Implementation()
+void AMultiplayerCharacter::HandleFire_Implementation(FVector MuzzleVector, FRotator MuzzleRotation)
 {
-	FVector spawnLocation = GetActorLocation() + (GetActorRotation().Vector() * 100.0f) + (GetActorUpVector() * 50.0f); 
-	FRotator spawnRotation = GetActorRotation();
-
-	
-	
 	FActorSpawnParameters spawnParameters;
 	spawnParameters.Instigator = GetInstigator();
 	spawnParameters.Owner = this;
-	
-	FVector SpawnOnWeapon = WeaponSocket->GetSocketLocation(TEXT("FireSocket"));
-	
-	AMPProjectile* spawnProjectile = GetWorld()->SpawnActor<AMPProjectile>(spawnLocation, spawnRotation, spawnParameters);
-
+	AMPProjectile* spawnProjectile = GetWorld()->SpawnActor<AMPProjectile>(ProjectileClass, MuzzleVector, MuzzleRotation, spawnParameters);
 }
 
 //////////////////////////////////////////////////////////////////////////
@@ -406,14 +426,12 @@ void AMultiplayerCharacter::OnRep_Aiming()
 		CurrentState = EPlayerOverlayState::EPS_Rifle;
 		CameraBoom->SocketOffset.Set(250.0, 73.0, 60.0);
 		GetCharacterMovement()->MaxWalkSpeed = AimingVelocity;
-		
 	}
 	else
 	{
 		CurrentState = EPlayerOverlayState::EPS_Unarmed;
 		CameraBoom->SocketOffset.Set(75.0, 68.0, 10.0);
 		GetCharacterMovement()->MaxWalkSpeed = NormalVelocity;
-		
 	}
 }
 

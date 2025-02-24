@@ -24,7 +24,9 @@ struct FWeaponInformation
 	UPROPERTY(EditDefaultsOnly)
 	float Damage;
 	UPROPERTY(EditDefaultsOnly)
-	int AmmoCap;
+	int32 AmmoCap;
+	UPROPERTY(EditDefaultsOnly)
+	FVector BulletSpawnLoc;
 };
 
 UCLASS()

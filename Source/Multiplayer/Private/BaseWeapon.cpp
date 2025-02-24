@@ -19,6 +19,7 @@ ABaseWeapon::ABaseWeapon()
 	StaticMesh = CreateDefaultSubobject<UStaticMeshComponent>(TEXT("WeaponMesh"));
 	StaticMesh->SetupAttachment(RootComponent);
 	StaticMesh->SetStaticMesh(WeaponInformation.Mesh);
+	WeaponInformation.BulletSpawnLoc = (StaticMesh->GetSocketLocation("FireSocket"));
 }
 
 // Called when the game starts or when spawned
