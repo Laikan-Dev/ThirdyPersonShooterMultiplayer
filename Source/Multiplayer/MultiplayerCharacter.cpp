@@ -101,26 +101,8 @@ void AMultiplayerCharacter::Tick(float DeltaTime)
 
 void AMultiplayerCharacter::UpdateCamera()
 {
-	if (GetCharacterMovement()->Velocity.Length() > 0)
-	{
-		GetCharacterMovement()->bUseControllerDesiredRotation = true;
-	}
-	else
-	{
-		GetCharacterMovement()->bUseControllerDesiredRotation = false;
-	}
-	if (!bIsAiming)
-	{
-			GetCharacterMovement()->bUseControllerDesiredRotation = false;
-			GEngine->AddOnScreenDebugMessage(-1, 15.f, FColor::Blue, TEXT("yES"));
-	}
-	else
-	{
-			GEngine->AddOnScreenDebugMessage(-1, 15.f, FColor::Blue, TEXT("NO"));
-			GetCharacterMovement()->bUseControllerDesiredRotation = true;
-	}
-	
-	
+	bool bIsMoving = !GetVelocity().IsNearlyZero();
+	bUseControllerRotationYaw = bIsMoving || bIsAiming;
 }
 
 void AMultiplayerCharacter::OnRep_CurrentHealth()
@@ -308,7 +290,7 @@ void AMultiplayerCharacter::SetupPlayerInputComponent(UInputComponent* PlayerInp
 	if (UEnhancedInputComponent* EnhancedInputComponent = Cast<UEnhancedInputComponent>(PlayerInputComponent)) {
 		
 		// Jumping
-		EnhancedInputComponent->BindAction(JumpAction, ETriggerEvent::Started, this, &ACharacter::Jump);
+		EnhancedInputComponent->BindAction(JumpAction, ETriggerEvent::Started, this, &AMultiplayerCharacter::StartJump);
 		EnhancedInputComponent->BindAction(JumpAction, ETriggerEvent::Completed, this, &ACharacter::StopJumping);
 
 		// Moving
@@ -462,6 +444,14 @@ void AMultiplayerCharacter::StopAiming()
 	}
 }
 
+void AMultiplayerCharacter::StartJump()
+{
+	if (!bIsAiming)
+	{
+		Jump();
+	}
+}
+
 void AMultiplayerCharacter::ChoseRed()
 {
 	if (CurrentTeam == ETeam::ET_NoTeam)
@@ -499,31 +489,42 @@ void AMultiplayerCharacter::ChoseBlue()
 
 void AMultiplayerCharacter::Running()
 {
-	
+	if (!bIsAiming)
+	{
 		GetCharacterMovement()->MaxWalkSpeed = RunningVelocity;
 		CameraBoom->SocketOffset.Set(30.0, 68.0, 10.0);
 		ServerSetRuning(true);
+	}
 }
 
 void AMultiplayerCharacter::StopRunning()
 {
-	
-		GetCharacterMovement()->MaxWalkSpeed = NormalVelocity;
+	GetCharacterMovement()->MaxWalkSpeed = NormalVelocity;
+	if (!bIsAiming)
+	{
 		CameraBoom->SocketOffset.Set(75.0, 68.0, 10.0);
-		ServerSetRuning(false);
+	}
+	ServerSetRuning(false);
 }
 
 void AMultiplayerCharacter::StartCrounch()
 {
 	GetCharacterMovement()->MaxWalkSpeed = CrounchVelocity;
-	CameraBoom->SocketOffset.Set(100.f, 68.0, 10.0);
+	if (!bIsAiming)
+	{
+		CameraBoom->SocketOffset.Set(100.f, 68.0, 10.0);
+	}
+	
 	ServerSetCrounch(true);
 }
 
 void AMultiplayerCharacter::StopCrounch()
 {
 	GetCharacterMovement()->MaxWalkSpeed = NormalVelocity;
-	CameraBoom->SocketOffset.Set(75.0, 68.0, 10.0);
+	if (!bIsAiming)
+	{
+		CameraBoom->SocketOffset.Set(75.0, 68.0, 10.0);
+	}
 	ServerSetCrounch(false);
 
 }

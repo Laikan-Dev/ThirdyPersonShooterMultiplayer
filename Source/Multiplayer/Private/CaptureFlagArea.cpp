@@ -281,6 +281,13 @@ void ACaptureFlagArea::Tick(float DeltaTime)
 	Super::Tick(DeltaTime);
 	if (!bCaptured)
 	{
+		if (bContesting)
+		{
+			FString ContestingMessage = FString::Printf(TEXT("Teams are contesting the flag"));
+			GEngine->AddOnScreenDebugMessage(-1, 1.f, FColor::Blue, ContestingMessage);
+			SetCurrentCaptureTime(CurrentCaptureTime + 0);
+		}
+
 		if (bCapturing)
 		{
 			float Capture = CurrentCaptureTime + 0.1;
@@ -293,11 +300,7 @@ void ACaptureFlagArea::Tick(float DeltaTime)
 			SetCurrentCaptureTime(Capture);
 
 		}
-		if(bContesting)
-		{
-			FString ContestingMessage = FString::Printf(TEXT("Teams are contesting the flag"));
-			GEngine->AddOnScreenDebugMessage(-1, 1.f, FColor::Blue, ContestingMessage);
-		}
+		
 	}
 }
 

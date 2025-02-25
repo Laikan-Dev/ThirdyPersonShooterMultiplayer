@@ -60,7 +60,6 @@ class AMultiplayerCharacter : public ACharacter
 	UPROPERTY(EditDefaultsOnly, Category = "Input")
 	UInputAction* PickUpInput;
 
-
 public:
 	AMultiplayerCharacter();
 
@@ -76,6 +75,10 @@ protected:
 	void StartAiming();
 	UFUNCTION()
 	void StopAiming();
+
+	//Jump
+	UFUNCTION()
+	void StartJump();
 
 	//Select Team
 	UFUNCTION(BlueprintCallable)
