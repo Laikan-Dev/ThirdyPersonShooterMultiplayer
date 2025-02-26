@@ -6,10 +6,9 @@
 #include "Components/CapsuleComponent.h"
 #include "GameFramework/CharacterMovementComponent.h"
 #include "GameFramework/SpringArmComponent.h"
+#include "Components/SkeletalMeshComponent.h"
 #include "Net/UnrealNetwork.h"
 #include "Engine/Engine.h"
-#include "Sockets.h"
-#include "Engine/StaticMeshSocket.h"
 #include "GameFramework/Controller.h"
 #include "MultiplayerPlayerController.h"
 #include "EnhancedInputComponent.h"
@@ -17,7 +16,6 @@
 #include "InputActionValue.h"
 #include "Blueprint/UserWidget.h"
 #include "Blueprint/WidgetBlueprintLibrary.h"
-#include "BaseWeapon.h"
 #include "CaptureFlagArea.h"
 
 
@@ -76,7 +74,7 @@ AMultiplayerCharacter::AMultiplayerCharacter()
 	FollowCamera->bUsePawnControlRotation = false; // Camera does not rotate relative to arm
 
 	//Create a Weapon Socket
-	WeaponSocket = CreateDefaultSubobject<UStaticMeshComponent>(TEXT("HandSocket"));
+	WeaponSocket = CreateDefaultSubobject<USkeletalMeshComponent>(TEXT("HandSocket"));
 	WeaponSocket->SetupAttachment(GetMesh(), TEXT("hand_rSocket"));
 	WeaponSocket->SetCollisionEnabled(ECollisionEnabled::NoCollision);
 	WeaponSocket->SetIsReplicated(true);
@@ -149,6 +147,7 @@ void AMultiplayerCharacter::GetLifetimeReplicatedProps(TArray<FLifetimeProperty>
 	DOREPLIFETIME(AMultiplayerCharacter, bIsAiming);
 	DOREPLIFETIME(AMultiplayerCharacter, CurrentWeaponClass);
 	DOREPLIFETIME(AMultiplayerCharacter, CurrentState);
+	DOREPLIFETIME(AMultiplayerCharacter, WeaponInfo);
 }
 
 void AMultiplayerCharacter::OnHealthUpdate()
@@ -175,12 +174,12 @@ void AMultiplayerCharacter::OnHealthUpdate()
 
 void AMultiplayerCharacter::OnRep_CurrentWeapon()
 {
-	OnCurrentWeaponUpdate();
+	OnCurrentWeaponUpdate(WeaponInfo);	
 }
 
-void AMultiplayerCharacter::OnCurrentWeaponUpdate()
+void AMultiplayerCharacter::OnCurrentWeaponUpdate(FWeaponInformation CurrentWeapon)
 {
-
+	WeaponInfo = CurrentWeapon;
 }
 
 void AMultiplayerCharacter::SetCurrentHealth(float healthValue)
@@ -201,10 +200,10 @@ float AMultiplayerCharacter::TakeDamage(float DamageTaken, FDamageEvent const& D
 
 void AMultiplayerCharacter::SetCurrentWeapon_Implementation(FWeaponInformation CurrentWeapon)
 {
-	WeaponSocket->SetStaticMesh(CurrentWeapon.Mesh);
-	CurrentWeaponClass = CurrentWeapon.WeaponClass;
-	FireRate = CurrentWeapon.FireRate;
-
+	WeaponInfo = CurrentWeapon;
+	WeaponSocket->SetSkeletalMesh(WeaponInfo.Mesh);
+	CurrentWeaponClass = WeaponInfo.WeaponClass;
+	FireRate = WeaponInfo.FireRate;
 }
 
 void AMultiplayerCharacter::StartFire()
@@ -218,6 +217,7 @@ void AMultiplayerCharacter::StartFire()
 		{
 			if (HasAuthority())
 			{
+				WeaponSocket->PlayAnimation(WeaponInfo.FireAnimation, false);
 				bIsFiringWeapon = true;
 				UWorld* World = GetWorld();
 				World->GetTimerManager().SetTimer(FiringTimer, this, &AMultiplayerCharacter::StopFire, FireRate, false);
@@ -225,6 +225,7 @@ void AMultiplayerCharacter::StartFire()
 			}
 			else
 			{
+				WeaponSocket->PlayAnimation(WeaponInfo.FireAnimation, false);
 				bIsFiringWeapon = true;
 				UWorld* World = GetWorld();
 				World->GetTimerManager().SetTimer(FiringTimer, this, &AMultiplayerCharacter::StopFire, FireRate, false);

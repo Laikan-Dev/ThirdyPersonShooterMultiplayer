@@ -16,10 +16,9 @@ ABaseWeapon::ABaseWeapon()
 	SphereComponent->OnComponentEndOverlap.AddDynamic(this, &ABaseWeapon::OnComponentEndOverlap);
 	RootComponent = SphereComponent;
 	
-	StaticMesh = CreateDefaultSubobject<UStaticMeshComponent>(TEXT("WeaponMesh"));
-	StaticMesh->SetupAttachment(RootComponent);
-	StaticMesh->SetStaticMesh(WeaponInformation.Mesh);
-	WeaponInformation.BulletSpawnLoc = (StaticMesh->GetSocketLocation("FireSocket"));
+	SkeletalMesh = CreateDefaultSubobject<USkeletalMeshComponent>(TEXT("WeaponMesh"));
+	SkeletalMesh->SetupAttachment(RootComponent);
+	SkeletalMesh->SetSkeletalMesh(WeaponInformation.Mesh);
 }
 
 // Called when the game starts or when spawned
@@ -32,8 +31,16 @@ void ABaseWeapon::PickUp_Implementation(AMultiplayerCharacter* Player)
 {
 	if (Player)
 	{
-		Player->SetCurrentWeapon(WeaponInformation);
-		Destroy();
+		if (HasAuthority())
+		{
+			Player->SetCurrentWeapon(WeaponInformation);
+			Destroy();
+		}
+		else
+		{
+			Player->SetCurrentWeapon(WeaponInformation);
+			Destroy();
+		}
 	}
 	
 }

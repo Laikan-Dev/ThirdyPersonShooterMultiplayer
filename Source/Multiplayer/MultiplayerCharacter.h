@@ -6,11 +6,13 @@
 #include "Logging/LogMacros.h"
 #include "MultiplayerGameMode.h"
 #include "MPProjectile.h"
+#include "BaseWeapon.h"
 #include "PlayerOverlayStates.h"
 #include "MultiplayerCharacter.generated.h"
 
 class USpringArmComponent;
 class UCameraComponent;
+class USkeletalMeshComponent;
 class UInputMappingContext;
 class UInputAction;
 struct FInputActionValue;
@@ -31,8 +33,8 @@ class AMultiplayerCharacter : public ACharacter
 	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = Camera, meta = (AllowPrivateAccess = "true"))
 	UCameraComponent* FollowCamera;
 	//WeaponSocket
-	UPROPERTY(EditDefaultsOnly, BlueprintReadOnly, Category = "Components", meta = (AllowPrivateAccess = "true"))
-	UStaticMeshComponent* WeaponSocket;
+	UPROPERTY(VisibleAnywhere, BlueprintReadWrite, Category = "Components", meta = (AllowPrivateAccess = "true"))
+	USkeletalMeshComponent* WeaponSocket;
 	/** MappingContext */
 	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = Input, meta = (AllowPrivateAccess = "true"))
 	UInputMappingContext* DefaultMappingContext;
@@ -122,6 +124,10 @@ public:
 
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Replicated)
 	EPlayerOverlayState CurrentState;
+
+	UPROPERTY(BlueprintReadOnly, ReplicatedUsing = OnRep_CurrentWeapon)
+	FWeaponInformation WeaponInfo;
+
 protected:
 //ReplicatedProperties
 	//Health
@@ -171,7 +177,7 @@ protected:
 	//FunctionRep for Weapon
 	UFUNCTION()
 	void OnRep_CurrentWeapon();
-	void OnCurrentWeaponUpdate();
+	void OnCurrentWeaponUpdate(FWeaponInformation CurrentWeapon);
 
 public:
 	//Getter for max health

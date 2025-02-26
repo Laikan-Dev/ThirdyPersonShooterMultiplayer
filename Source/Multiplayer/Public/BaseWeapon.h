@@ -16,7 +16,11 @@ struct FWeaponInformation
 	UPROPERTY(EditDefaultsOnly)
 	FString Descryption;
 	UPROPERTY(EditDefaultsOnly)
-	UStaticMesh* Mesh;
+	USkeletalMesh* Mesh;
+	UPROPERTY(EditDefaultsOnly)
+	UAnimationAsset* FireAnimation;
+	UPROPERTY(EditDefaultsOnly)
+	UAnimationAsset* ReloadAnimation;
 	UPROPERTY(EditDefaultsOnly)
 	UTexture2D* Icon;
 	UPROPERTY(EditDefaultsOnly)
@@ -24,9 +28,7 @@ struct FWeaponInformation
 	UPROPERTY(EditDefaultsOnly)
 	float Damage;
 	UPROPERTY(EditDefaultsOnly)
-	int32 AmmoCap;
-	UPROPERTY(EditDefaultsOnly)
-	FVector BulletSpawnLoc;
+	int32 AmmoCap;;
 };
 
 UCLASS()
@@ -45,7 +47,7 @@ public:
 	class USphereComponent* SphereComponent;
 
 	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = "Components")
-	class UStaticMeshComponent* StaticMesh;
+	class USkeletalMeshComponent* SkeletalMesh;
 
 protected:
 	// Called when the game starts or when spawned
