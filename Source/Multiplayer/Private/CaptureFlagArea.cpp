@@ -79,7 +79,7 @@ void ACaptureFlagArea::OnCaptureTimeUpdate()
 				{
 					Flag->SetMaterial(0, RedTeamColor);
 					AddTeamScore();
-
+				
 				}
 			}
 				break;
@@ -103,6 +103,10 @@ void ACaptureFlagArea::OnCaptureTimeUpdate()
 			
 			bCaptured = true;
 		}
+	}
+	if (CurrentCaptureTime <= 0)
+	{
+		bContesting = false;
 	}
 }
 
@@ -134,10 +138,6 @@ void ACaptureFlagArea::SetCurrentCaptureTime_Implementation(float CaptureTimeVal
 			case ETeam::ET_NoTeam:
 				break;
 			}
-		}
-		else
-		{
-			CurrentTeam = ETeam::ET_NoTeam;
 		}
 	}
 }
@@ -186,14 +186,14 @@ void ACaptureFlagArea::ContestingFlagArea()
 	}
 }
 
-bool ACaptureFlagArea::CanIncreseCapture(AMultiplayerCharacter* CurrentPlayer, ETeam PlayerTeam)
+bool ACaptureFlagArea::CanIncreseCapture()
 {
-	if (RedTeamPlayersArray.Num() > 0 && !bContesting)
+	if (RedTeamPlayersArray.Num() > 0 && !bContesting && BlueTeamCaptureValue <= 0)
 	{
 		CurrentTeam = ETeam::ET_RedTeam;
 		return true;
 	}
-	if (BlueTeamPlayersArray.Num() > 0 && !bContesting)
+	if (BlueTeamPlayersArray.Num() > 0 && !bContesting && BlueTeamCaptureValue <= 0)
 	{
 		CurrentTeam = ETeam::ET_BlueTeam;
 		return true;
@@ -285,20 +285,27 @@ void ACaptureFlagArea::Tick(float DeltaTime)
 		{
 			FString ContestingMessage = FString::Printf(TEXT("Teams are contesting the flag"));
 			GEngine->AddOnScreenDebugMessage(-1, 1.f, FColor::Blue, ContestingMessage);
-			SetCurrentCaptureTime(CurrentCaptureTime + 0);
+			SetCurrentCaptureTime(CurrentCaptureTime - 0.1);
 		}
-
-		if (bCapturing)
+		else if(CanIncreseCapture())
 		{
-			float Capture = CurrentCaptureTime + 0.1;
-			SetCurrentCaptureTime(Capture);
-
-		}
-		else
-		{	
-			float Capture = CurrentCaptureTime - 0.1;
-			SetCurrentCaptureTime(Capture);
-
+			switch (CurrentTeam)
+			{
+			case ETeam::ET_RedTeam: 
+			{
+				RedTeamCaptureValue = RedTeamCaptureValue + 0.1;
+				SetCurrentCaptureTime(RedTeamCaptureValue);
+			}
+				break;
+			case ETeam::ET_BlueTeam:
+				BlueTeamCaptureValue = BlueTeamCaptureValue + 0.1;
+				SetCurrentCaptureTime(BlueTeamCaptureValue);
+				break;
+			case ETeam::ET_NoTeam:
+				break;
+			default:
+				break;
+			}
 		}
 		
 	}
@@ -310,7 +317,7 @@ void ACaptureFlagArea::OnOverlapCollision(UPrimitiveComponent* OverlappedCompone
 	if (Player != nullptr)
 	{
 		AddPlayerToTeamArray(Player, Player->CurrentTeam);
-		if (CanIncreseCapture(Player, Player->CurrentTeam))
+		if (CanIncreseCapture())
 		{
 			bCapturing = true;
 		}
@@ -327,7 +334,7 @@ void ACaptureFlagArea::OnEndOverlapCollision(UPrimitiveComponent* OverlappedComp
 	if (Player != nullptr)
 	{
 		RemovePlayerToTeamArray(Player, Player->CurrentTeam);
-		if (CanIncreseCapture(Player, Player->CurrentTeam))
+		if (CanIncreseCapture())
 		{
 			bCapturing = true;
 		}

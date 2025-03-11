@@ -125,7 +125,7 @@ public:
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Replicated)
 	EPlayerOverlayState CurrentState;
 
-	UPROPERTY(BlueprintReadOnly, ReplicatedUsing = OnRep_CurrentWeapon)
+	UPROPERTY(EditAnywhere, BlueprintReadOnly, ReplicatedUsing = OnRep_CurrentWeapon)
 	FWeaponInformation WeaponInfo;
 
 protected:
@@ -177,7 +177,7 @@ protected:
 	//FunctionRep for Weapon
 	UFUNCTION()
 	void OnRep_CurrentWeapon();
-	void OnCurrentWeaponUpdate(FWeaponInformation CurrentWeapon);
+	void OnCurrentWeaponUpdate();
 
 public:
 	//Getter for max health
@@ -213,7 +213,7 @@ protected:
 	void StopFire();
 
 	UFUNCTION(Server, Reliable)
-	void HandleFire(FVector MuzzleVector, FRotator MuzzleRotation);
+	void HandleFire(UAnimationAsset* FireAnim, FVector MuzzleVector, FRotator MuzzleRotation);
 
 	UFUNCTION(Server, Reliable)
 	void ServerSetTeam(ETeam NewTeam);
@@ -252,6 +252,9 @@ public:
 	float RunningVelocity = 700.f;
 	UPROPERTY(EditDefaultsOnly, BlueprintReadWrite, Category = "Movement")
 	float CrounchVelocity = 200.f;
+
+	//WeaponInfo
+	UAnimationAsset* WeaponShotAnim;
 	
 
 };

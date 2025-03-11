@@ -55,6 +55,11 @@ protected:
 	bool bContesting;
 
 	//TeamConfig
+
+	UPROPERTY(EditAnywhere, BlueprintReadWrite)
+	float RedTeamCaptureValue;
+	UPROPERTY(EditAnywhere, BlueprintReadWrite)
+	float BlueTeamCaptureValue;
 	UPROPERTY(EditAnywhere, BlueprintReadWrite)
 	ETeam CurrentTeam;
 	UPROPERTY(VisibleAnywhere)
@@ -96,7 +101,7 @@ public:
 
 	//CheckFunction
 	UFUNCTION(BlueprintPure)
-	bool CanIncreseCapture(AMultiplayerCharacter* CurrentPlayer, ETeam PlayerTeam);
+	bool CanIncreseCapture();
 	UFUNCTION()
 	void AddPlayerToTeamArray(AMultiplayerCharacter* CurrentPlayer, ETeam PlayerTeam);
 	UFUNCTION()
