@@ -21,6 +21,8 @@ public:
 protected:
 	// Called when the game starts or when spawned
 	virtual void BeginPlay() override;
+	// Called every frame
+	virtual void Tick(float DeltaTime) override;
 
 public:
 	//Components
@@ -47,6 +49,11 @@ protected:
 	float MaxCaptureTime;
 	UPROPERTY(ReplicatedUsing = OnRep_CurrentCaptureTime)
 	float CurrentCaptureTime;
+	UPROPERTY(EditDefaultsOnly, BlueprintReadOnly, Category = "CaptureSettings")
+	float CapturingSpeed;
+	UPROPERTY(EditDefaultsOnly, BlueprintReadOnly, Category = "CaptureSettings")
+	float LosingSpeed;
+	
 
 	//CheckBools
 	UPROPERTY(EditDefaultsOnly)
@@ -55,11 +62,6 @@ protected:
 	bool bContesting;
 
 	//TeamConfig
-
-	UPROPERTY(EditAnywhere, BlueprintReadWrite)
-	float RedTeamCaptureValue;
-	UPROPERTY(EditAnywhere, BlueprintReadWrite)
-	float BlueTeamCaptureValue;
 	UPROPERTY(EditAnywhere, BlueprintReadWrite)
 	ETeam CurrentTeam;
 	UPROPERTY(VisibleAnywhere)
@@ -92,24 +94,19 @@ public:
 	UFUNCTION(NetMulticast, Server, Reliable)
 	void AddProgressToWidget(float value);
 
-	
-
+	UFUNCTION()
+	void CanIncreseCapture();
 
 	//Contest The Flag
 	UFUNCTION()
 	void ContestingFlagArea();
 
 	//CheckFunction
-	UFUNCTION(BlueprintPure)
-	bool CanIncreseCapture();
 	UFUNCTION()
 	void AddPlayerToTeamArray(AMultiplayerCharacter* CurrentPlayer, ETeam PlayerTeam);
 	UFUNCTION()
 	void RemovePlayerToTeamArray(AMultiplayerCharacter* CurrentPlayer, ETeam PlayerTeam);
 	
-	// Called every frame
-	virtual void Tick(float DeltaTime) override;
-
 	//Collision Functions
 	UFUNCTION()
 	void OnOverlapCollision(UPrimitiveComponent* OverlappedComponent, AActor* OtherActor, UPrimitiveComponent* OtherComp, int32 OtherBodyIndex, bool bFromSweep, const FHitResult& SweepResult);
