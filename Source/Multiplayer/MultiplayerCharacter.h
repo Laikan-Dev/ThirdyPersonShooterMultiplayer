@@ -128,13 +128,13 @@ public:
 
 	UPROPERTY(ReplicatedUsing = OnRep_PlayerTeam, BlueprintReadWrite)
 	ETeam CurrentTeam = ETeam::ET_NoTeam;
-	UPROPERTY(VisibleAnywhere, ReplicatedUsing = OnRep_CurrentWeapon)
+	UPROPERTY(VisibleAnywhere)
 	TSubclassOf<class ABaseWeapon> CurrentWeaponClass;
 
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Replicated)
 	EPlayerOverlayState CurrentState;
 
-	UPROPERTY(EditAnywhere, BlueprintReadOnly, ReplicatedUsing = OnRep_CurrentWeapon)
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, ReplicatedUsing = OnRep_CurrentWeapon)
 	FWeaponInformation WeaponInfo;
 
 protected:
@@ -203,8 +203,14 @@ public:
 	UFUNCTION(BlueprintCallable, Category = "Health")
 	float TakeDamage(float DamageTaken, struct FDamageEvent const& DamageEvent, AController* EventInstigator, AActor* DamageCauser) override;
 
-	UFUNCTION(Server, NetMulticast, Reliable)
+	UFUNCTION()
 	void SetCurrentWeapon(FWeaponInformation CurrentWeapon);
+
+	UFUNCTION(Server, Reliable)
+	void Server_SetCurrentWeapon(FWeaponInformation CurrentWeapon);
+
+	UFUNCTION(NetMulticast, Reliable)
+	void MC_SetCurrentWeapon(FWeaponInformation CurrentWeapon);
 
 protected:
 	UPROPERTY(EditDefaultsOnly, Category="Gameplay|Projectile")
@@ -222,7 +228,7 @@ protected:
 	void StopFire();
 
 	UFUNCTION(Server, Reliable)
-	void HandleFire(UAnimationAsset* FireAnim, FVector MuzzleVector, FRotator MuzzleRotation);
+	void Server_HandleFire(UAnimMontage* FireAnim, FVector MuzzleVector, FRotator MuzzleRotation);
 
 	UFUNCTION(Server, Reliable)
 	void ServerSetTeam(ETeam NewTeam);

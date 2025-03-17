@@ -146,7 +146,6 @@ void AMultiplayerCharacter::GetLifetimeReplicatedProps(TArray<FLifetimeProperty>
 	DOREPLIFETIME(AMultiplayerCharacter, CurrentTeam);	    //Replicate Current Team
 	DOREPLIFETIME(AMultiplayerCharacter, bIsDead);			//Replicate boolean Death for ABP
 	DOREPLIFETIME(AMultiplayerCharacter, bIsAiming);		//Replicate boolean aiming
-	DOREPLIFETIME(AMultiplayerCharacter, CurrentWeaponClass);
 	DOREPLIFETIME(AMultiplayerCharacter, CurrentState);
 	DOREPLIFETIME(AMultiplayerCharacter, WeaponInfo);
 }
@@ -180,7 +179,6 @@ void AMultiplayerCharacter::OnRep_CurrentWeapon()
 
 void AMultiplayerCharacter::OnCurrentWeaponUpdate()
 {
-	
 }
 
 void AMultiplayerCharacter::SetCurrentHealth(float healthValue)
@@ -199,15 +197,38 @@ float AMultiplayerCharacter::TakeDamage(float DamageTaken, FDamageEvent const& D
 	return damageApplied;
 }
 
-void AMultiplayerCharacter::SetCurrentWeapon_Implementation(FWeaponInformation CurrentWeapon)
+void AMultiplayerCharacter::SetCurrentWeapon(FWeaponInformation CurrentWeapon)
+{
+	if(HasAuthority())
+	{
+		MC_SetCurrentWeapon(CurrentWeapon);
+	}
+	else
+	{
+		Server_SetCurrentWeapon(CurrentWeapon);
+	}
+}
+
+void AMultiplayerCharacter::MC_SetCurrentWeapon_Implementation(FWeaponInformation CurrentWeapon)
 {
 	WeaponInfo = CurrentWeapon;
 	WeaponSocket->SetSkeletalMesh(WeaponInfo.Mesh);
-	CurrentWeaponClass = WeaponInfo.WeaponClass;
-	FireRate = WeaponInfo.FireRate;
-	WeaponShotAnim = WeaponInfo.FireAnimation;
+	
 	
 }
+
+void AMultiplayerCharacter::Server_SetCurrentWeapon_Implementation(FWeaponInformation CurrentWeapon)
+{
+	MC_SetCurrentWeapon(CurrentWeapon);
+	//WeaponInfo = CurrentWeapon;
+	//WeaponSocket->SetSkeletalMesh(WeaponInfo.Mesh);
+	//CurrentWeaponClass = WeaponInfo.WeaponClass;
+	//FireRate = WeaponInfo.FireRate;
+	//WeaponShotAnim = WeaponInfo.FireAnimation;
+	
+	
+}
+
 void AMultiplayerCharacter::StartFire()
 {
 	if (bIsAiming)
@@ -217,22 +238,10 @@ void AMultiplayerCharacter::StartFire()
 
 		if (!bIsFiringWeapon)
 		{
-			if (HasAuthority())
-			{
-	
-				bIsFiringWeapon = true;
-				UWorld* World = GetWorld();
-				World->GetTimerManager().SetTimer(FiringTimer, this, &AMultiplayerCharacter::StopFire, FireRate, false);
-				HandleFire(WeaponShotAnim, MuzzleTranform.GetLocation(), MuzzleTranform.GetRotation().Rotator());
-			}
-			else
-			{
-				WeaponSocket->PlayAnimation(WeaponShotAnim, false);
-				bIsFiringWeapon = true;
-				UWorld* World = GetWorld();
-				World->GetTimerManager().SetTimer(FiringTimer, this, &AMultiplayerCharacter::StopFire, FireRate, false);
-				HandleFire(WeaponShotAnim, MuzzleTranform.GetLocation(), MuzzleTranform.GetRotation().Rotator());
-			}
+			bIsFiringWeapon = true;
+			UWorld* World = GetWorld();
+			World->GetTimerManager().SetTimer(FiringTimer, this, &AMultiplayerCharacter::StopFire, WeaponInfo.FireRate, false);
+			Server_HandleFire(WeaponInfo.FireAnimation, MuzzleTranform.GetLocation(), MuzzleTranform.GetRotation().Rotator());
 		}
 	}
 }
@@ -267,9 +276,9 @@ void AMultiplayerCharacter::SelectTeam_Implementation()
 	//return NewTeam == ETeam::ET_RedTeam || NewTeam == ETeam::ET_BlueTeam;
 //}
 
-void AMultiplayerCharacter::HandleFire_Implementation(UAnimationAsset* FireAnim, FVector MuzzleVector, FRotator MuzzleRotation)
+void AMultiplayerCharacter::Server_HandleFire_Implementation(UAnimMontage* FireAnim, FVector MuzzleVector, FRotator MuzzleRotation)
 {
-	WeaponSocket->PlayAnimation(FireAnim, false);
+	WeaponSocket->GetAnimInstance()->Montage_Play(FireAnim);
 	FActorSpawnParameters spawnParameters;
 	spawnParameters.Instigator = GetInstigator();
 	spawnParameters.Owner = this;
@@ -423,7 +432,7 @@ void AMultiplayerCharacter::OnRep_Aiming()
 
 void AMultiplayerCharacter::StartAiming()
 {
-	if (CurrentWeaponClass)
+	if (WeaponInfo.WeaponClass)
 	{
 		if (HasAuthority())
 		{

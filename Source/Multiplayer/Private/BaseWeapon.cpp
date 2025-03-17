@@ -33,12 +33,12 @@ void ABaseWeapon::PickUp_Implementation(AMultiplayerCharacter* Player)
 	{
 		if (HasAuthority())
 		{
-			Player->SetCurrentWeapon(WeaponInformation);
+			Player->MC_SetCurrentWeapon(WeaponInformation);
 			Destroy();
 		}
 		else
 		{
-			Player->SetCurrentWeapon(WeaponInformation);
+			Player->Server_SetCurrentWeapon(WeaponInformation);
 			Destroy();
 		}
 	}

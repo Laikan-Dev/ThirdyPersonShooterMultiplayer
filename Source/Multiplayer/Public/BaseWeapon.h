@@ -9,25 +9,25 @@ struct FWeaponInformation
 {
 	GENERATED_BODY()
 
-	UPROPERTY(EditAnywhere)
+	UPROPERTY(EditAnywhere, BlueprintReadWrite)
 	TSubclassOf<ABaseWeapon> WeaponClass;
-	UPROPERTY(EditAnywhere)
+	UPROPERTY(EditAnywhere, BlueprintReadWrite)
 	FName Name;
-	UPROPERTY(EditAnywhere)
+	UPROPERTY(EditAnywhere, BlueprintReadWrite)
 	FString Descryption;
-	UPROPERTY(EditAnywhere)
+	UPROPERTY(EditAnywhere, BlueprintReadWrite)
 	USkeletalMesh* Mesh;
-	UPROPERTY(EditAnywhere)
-	UAnimationAsset* FireAnimation;
-	UPROPERTY(EditAnywhere)
-	UAnimationAsset* ReloadAnimation;
-	UPROPERTY(EditAnywhere)
+	UPROPERTY(EditAnywhere, BlueprintReadWrite)
+	UAnimMontage* FireAnimation;
+	UPROPERTY(EditAnywhere, BlueprintReadWrite)
+	UAnimMontage* ReloadAnimation;
+	UPROPERTY(EditAnywhere, BlueprintReadWrite)
 	UTexture2D* Icon;
-	UPROPERTY(EditAnywhere)
+	UPROPERTY(EditAnywhere, BlueprintReadWrite)
 	float FireRate;
-	UPROPERTY(EditAnywhere)
+	UPROPERTY(EditAnywhere, BlueprintReadWrite)
 	float Damage;
-	UPROPERTY(EditAnywhere)
+	UPROPERTY(EditAnywhere, BlueprintReadWrite)
 	int32 AmmoCap;;
 };
 
