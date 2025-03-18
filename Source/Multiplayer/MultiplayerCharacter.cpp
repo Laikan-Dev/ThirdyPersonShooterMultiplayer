@@ -18,7 +18,7 @@
 #include "Blueprint/WidgetBlueprintLibrary.h"
 #include "CaptureFlagArea.h"
 #include "CombatComponent.h"
-
+#include "Multiplayer/Public/MultiplayerCharAnimInstance.h"
 
 DEFINE_LOG_CATEGORY(LogTemplateCharacter);
 
@@ -30,6 +30,11 @@ AMultiplayerCharacter::AMultiplayerCharacter()
 	//Replicate
 	bReplicates = true;
 	SetReplicateMovement(true);
+
+	//DashDefaults
+	TimeDashCooldown = 3.0;
+	DashForceXY = 700;
+	DashForceZ = 150.0;
 	
 	//Initial Health
 	MaxHealth = 100;
@@ -83,6 +88,8 @@ AMultiplayerCharacter::AMultiplayerCharacter()
 	//Create CombatComponent
 	CombatSystem = CreateDefaultSubobject<UCombatComponent>(TEXT("CombatComponent"));
 	CombatSystem->SetIsReplicated(true);
+
+	
 	
 
 	// Note: The skeletal mesh and anim blueprint references on the Mesh component (inherited from Character) 
@@ -104,6 +111,7 @@ void AMultiplayerCharacter::BeginPlay()
 	// Call the base class  
 	Super::BeginPlay();
 	SelectTeam();
+	AnimInstance = Cast<UMultiplayerCharAnimInstance>(GetMesh()->GetAnimInstance());
 }
 
 void AMultiplayerCharacter::Tick(float DeltaTime)
@@ -357,6 +365,9 @@ void AMultiplayerCharacter::SetupPlayerInputComponent(UInputComponent* PlayerInp
 		EnhancedInputComponent->BindAction(CrounchAction, ETriggerEvent::Triggered, this, &AMultiplayerCharacter::StartCrounch);
 		EnhancedInputComponent->BindAction(CrounchAction, ETriggerEvent::Completed, this, &AMultiplayerCharacter::StopCrounch);
 
+		EnhancedInputComponent->BindAction(JumpAction, ETriggerEvent::Triggered, this, &AMultiplayerCharacter::Jump);
+		EnhancedInputComponent->BindAction(JumpAction, ETriggerEvent::Completed, this, &AMultiplayerCharacter::StopJumping);
+
 		// Looking
 		EnhancedInputComponent->BindAction(LookAction, ETriggerEvent::Triggered, this, &AMultiplayerCharacter::Look);
 
@@ -586,6 +597,83 @@ void AMultiplayerCharacter::StopCrounch()
 	}
 	ServerSetCrounch(false);
 
+}
+
+//DashFunctions
+
+void AMultiplayerCharacter::StartDash()
+{
+	FTimerHandle TimerHandle;
+	if (CanDash())
+	{
+		bIsDashing = true;
+		AbilityDash(AnimInstance->MoveDirection);
+		GetWorld()->GetTimerManager().SetTimer(TimerHandle, this, &AMultiplayerCharacter::DashCooldown, TimeDashCooldown);
+	}
+}
+
+void AMultiplayerCharacter::AddDashImpulse(ECharMovDirection Direction)
+{
+	FVector LelImpulse;
+	switch (Direction)
+	{
+	case ECharMovDirection::None:
+		{
+		FVector MultiplyValue(0.0, 0.0, 0.0);
+		LelImpulse = GetActorForwardVector() * MultiplyValue;
+		}
+		break;
+	case ECharMovDirection::Forward:
+		break;
+	case ECharMovDirection::Backward:
+		break;
+	case ECharMovDirection::Left:
+		break;
+	case ECharMovDirection::Right:
+		break;
+	default:
+		break;
+	}
+}
+
+void AMultiplayerCharacter::DashCooldown()
+{
+	bIsDashing = false;
+}
+
+bool AMultiplayerCharacter::CanDash()
+{
+	if (!bIsDashing)
+	{
+		return true;
+	}
+	else
+	{
+		return false;
+	}
+}
+
+void AMultiplayerCharacter::AbilityDash(ECharMovDirection Direction)
+{
+	if (HasAuthority())
+	{
+		MC_AbilityDash(Direction);
+	}
+	else
+	{
+		Server_AbilityDash(Direction);
+	}
+}
+
+void AMultiplayerCharacter::MC_AbilityDash_Implementation(ECharMovDirection Direction)
+{
+	LastDirection = Direction;
+	AnimInstance->PlayDashMontage(LastDirection);
+}
+
+void AMultiplayerCharacter::Server_AbilityDash_Implementation(ECharMovDirection Direction)
+{
+	MC_AbilityDash(Direction);
 }
 
 void AMultiplayerCharacter::EquipItem()

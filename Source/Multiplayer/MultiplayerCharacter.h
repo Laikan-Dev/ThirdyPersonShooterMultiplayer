@@ -47,9 +47,12 @@ class AMultiplayerCharacter : public ACharacter
 	/** MappingContext */
 	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = Input, meta = (AllowPrivateAccess = "true"))
 	UInputMappingContext* DefaultMappingContext;
-	/** Jump Input Action */
+	/** Dash Input Action */
 	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = Input, meta = (AllowPrivateAccess = "true"))
 	UInputAction* DashAction;
+	/** Jump Input Action */
+	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = Input, meta = (AllowPrivateAccess = "true"))
+	UInputAction* JumpAction;
 	/** Move Input Action */
 	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = Input, meta = (AllowPrivateAccess = "true"))
 	UInputAction* MoveAction;
@@ -74,6 +77,8 @@ class AMultiplayerCharacter : public ACharacter
 public:
 	AMultiplayerCharacter();
 	virtual void PostInitializeComponents() override;
+	UPROPERTY()
+	class UMultiplayerCharAnimInstance* AnimInstance;
 
 protected:
 	//Commands
@@ -107,6 +112,35 @@ protected:
 	void StartCrounch();
 	UFUNCTION()
 	void StopCrounch();
+
+	//DashProperties
+	UPROPERTY(BlueprintReadOnly, EditDefaultsOnly, Category = "DashDefaults")
+	float TimeDashCooldown;
+	UPROPERTY(BlueprintReadOnly, EditDefaultsOnly, Category = "DashDefaults")
+	int32 DashForceXY;
+	UPROPERTY(BlueprintReadOnly, EditDefaultsOnly, Category = "DashDefaults")
+	float DashForceZ;
+	UPROPERTY(BlueprintReadOnly, EditDefaultsOnly, Category = "DashDefaults")
+	bool bIsDashing;
+	UPROPERTY(BlueprintReadOnly, EditDefaultsOnly, Category = "DashDefaults")
+	ECharMovDirection LastDirection;
+
+	//DashFunctions
+	UFUNCTION()
+	void StartDash();
+	UFUNCTION(BlueprintCallable)
+	void AddDashImpulse(ECharMovDirection Direction);
+	
+	UFUNCTION()
+	void DashCooldown();
+	UFUNCTION()
+	bool CanDash();
+	UFUNCTION()
+	void AbilityDash(ECharMovDirection Direction);
+	UFUNCTION(Server, Unreliable)
+	void Server_AbilityDash(ECharMovDirection Direction);
+	UFUNCTION(NetMulticast, Reliable)
+	void MC_AbilityDash(ECharMovDirection Direction);
 
 	//Pickup
 	UFUNCTION()
@@ -169,8 +203,6 @@ protected:
 	//Movement
 	UPROPERTY()
 	bool bIsCrounch;
-	UPROPERTY(ReplicatedUsing = OnRep_Aiming, BlueprintReadOnly)
-	bool bIsAiming;
 	//Rep Functions for Aiming
 	UFUNCTION()
 	void OnRep_Aiming();
@@ -259,6 +291,8 @@ protected:
 	FTimerHandle FiringTimer;
 
 public:
+	UPROPERTY(ReplicatedUsing = OnRep_Aiming, BlueprintReadOnly)
+	bool bIsAiming;
 	//TeamColor
 	UPROPERTY(EditDefaultsOnly)
 	UMaterial* Red;
@@ -288,7 +322,15 @@ public:
 	//WeaponInfo
 	UAnimationAsset* WeaponShotAnim;
 	
-
+	//Montages
+	UPROPERTY(EditDefaultsOnly, BlueprintReadWrite, Category = "Montages")
+	UAnimMontage* DashForward;
+	UPROPERTY(EditDefaultsOnly, BlueprintReadWrite, Category = "Montages")
+	UAnimMontage* DashBackward;
+	UPROPERTY(EditDefaultsOnly, BlueprintReadWrite, Category = "Montages")
+	UAnimMontage* DashLeft;
+	UPROPERTY(EditDefaultsOnly, BlueprintReadWrite, Category = "Montages")
+	UAnimMontage* DashRight;
 };
 
 
