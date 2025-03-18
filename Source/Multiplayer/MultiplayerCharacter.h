@@ -73,6 +73,7 @@ class AMultiplayerCharacter : public ACharacter
 
 public:
 	AMultiplayerCharacter();
+	virtual void PostInitializeComponents() override;
 
 protected:
 	//Commands
@@ -107,6 +108,10 @@ protected:
 	UFUNCTION()
 	void StopCrounch();
 
+	//Pickup
+	UFUNCTION()
+	void EquipItem();
+
 protected:
 	// APawn interface
 	virtual void SetupPlayerInputComponent(class UInputComponent* PlayerInputComponent) override;
@@ -120,6 +125,12 @@ protected:
 	//Camera Update
 	void UpdateCamera();
 
+private:
+	UPROPERTY(VisibleAnywhere)
+	class UCombatComponent* CombatSystem;
+	UFUNCTION(Server, Reliable)
+	void ServerEquipItem();
+
 public:
 	/** Returns CameraBoom subobject **/
 	FORCEINLINE class USpringArmComponent* GetCameraBoom() const { return CameraBoom; }
@@ -128,8 +139,14 @@ public:
 
 	UPROPERTY(ReplicatedUsing = OnRep_PlayerTeam, BlueprintReadWrite)
 	ETeam CurrentTeam = ETeam::ET_NoTeam;
-	UPROPERTY(VisibleAnywhere)
-	TSubclassOf<class ABaseWeapon> CurrentWeaponClass;
+
+	UPROPERTY(ReplicatedUsing = OnRep_OverlappingWeapon)
+	class ABaseWeapon* OverlappingWeapon;
+
+	void SetOverlappingWeapon(ABaseWeapon* Weapon);
+
+	UFUNCTION()
+	void OnRep_OverlappingWeapon(ABaseWeapon* LastWeapon);
 
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Replicated)
 	EPlayerOverlayState CurrentState;
@@ -177,7 +194,7 @@ protected:
 	UFUNCTION(Server, NetMulticast, Reliable)
 	void MulticastOnDeath();
 
-	//FunctionRep for Team
+	//FunctionRep
 	UFUNCTION()
 	void OnRep_PlayerTeam();
 	void GetLifetimeReplicatedProps(TArray<FLifetimeProperty>& OutLifetimeProps) const override;

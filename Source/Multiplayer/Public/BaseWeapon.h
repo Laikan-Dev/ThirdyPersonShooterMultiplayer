@@ -4,6 +4,7 @@
 
 #include "GameFramework/Actor.h"
 #include "BaseWeapon.generated.h"
+
 USTRUCT(BlueprintType)
 struct FWeaponInformation
 {
@@ -31,6 +32,15 @@ struct FWeaponInformation
 	int32 AmmoCap;;
 };
 
+UENUM(BlueprintType)
+enum class EWeaponState : uint8
+{
+	EWS_Initial UMETA(DisplayName = "Initial State"),
+	EWS_Equipped UMETA(DisplayName = "Equipped"),
+	EWS_Dropped UMETA(DisplayName = "Dropped"),
+	EWS_MAX UMETA(DisplayName = "DefaultMAX"),
+};
+
 UCLASS()
 class MULTIPLAYER_API ABaseWeapon : public AActor
 {
@@ -39,15 +49,29 @@ class MULTIPLAYER_API ABaseWeapon : public AActor
 public:
 	// Sets default values for this actor's properties
 	ABaseWeapon();
+
+	void GetLifetimeReplicatedProps(TArray<FLifetimeProperty>& OutLifetimeProps) const override;
+
 	// Struct Information
-	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Info")
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Weapon Properties")
 	FWeaponInformation WeaponInformation;
-public:
-	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = "Components")
+
+	UPROPERTY(VisibleAnywhere, Category = "Weapon Properties")
+	class UWidgetComponent* PickupWidget;
+
+	void ShowPickupWidget(bool bShowWidget);
+private:
+	UPROPERTY(VisibleAnywhere, Category = "Components")
 	class USphereComponent* SphereComponent;
 
-	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = "Components")
+	UPROPERTY(VisibleAnywhere, Category = "Components")
 	class USkeletalMeshComponent* SkeletalMesh;
+
+	UPROPERTY(VisibleAnywhere, ReplicatedUsing = OnRep_WeaponState, Category = "Weapon Properties")
+	EWeaponState WeaponState;
+
+	UFUNCTION()
+	void OnRep_WeaponState();
 
 protected:
 	// Called when the game starts or when spawned
@@ -55,6 +79,10 @@ protected:
 
 	UFUNCTION(Server, Reliable)
 	void PickUp(AMultiplayerCharacter* Player);
+
+public:
+	void SetWeaponState(EWeaponState State);
+	FORCEINLINE USphereComponent* GetAreaSphere() const { return SphereComponent; }
 
 public:
 	UFUNCTION()

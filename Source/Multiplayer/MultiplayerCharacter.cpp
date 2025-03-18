@@ -17,6 +17,7 @@
 #include "Blueprint/UserWidget.h"
 #include "Blueprint/WidgetBlueprintLibrary.h"
 #include "CaptureFlagArea.h"
+#include "CombatComponent.h"
 
 
 DEFINE_LOG_CATEGORY(LogTemplateCharacter);
@@ -78,11 +79,24 @@ AMultiplayerCharacter::AMultiplayerCharacter()
 	WeaponSocket->SetupAttachment(GetMesh(), TEXT("hand_rSocket"));
 	WeaponSocket->SetCollisionEnabled(ECollisionEnabled::NoCollision);
 	WeaponSocket->SetIsReplicated(true);
-	
+
+	//Create CombatComponent
+	CombatSystem = CreateDefaultSubobject<UCombatComponent>(TEXT("CombatComponent"));
+	CombatSystem->SetIsReplicated(true);
 	
 
 	// Note: The skeletal mesh and anim blueprint references on the Mesh component (inherited from Character) 
 	// are set in the derived blueprint asset named ThirdPersonCharacter (to avoid direct content references in C++)
+}
+
+void AMultiplayerCharacter::PostInitializeComponents()
+{
+	Super::PostInitializeComponents();
+	if (CombatSystem)
+	{
+		CombatSystem->Character = this;
+	}
+	
 }
 
 void AMultiplayerCharacter::BeginPlay()
@@ -102,6 +116,33 @@ void AMultiplayerCharacter::UpdateCamera()
 {
 	bool bIsMoving = !GetVelocity().IsNearlyZero();
 	bUseControllerRotationYaw = bIsMoving || bIsAiming;
+}
+void AMultiplayerCharacter::SetOverlappingWeapon(ABaseWeapon* Weapon)
+{
+	if (OverlappingWeapon)
+	{
+		OverlappingWeapon->ShowPickupWidget(false);
+	}
+	OverlappingWeapon = Weapon;
+	if (IsLocallyControlled())
+	{
+		if (OverlappingWeapon)
+		{
+			OverlappingWeapon->ShowPickupWidget(true);
+		}
+	}
+}
+
+void AMultiplayerCharacter::OnRep_OverlappingWeapon(ABaseWeapon* LastWeapon)
+{
+	if (OverlappingWeapon)
+	{
+		OverlappingWeapon->ShowPickupWidget(true);
+	}
+	if (LastWeapon)
+	{
+		LastWeapon->ShowPickupWidget(false);
+	}
 }
 
 void AMultiplayerCharacter::OnRep_CurrentHealth()
@@ -148,6 +189,7 @@ void AMultiplayerCharacter::GetLifetimeReplicatedProps(TArray<FLifetimeProperty>
 	DOREPLIFETIME(AMultiplayerCharacter, bIsAiming);		//Replicate boolean aiming
 	DOREPLIFETIME(AMultiplayerCharacter, CurrentState);
 	DOREPLIFETIME(AMultiplayerCharacter, WeaponInfo);
+	DOREPLIFETIME_CONDITION(AMultiplayerCharacter, OverlappingWeapon, COND_OwnerOnly);
 }
 
 void AMultiplayerCharacter::OnHealthUpdate()
@@ -321,8 +363,12 @@ void AMultiplayerCharacter::SetupPlayerInputComponent(UInputComponent* PlayerInp
 		//Aiming
 		EnhancedInputComponent->BindAction(AimingInput, ETriggerEvent::Triggered, this, &AMultiplayerCharacter::StartAiming);
 		EnhancedInputComponent->BindAction(AimingInput, ETriggerEvent::Completed, this, &AMultiplayerCharacter::StopAiming);
+
 		//Firing Projectiles
 		EnhancedInputComponent->BindAction(FireInput, ETriggerEvent::Started, this, &AMultiplayerCharacter::StartFire);
+
+		//PickupItem
+		EnhancedInputComponent->BindAction(PickUpInput, ETriggerEvent::Started, this, &AMultiplayerCharacter::EquipItem);
 	}
 	else
 	{
@@ -541,3 +587,27 @@ void AMultiplayerCharacter::StopCrounch()
 	ServerSetCrounch(false);
 
 }
+
+void AMultiplayerCharacter::EquipItem()
+{
+	if (CombatSystem)
+	{
+		if (HasAuthority())
+		{
+			CombatSystem->EquipWeapon(OverlappingWeapon);
+		}
+		else
+		{
+			ServerEquipItem();
+		}
+		
+	}
+}
+void AMultiplayerCharacter::ServerEquipItem_Implementation()
+{
+	if (CombatSystem)
+	{
+		CombatSystem->EquipWeapon(OverlappingWeapon);
+	}
+}
+
