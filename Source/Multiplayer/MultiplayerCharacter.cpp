@@ -364,9 +364,11 @@ void AMultiplayerCharacter::SetupPlayerInputComponent(UInputComponent* PlayerInp
 		//Crounch
 		EnhancedInputComponent->BindAction(CrounchAction, ETriggerEvent::Triggered, this, &AMultiplayerCharacter::StartCrounch);
 		EnhancedInputComponent->BindAction(CrounchAction, ETriggerEvent::Completed, this, &AMultiplayerCharacter::StopCrounch);
-
+		//Jump
 		EnhancedInputComponent->BindAction(JumpAction, ETriggerEvent::Triggered, this, &AMultiplayerCharacter::Jump);
 		EnhancedInputComponent->BindAction(JumpAction, ETriggerEvent::Completed, this, &AMultiplayerCharacter::StopJumping);
+		//Dash
+		EnhancedInputComponent->BindAction(DashAction, ETriggerEvent::Started, this, &AMultiplayerCharacter::StartDash);
 
 		// Looking
 		EnhancedInputComponent->BindAction(LookAction, ETriggerEvent::Triggered, this, &AMultiplayerCharacter::Look);
@@ -619,21 +621,37 @@ void AMultiplayerCharacter::AddDashImpulse(ECharMovDirection Direction)
 	{
 	case ECharMovDirection::None:
 		{
-		FVector MultiplyValue(0.0, 0.0, 0.0);
-		LelImpulse = GetActorForwardVector() * MultiplyValue;
+		LelImpulse = GetActorForwardVector() * DashForceXY;
 		}
 		break;
 	case ECharMovDirection::Forward:
+	{
+		LelImpulse = GetActorForwardVector() * DashForceXY;
+	}
 		break;
 	case ECharMovDirection::Backward:
+		{
+		int32 Value = DashForceXY * -1;
+		LelImpulse = GetActorForwardVector() * Value;
+		}
 		break;
 	case ECharMovDirection::Left:
+		{
+		int32 Value = DashForceXY * -1;
+		LelImpulse = GetActorRightVector() * Value;
+		}
 		break;
 	case ECharMovDirection::Right:
+		{
+		LelImpulse = GetActorRightVector() * DashForceXY;
+		}
 		break;
 	default:
 		break;
 	}
+	LelImpulse.Z = LelImpulse.Z + DashForceZ;
+	GetCharacterMovement()->AddImpulse(LelImpulse, true);
+	return;
 }
 
 void AMultiplayerCharacter::DashCooldown()
