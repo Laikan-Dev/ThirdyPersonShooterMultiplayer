@@ -127,5 +127,6 @@ void UMultiplayerCharAnimInstance::PlayDashMontage(ECharMovDirection AnimDirecti
 		}
 		break;
 	}
+	Character->OnAbilityVFX(false);
 	return;
 }

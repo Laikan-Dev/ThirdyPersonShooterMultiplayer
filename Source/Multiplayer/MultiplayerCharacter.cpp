@@ -19,6 +19,7 @@
 #include "CaptureFlagArea.h"
 #include "CombatComponent.h"
 #include "Multiplayer/Public/MultiplayerCharAnimInstance.h"
+#include "Niagara/Public/NiagaraComponent.h"
 
 DEFINE_LOG_CATEGORY(LogTemplateCharacter);
 
@@ -30,6 +31,11 @@ AMultiplayerCharacter::AMultiplayerCharacter()
 	//Replicate
 	bReplicates = true;
 	SetReplicateMovement(true);
+
+	//Niagra VFX
+	AbilityVFX = CreateDefaultSubobject<UNiagaraComponent>(TEXT("VisualFx"));
+	AbilityVFX->SetupAttachment(GetMesh());
+	AbilityVFX->SetIsReplicated(true);
 
 	//DashDefaults
 	TimeDashCooldown = 3.0;
@@ -317,6 +323,11 @@ bool AMultiplayerCharacter::bIsAiming()
 	return (CombatSystem && CombatSystem->bAiming);
 }
 
+void AMultiplayerCharacter::OnAbilityVFX(bool bNewActivate)
+{
+	AbilityVFX->Activate(bNewActivate);
+}
+
 void AMultiplayerCharacter::SelectTeam_Implementation()
 {
 	AMultiplayerPlayerController* PlayerController = Cast<AMultiplayerPlayerController>(GetController());
@@ -578,6 +589,7 @@ void AMultiplayerCharacter::StartDash()
 
 void AMultiplayerCharacter::AddDashImpulse(ECharMovDirection Direction)
 {
+	
 	FVector LelImpulse;
 	switch (Direction)
 	{
@@ -648,6 +660,7 @@ void AMultiplayerCharacter::AbilityDash(ECharMovDirection Direction)
 void AMultiplayerCharacter::MC_AbilityDash_Implementation(ECharMovDirection Direction)
 {
 	LastDirection = Direction;
+	OnAbilityVFX(true);
 	AnimInstance->PlayDashMontage(LastDirection);
 }
 
