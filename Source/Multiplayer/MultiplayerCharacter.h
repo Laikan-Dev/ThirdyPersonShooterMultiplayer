@@ -110,8 +110,6 @@ protected:
 	void StopRunning();
 	UFUNCTION()
 	void StartCrounch();
-	UFUNCTION()
-	void StopCrounch();
 
 	//DashProperties
 	UPROPERTY(BlueprintReadOnly, EditDefaultsOnly, Category = "DashDefaults")
@@ -182,6 +180,8 @@ public:
 	UFUNCTION()
 	void OnRep_OverlappingWeapon(ABaseWeapon* LastWeapon);
 
+	bool IWeaponEquipped();
+
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Replicated)
 	EPlayerOverlayState CurrentState;
 
@@ -206,17 +206,10 @@ protected:
 	//Rep Functions for Aiming
 	UFUNCTION()
 	void OnRep_Aiming();
-	UFUNCTION(Server, Reliable)
-	void ServerSetAiming(bool bNewAiming);
-	void ServerSetAiming_Implementation(bool bNewAiming);
 
 	UFUNCTION(Server, Reliable)
 	void ServerSetRuning(bool bIsRunning);
 	void ServerSetRuning_Implementation(bool bIsRunning);
-	UFUNCTION(Server, Reliable)
-	void ServerSetCrounch(bool bIsCrouching);
-	void ServerSetCrounch_Implementation(bool bIsRunning);
-
 //FunctionRep for Health
 	UFUNCTION()
 	void OnRep_CurrentHealth();
@@ -291,8 +284,8 @@ protected:
 	FTimerHandle FiringTimer;
 
 public:
-	UPROPERTY(ReplicatedUsing = OnRep_Aiming, BlueprintReadOnly)
-	bool bIsAiming;
+
+	bool bIsAiming();
 	//TeamColor
 	UPROPERTY(EditDefaultsOnly)
 	UMaterial* Red;
@@ -316,8 +309,6 @@ public:
 	float AimingVelocity = 250.f;
 	UPROPERTY(EditDefaultsOnly, BlueprintReadWrite, Category = "Movement")
 	float RunningVelocity = 700.f;
-	UPROPERTY(EditDefaultsOnly, BlueprintReadWrite, Category = "Movement")
-	float CrounchVelocity = 200.f;
 
 	//WeaponInfo
 	UAnimationAsset* WeaponShotAnim;

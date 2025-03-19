@@ -39,6 +39,15 @@ public:
 	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = "MovementData")
 	bool bIsFalling;
 
+	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = "Combat")
+	bool bWeaponEquipped;
+
+	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = "Combat")
+	bool bIsCrouched;
+
+	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = "Combat")
+	bool bIsAiming;
+
 	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = "AimOffset")
 	float AimOffset;
 

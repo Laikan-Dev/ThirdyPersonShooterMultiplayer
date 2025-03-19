@@ -31,6 +31,9 @@ void UMultiplayerCharAnimInstance::NativeUpdateAnimation(float DeltaTimeX)
 
 		//Set Is Falling from the movement components falling state.
 		bIsFalling = CharMovComponent->IsFalling();
+		bWeaponEquipped = Character->IWeaponEquipped();
+		bIsCrouched = Character->bIsCrouched;
+		bIsAiming = Character->bIsAiming();
 
 		GetAimOffset();
 		GetDirection();
@@ -40,7 +43,7 @@ void UMultiplayerCharAnimInstance::NativeUpdateAnimation(float DeltaTimeX)
 
 void UMultiplayerCharAnimInstance::GetAimOffset()
 {
-	if (Character->bIsAiming)
+	if (Character->bIsAiming())
 	{
 		FRotator AimRotator = UKismetMathLibrary::NormalizedDeltaRotator(Character->GetBaseAimRotation(), Character->GetActorRotation());
 		float Value = AimRotator.Pitch * -1.0;

@@ -17,6 +17,7 @@ public:
 	UCombatComponent();
 	// Called every frame
 	virtual void TickComponent(float DeltaTime, ELevelTick TickType, FActorComponentTickFunction* ThisTickFunction) override;
+	void GetLifetimeReplicatedProps(TArray<FLifetimeProperty>& OutLifetimeProps) const override;
 	friend class AMultiplayerCharacter;
 
 	void EquipWeapon(class ABaseWeapon* WeaponToEquip);
@@ -24,10 +25,16 @@ public:
 protected:
 	// Called when the game starts
 	virtual void BeginPlay() override;
+	void SetAiming(bool bIsAiming);
+	UFUNCTION(Server, Reliable)
+	void Server_SetAiming(bool bIsAiming);
 
 private:
 	class AMultiplayerCharacter* Character;
-	class ABaseWeapon* EquippedWeapon;
+	UPROPERTY(Replicated)
+	ABaseWeapon* EquippedWeapon;
+	UPROPERTY(Replicated)
+	bool bAiming;
 
 public:	
 	

@@ -57,6 +57,7 @@ AMultiplayerCharacter::AMultiplayerCharacter()
 	// Configure character movement
 	GetCharacterMovement()->bOrientRotationToMovement = true; // Character moves in the direction of input...	
 	GetCharacterMovement()->RotationRate = FRotator(0.0f, 500.0f, 0.0f); // ...at this rotation rate
+	GetCharacterMovement()->NavAgentProps.bCanCrouch = true;
 
 	// Note: For faster iteration times these variables, and many more, can be tweaked in the Character Blueprint
 	// instead of recompiling to adjust them
@@ -123,7 +124,7 @@ void AMultiplayerCharacter::Tick(float DeltaTime)
 void AMultiplayerCharacter::UpdateCamera()
 {
 	bool bIsMoving = !GetVelocity().IsNearlyZero();
-	bUseControllerRotationYaw = bIsMoving || bIsAiming;
+	bUseControllerRotationYaw = bIsMoving || bIsAiming();
 }
 void AMultiplayerCharacter::SetOverlappingWeapon(ABaseWeapon* Weapon)
 {
@@ -151,6 +152,11 @@ void AMultiplayerCharacter::OnRep_OverlappingWeapon(ABaseWeapon* LastWeapon)
 	{
 		LastWeapon->ShowPickupWidget(false);
 	}
+}
+
+bool AMultiplayerCharacter::IWeaponEquipped()
+{
+	return (CombatSystem && CombatSystem->EquippedWeapon);
 }
 
 void AMultiplayerCharacter::OnRep_CurrentHealth()
@@ -194,7 +200,6 @@ void AMultiplayerCharacter::GetLifetimeReplicatedProps(TArray<FLifetimeProperty>
 	DOREPLIFETIME(AMultiplayerCharacter, CurrentHealth); 	//Replicate Current Health
 	DOREPLIFETIME(AMultiplayerCharacter, CurrentTeam);	    //Replicate Current Team
 	DOREPLIFETIME(AMultiplayerCharacter, bIsDead);			//Replicate boolean Death for ABP
-	DOREPLIFETIME(AMultiplayerCharacter, bIsAiming);		//Replicate boolean aiming
 	DOREPLIFETIME(AMultiplayerCharacter, CurrentState);
 	DOREPLIFETIME(AMultiplayerCharacter, WeaponInfo);
 	DOREPLIFETIME_CONDITION(AMultiplayerCharacter, OverlappingWeapon, COND_OwnerOnly);
@@ -281,7 +286,7 @@ void AMultiplayerCharacter::Server_SetCurrentWeapon_Implementation(FWeaponInform
 
 void AMultiplayerCharacter::StartFire()
 {
-	if (bIsAiming)
+	if (bIsAiming())
 	{
 		FTransform MuzzleTranform = WeaponSocket->GetSocketTransform(TEXT("FireSocket"));
 		MuzzleTranform.SetToRelativeTransform(WeaponSocket->GetRelativeTransform());
@@ -305,6 +310,11 @@ void AMultiplayerCharacter::ServerSetTeam_Implementation(ETeam NewTeam)
 {
 	CurrentTeam = NewTeam;
 	OnRep_PlayerTeam();
+}
+
+bool AMultiplayerCharacter::bIsAiming()
+{
+	return (CombatSystem && CombatSystem->bAiming);
 }
 
 void AMultiplayerCharacter::SelectTeam_Implementation()
@@ -363,9 +373,8 @@ void AMultiplayerCharacter::SetupPlayerInputComponent(UInputComponent* PlayerInp
 		EnhancedInputComponent->BindAction(RunningAction, ETriggerEvent::Completed, this, &AMultiplayerCharacter::StopRunning);
 		//Crounch
 		EnhancedInputComponent->BindAction(CrounchAction, ETriggerEvent::Triggered, this, &AMultiplayerCharacter::StartCrounch);
-		EnhancedInputComponent->BindAction(CrounchAction, ETriggerEvent::Completed, this, &AMultiplayerCharacter::StopCrounch);
 		//Jump
-		EnhancedInputComponent->BindAction(JumpAction, ETriggerEvent::Triggered, this, &AMultiplayerCharacter::Jump);
+		EnhancedInputComponent->BindAction(JumpAction, ETriggerEvent::Triggered, this, &AMultiplayerCharacter::StartJump);
 		EnhancedInputComponent->BindAction(JumpAction, ETriggerEvent::Completed, this, &AMultiplayerCharacter::StopJumping);
 		//Dash
 		EnhancedInputComponent->BindAction(DashAction, ETriggerEvent::Started, this, &AMultiplayerCharacter::StartDash);
@@ -425,26 +434,6 @@ void AMultiplayerCharacter::Look(const FInputActionValue& Value)
 	}
 }
 
-void AMultiplayerCharacter::ServerSetAiming_Implementation(bool bNewAiming)
-{
-	bIsAiming = bNewAiming;
-
-	if (bIsAiming)
-	{
-		CurrentState = EPlayerOverlayState::EPS_Rifle;
-		CameraBoom->SocketOffset.Set(250.0, 73.0, 60.0);
-		GetCharacterMovement()->MaxWalkSpeed = AimingVelocity;
-		
-	}
-	else
-	{
-		CurrentState = EPlayerOverlayState::EPS_Unarmed;
-		CameraBoom->SocketOffset.Set(75.0, 68.0, 10.0);
-		GetCharacterMovement()->MaxWalkSpeed = NormalVelocity;
-		
-	}
-}
-
 void AMultiplayerCharacter::ServerSetRuning_Implementation(bool bIsRunning)
 {
 	if (bIsRunning)
@@ -459,23 +448,9 @@ void AMultiplayerCharacter::ServerSetRuning_Implementation(bool bIsRunning)
 	}
 }
 
-void AMultiplayerCharacter::ServerSetCrounch_Implementation(bool bIsCrouching)
-{
-	if (bIsCrouching)
-	{
-		GetCharacterMovement()->MaxWalkSpeed = CrounchVelocity;
-		CameraBoom->SocketOffset.Set(100.f, 68.0, 10.0);
-	}
-	else
-	{
-		GetCharacterMovement()->MaxWalkSpeed = NormalVelocity;
-		CameraBoom->SocketOffset.Set(75.0, 68.0, 10.0);
-	}
-}
-
 void AMultiplayerCharacter::OnRep_Aiming()
 {
-	if (bIsAiming)
+	if (bIsAiming())
 	{
 		CurrentState = EPlayerOverlayState::EPS_Rifle;
 		CameraBoom->SocketOffset.Set(250.0, 73.0, 60.0);
@@ -491,34 +466,23 @@ void AMultiplayerCharacter::OnRep_Aiming()
 
 void AMultiplayerCharacter::StartAiming()
 {
-	if (WeaponInfo.WeaponClass)
+	if (CombatSystem)
 	{
-		if (HasAuthority())
-		{
-			bIsAiming = true;
-		}
-		else
-		{
-			ServerSetAiming(true);
-		}
+		CombatSystem->SetAiming(true);
 	}
 }
 
 void AMultiplayerCharacter::StopAiming()
 {
-	if (HasAuthority())
+	if (CombatSystem)
 	{
-		bIsAiming = false;
-	}
-	else
-	{
-		ServerSetAiming(false);
+		CombatSystem->SetAiming(false);
 	}
 }
 
 void AMultiplayerCharacter::StartJump()
 {
-	if (!bIsAiming)
+	if (!bIsAiming())
 	{
 		Jump();
 	}
@@ -561,7 +525,7 @@ void AMultiplayerCharacter::ChoseBlue()
 
 void AMultiplayerCharacter::Running()
 {
-	if (!bIsAiming)
+	if (!bIsAiming())
 	{
 		GetCharacterMovement()->MaxWalkSpeed = RunningVelocity;
 		CameraBoom->SocketOffset.Set(30.0, 68.0, 10.0);
@@ -572,7 +536,7 @@ void AMultiplayerCharacter::Running()
 void AMultiplayerCharacter::StopRunning()
 {
 	GetCharacterMovement()->MaxWalkSpeed = NormalVelocity;
-	if (!bIsAiming)
+	if (!bIsAiming())
 	{
 		CameraBoom->SocketOffset.Set(75.0, 68.0, 10.0);
 	}
@@ -581,24 +545,22 @@ void AMultiplayerCharacter::StopRunning()
 
 void AMultiplayerCharacter::StartCrounch()
 {
-	GetCharacterMovement()->MaxWalkSpeed = CrounchVelocity;
-	if (!bIsAiming)
+	if (bIsCrouched)
 	{
-		CameraBoom->SocketOffset.Set(100.f, 68.0, 10.0);
+		UnCrouch();
+		if (!bIsAiming())
+		{
+			CameraBoom->SocketOffset.Set(75.0, 68.0, 10.0);
+		}
 	}
-	
-	ServerSetCrounch(true);
-}
-
-void AMultiplayerCharacter::StopCrounch()
-{
-	GetCharacterMovement()->MaxWalkSpeed = NormalVelocity;
-	if (!bIsAiming)
+	else
 	{
-		CameraBoom->SocketOffset.Set(75.0, 68.0, 10.0);
+		Crouch();
+		if (!bIsAiming())
+		{
+			CameraBoom->SocketOffset.Set(100.f, 68.0, 10.0);
+		}
 	}
-	ServerSetCrounch(false);
-
 }
 
 //DashFunctions
