@@ -20,6 +20,7 @@
 #include "CombatComponent.h"
 #include "Multiplayer/Public/MultiplayerCharAnimInstance.h"
 #include "Niagara/Public/NiagaraComponent.h"
+#include "Components/WidgetComponent.h"
 
 DEFINE_LOG_CATEGORY(LogTemplateCharacter);
 
@@ -36,6 +37,9 @@ AMultiplayerCharacter::AMultiplayerCharacter()
 	AbilityVFX = CreateDefaultSubobject<UNiagaraComponent>(TEXT("VisualFx"));
 	AbilityVFX->SetupAttachment(GetMesh());
 	AbilityVFX->SetIsReplicated(true);
+
+	//PlayerInfoWidget
+	PlayerInfo = CreateDefaultSubobject<UWidgetComponent>(TEXT("PlayerInfo"));
 
 	//DashDefaults
 	TimeDashCooldown = 3.0;

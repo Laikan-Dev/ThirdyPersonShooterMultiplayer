@@ -15,6 +15,7 @@ class UCameraComponent;
 class USkeletalMeshComponent;
 class UInputMappingContext;
 class UInputAction;
+class UWidgetComponent;
 class UNiagaraComponent;
 struct FInputActionValue;
 struct FWeaponInformation;
@@ -48,6 +49,9 @@ class AMultiplayerCharacter : public ACharacter
 	//WeaponSocket
 	UPROPERTY(VisibleAnywhere, BlueprintReadWrite, Category = "Components", meta = (AllowPrivateAccess = "true"))
 	UNiagaraComponent* AbilityVFX;
+	//WidgetComp
+	UPROPERTY(VisibleAnywhere, BlueprintReadWrite, Category = "Components", meta = (AllowPrivateAccess = "true"))	
+	UWidgetComponent* PlayerInfo;
 	/** MappingContext */
 	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = Input, meta = (AllowPrivateAccess = "true"))
 	UInputMappingContext* DefaultMappingContext;
