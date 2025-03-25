@@ -387,7 +387,7 @@ void AMultiplayerCharacter::SetupPlayerInputComponent(UInputComponent* PlayerInp
 		EnhancedInputComponent->BindAction(RunningAction, ETriggerEvent::Triggered, this, &AMultiplayerCharacter::Running);
 		EnhancedInputComponent->BindAction(RunningAction, ETriggerEvent::Completed, this, &AMultiplayerCharacter::StopRunning);
 		//Crounch
-		EnhancedInputComponent->BindAction(CrounchAction, ETriggerEvent::Triggered, this, &AMultiplayerCharacter::StartCrounch);
+		EnhancedInputComponent->BindAction(CrounchAction, ETriggerEvent::Started, this, &AMultiplayerCharacter::StartCrounch);
 		//Jump
 		EnhancedInputComponent->BindAction(JumpAction, ETriggerEvent::Triggered, this, &AMultiplayerCharacter::StartJump);
 		EnhancedInputComponent->BindAction(JumpAction, ETriggerEvent::Completed, this, &AMultiplayerCharacter::StopJumping);
@@ -481,7 +481,7 @@ void AMultiplayerCharacter::OnRep_Aiming()
 
 void AMultiplayerCharacter::StartAiming()
 {
-	if (CombatSystem)
+	if (CombatSystem && CombatSystem->EquippedWeapon)
 	{
 		CombatSystem->SetAiming(true);
 	}
@@ -489,7 +489,7 @@ void AMultiplayerCharacter::StartAiming()
 
 void AMultiplayerCharacter::StopAiming()
 {
-	if (CombatSystem)
+	if (CombatSystem && CombatSystem->EquippedWeapon)
 	{
 		CombatSystem->SetAiming(false);
 	}

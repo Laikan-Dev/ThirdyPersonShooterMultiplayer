@@ -35,6 +35,22 @@ void UMultiplayerCharAnimInstance::NativeUpdateAnimation(float DeltaTimeX)
 		bIsCrouched = Character->bIsCrouched;
 		bIsAiming = Character->bIsAiming();
 
+		//YawOffset
+		FRotator AimRotation = Character->GetBaseAimRotation();
+		FRotator MovementRotation = UKismetMathLibrary::MakeRotFromX(Character->GetVelocity());
+		FRotator DeltaRot = UKismetMathLibrary::NormalizedDeltaRotator(MovementRotation, AimRotation);
+		DeltaRotation = FMath::RInterpTo(DeltaRotation, DeltaRot, DeltaTimeX, 15.f);
+		YawOffset = DeltaRotation.Yaw;
+
+		CharacterRotationLastFrame = CharacterRotation;
+		CharacterRotation = Character->GetActorRotation();
+		const FRotator Delta = UKismetMathLibrary::NormalizedDeltaRotator(CharacterRotation, CharacterRotationLastFrame);
+		const float Target = Delta.Yaw / DeltaTimeX;
+		const float Interp = FMath::FInterpTo(Lean, Target, DeltaTimeX, 6.f);
+		Lean = FMath::Clamp(Interp, -90.f, 90.f);
+	
+
+
 		GetAimOffset();
 		GetDirection();
 		SetMovDirection(Direction, GroundSpeed);
