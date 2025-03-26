@@ -21,6 +21,7 @@
 #include "Multiplayer/Public/MultiplayerCharAnimInstance.h"
 #include "Niagara/Public/NiagaraComponent.h"
 #include "Components/WidgetComponent.h"
+#include "Kismet/KismetMathLibrary.h"
 
 DEFINE_LOG_CATEGORY(LogTemplateCharacter);
 
@@ -100,6 +101,10 @@ AMultiplayerCharacter::AMultiplayerCharacter()
 	CombatSystem = CreateDefaultSubobject<UCombatComponent>(TEXT("CombatComponent"));
 	CombatSystem->SetIsReplicated(true);
 
+	//Capsule Comp
+	GetCapsuleComponent()->SetCollisionResponseToChannel(ECollisionChannel::ECC_Camera, ECollisionResponse::ECR_Ignore);
+	GetMesh()->SetCollisionResponseToChannel(ECollisionChannel::ECC_Camera, ECollisionResponse::ECR_Ignore);
+
 	
 	
 
@@ -129,6 +134,7 @@ void AMultiplayerCharacter::Tick(float DeltaTime)
 {
 	Super::Tick(DeltaTime);
 	UpdateCamera();
+	AimOffset(DeltaTime);
 }
 
 void AMultiplayerCharacter::UpdateCamera()
@@ -320,6 +326,31 @@ void AMultiplayerCharacter::ServerSetTeam_Implementation(ETeam NewTeam)
 {
 	CurrentTeam = NewTeam;
 	OnRep_PlayerTeam();
+}
+//AimOffset
+void AMultiplayerCharacter::AimOffset(float DeltaTime)
+{
+	if (CombatSystem && CombatSystem->EquippedWeapon == nullptr) return;
+	FVector Velocity = GetVelocity();
+	Velocity.Z = 0.f;
+	float Speed = Velocity.Size();
+	bool bIsInAir = GetCharacterMovement()->IsFalling();
+
+	if (Speed == 0.f && !bIsInAir) // standing still, not jumping
+	{
+		FRotator CurrentAimRotation = FRotator(0.f, GetBaseAimRotation().Yaw, 0.f);
+		FRotator DeltaAimRotation = UKismetMathLibrary::NormalizedDeltaRotator(CurrentAimRotation, StartAimRotation);
+		AO_Yaw = DeltaAimRotation.Yaw;
+		bUseControllerRotationYaw = false;
+	}
+	if (Speed > 0.f || bIsInAir) // running, or jumping
+	{
+		StartAimRotation = FRotator(0.f, GetBaseAimRotation().Yaw, 0.f);
+		AO_Yaw = 0.f;
+		bUseControllerRotationYaw = true;
+	}
+
+	AO_Pitch = GetBaseAimRotation().Pitch;
 }
 
 bool AMultiplayerCharacter::bIsAiming()

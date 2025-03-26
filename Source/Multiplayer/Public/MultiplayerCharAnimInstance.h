@@ -57,6 +57,11 @@ public:
 	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = "AimOffset")
 	float Lean;
 
+	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = "AimOffset")
+	float AO_Yaw;
+	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = "AimOffset")
+	float AO_Pitch;
+
 	FRotator CharacterRotationLastFrame;
 	FRotator CharacterRotation;
 	FRotator DeltaRotation;

@@ -42,16 +42,18 @@ void UMultiplayerCharAnimInstance::NativeUpdateAnimation(float DeltaTimeX)
 		DeltaRotation = FMath::RInterpTo(DeltaRotation, DeltaRot, DeltaTimeX, 15.f);
 		YawOffset = DeltaRotation.Yaw;
 
-		CharacterRotationLastFrame = CharacterRotation;
+		
 		CharacterRotation = Character->GetActorRotation();
+		CharacterRotationLastFrame = CharacterRotation;
 		const FRotator Delta = UKismetMathLibrary::NormalizedDeltaRotator(CharacterRotation, CharacterRotationLastFrame);
 		const float Target = Delta.Yaw / DeltaTimeX;
 		const float Interp = FMath::FInterpTo(Lean, Target, DeltaTimeX, 6.f);
 		Lean = FMath::Clamp(Interp, -90.f, 90.f);
 	
+		AO_Yaw = Character->GetAO_Yaw();
+		AO_Pitch = Character->GetAO_Pitch();
 
-
-		GetAimOffset();
+		//GetAimOffset();
 		GetDirection();
 		SetMovDirection(Direction, GroundSpeed);
 	}
