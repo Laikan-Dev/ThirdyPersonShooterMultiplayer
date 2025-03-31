@@ -83,6 +83,7 @@ protected:
 public:
 	void SetWeaponState(EWeaponState State);
 	FORCEINLINE USphereComponent* GetAreaSphere() const { return SphereComponent; }
+	FORCEINLINE USkeletalMeshComponent* GetWeaponMesh() const { return SkeletalMesh; }
 
 public:
 	UFUNCTION()

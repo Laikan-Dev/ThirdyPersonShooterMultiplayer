@@ -4,6 +4,7 @@
 
 #include "CoreMinimal.h"
 #include "Animation/AnimInstance.h"
+#include "Multiplayer/Enums/TurningInPlace.h"
 #include "MultiplayerCharAnimInstance.generated.h"
 
 /**
@@ -67,6 +68,11 @@ public:
 	FRotator DeltaRotation;
 
 	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = "MovementData")
+	FTransform LeftHandTransform;
+
+	class ABaseWeapon* EquippedWeapon;
+
+	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = "MovementData")
 	float Direction;
 
 	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = "MovementData")
@@ -74,6 +80,10 @@ public:
 
 	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = "MovementData")
 	ECharMovDirection MoveDirection_LastUpdate;
+
+	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = "MovementData")
+
+	ETurningInPlace TurningInPlace;
 
 	//Functions
 	UFUNCTION(BlueprintCallable)
@@ -87,4 +97,5 @@ public:
 
 	UFUNCTION(BlueprintCallable)
 	void PlayDashMontage(ECharMovDirection AnimDirection);
+
 };

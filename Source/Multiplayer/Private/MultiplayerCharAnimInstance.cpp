@@ -5,6 +5,7 @@
 #include "Multiplayer/MultiplayerCharacter.h"
 #include "Gameframework/CharacterMovementComponent.h"
 #include "Kismet/KismetMathLibrary.h"
+#include "BaseWeapon.h"
 
 void UMultiplayerCharAnimInstance::NativeInitializeAnimation()
 {
@@ -32,8 +33,10 @@ void UMultiplayerCharAnimInstance::NativeUpdateAnimation(float DeltaTimeX)
 		//Set Is Falling from the movement components falling state.
 		bIsFalling = CharMovComponent->IsFalling();
 		bWeaponEquipped = Character->IWeaponEquipped();
+		EquippedWeapon = Character->GetEquippedWeapon();
 		bIsCrouched = Character->bIsCrouched;
 		bIsAiming = Character->bIsAiming();
+		TurningInPlace = Character->GetTurningInPlace();
 
 		//YawOffset
 		FRotator AimRotation = Character->GetBaseAimRotation();
@@ -56,6 +59,16 @@ void UMultiplayerCharAnimInstance::NativeUpdateAnimation(float DeltaTimeX)
 		//GetAimOffset();
 		GetDirection();
 		SetMovDirection(Direction, GroundSpeed);
+
+		if(bWeaponEquipped && EquippedWeapon && EquippedWeapon->GetWeaponMesh() && Character->GetMesh())
+		{
+			LeftHandTransform = EquippedWeapon->GetWeaponMesh()->GetSocketTransform(FName("LeftHandSocket"), ERelativeTransformSpace::RTS_World);
+			FVector OutPosition;
+			FRotator OutRotation;
+			Character->GetMesh()->TransformToBoneSpace(FName("hand_r"), LeftHandTransform.GetLocation(), FRotator::ZeroRotator, OutPosition, OutRotation);
+			LeftHandTransform.SetLocation(OutPosition);
+			LeftHandTransform.SetRotation(FQuat(OutRotation));
+		}
 	}
 }
 

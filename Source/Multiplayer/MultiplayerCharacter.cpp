@@ -342,12 +342,14 @@ void AMultiplayerCharacter::AimOffset(float DeltaTime)
 		FRotator DeltaAimRotation = UKismetMathLibrary::NormalizedDeltaRotator(CurrentAimRotation, StartAimRotation);
 		AO_Yaw = DeltaAimRotation.Yaw;
 		bUseControllerRotationYaw = false;
+		TurnInPlace(DeltaTime);
 	}
 	if (Speed > 0.f || bIsInAir) // running, or jumping
 	{
 		StartAimRotation = FRotator(0.f, GetBaseAimRotation().Yaw, 0.f);
 		AO_Yaw = 0.f;
 		bUseControllerRotationYaw = true;
+		TurningInPlace = ETurningInPlace::ETIP_NotTurning;
 	}
 
 	AO_Pitch = GetBaseAimRotation().Pitch;
@@ -360,6 +362,18 @@ void AMultiplayerCharacter::AimOffset(float DeltaTime)
 	}
 }
 
+void AMultiplayerCharacter::TurnInPlace(float DeltaTime)
+{
+	if (AO_Yaw > 90.f)
+	{
+		TurningInPlace = ETurningInPlace::ETIP_Right;
+	}
+	else if (AO_Yaw < -90.f)
+	{
+		TurningInPlace = ETurningInPlace::ETIP_Left;
+	}
+}
+
 bool AMultiplayerCharacter::bIsAiming()
 {
 	return (CombatSystem && CombatSystem->bAiming);
@@ -368,6 +382,13 @@ bool AMultiplayerCharacter::bIsAiming()
 void AMultiplayerCharacter::OnAbilityVFX(bool bNewActivate)
 {
 	AbilityVFX->Activate(bNewActivate);
+}
+
+ABaseWeapon* AMultiplayerCharacter::GetEquippedWeapon()
+{
+	if (CombatSystem == nullptr) return nullptr;
+	return CombatSystem->EquippedWeapon;
+
 }
 
 void AMultiplayerCharacter::SelectTeam_Implementation()

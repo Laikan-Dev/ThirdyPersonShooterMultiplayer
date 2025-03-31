@@ -8,6 +8,7 @@
 #include "MPProjectile.h"
 #include "BaseWeapon.h"
 #include "PlayerOverlayStates.h"
+#include "Multiplayer/Enums/TurningInPlace.h"
 #include "MultiplayerCharacter.generated.h"
 
 class USpringArmComponent;
@@ -298,6 +299,12 @@ protected:
 	float AO_Pitch;
 	FRotator StartAimRotation;
 
+
+	ETurningInPlace TurningInPlace;
+
+	UFUNCTION()
+	void TurnInPlace(float DeltaTime);
+
 public:
 
 	bool bIsAiming();
@@ -344,6 +351,9 @@ public:
 
 	FORCEINLINE float GetAO_Yaw() const { return AO_Yaw; }
 	FORCEINLINE float GetAO_Pitch() const { return AO_Pitch; }
+	ABaseWeapon* GetEquippedWeapon();
+
+	FORCEINLINE ETurningInPlace GetTurningInPlace() const { return TurningInPlace; }
 };
 
 
