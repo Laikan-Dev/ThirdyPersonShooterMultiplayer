@@ -78,7 +78,7 @@ void UMultiplayerCharAnimInstance::GetAimOffset()
 	{
 		FRotator AimRotator = UKismetMathLibrary::NormalizedDeltaRotator(Character->GetBaseAimRotation(), Character->GetActorRotation());
 		float Value = AimRotator.Pitch * -1.0;
-		AimOffset = FMath::Clamp(Value, -55.0, 55.0);
+		AimOffset = FMath::Clamp(Value, -90.0, 90.0);
 	}
 	else
 	{
