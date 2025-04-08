@@ -121,6 +121,20 @@ void AMultiplayerCharacter::PostInitializeComponents()
 	
 }
 
+void AMultiplayerCharacter::PlayFireMontage(bool bAiming)
+{
+	if (CombatSystem == nullptr || CombatSystem->EquippedWeapon == nullptr) return;
+	
+	UAnimInstance* AnimInstanceRef = GetMesh()->GetAnimInstance();
+	if (AnimInstanceRef && ShootingMontage)
+	{
+		AnimInstance->Montage_Play(ShootingMontage);
+		FName SectionName;
+		SectionName = bAiming ? FName("RifleAim") : FName("RifleHip");
+		AnimInstanceRef->Montage_JumpToSection(SectionName);
+	}
+}
+
 void AMultiplayerCharacter::BeginPlay()
 {
 	// Call the base class  
@@ -476,6 +490,10 @@ void AMultiplayerCharacter::SetupPlayerInputComponent(UInputComponent* PlayerInp
 		//Firing Projectiles
 		EnhancedInputComponent->BindAction(FireInput, ETriggerEvent::Started, this, &AMultiplayerCharacter::StartFire);
 
+		//FiringInput
+		EnhancedInputComponent->BindAction(FireInput, ETriggerEvent::Triggered, this, &AMultiplayerCharacter::FireButtonPressed);
+		EnhancedInputComponent->BindAction(FireInput, ETriggerEvent::Completed, this, &AMultiplayerCharacter::FireButtonPressed);
+
 		//PickupItem
 		EnhancedInputComponent->BindAction(PickUpInput, ETriggerEvent::Started, this, &AMultiplayerCharacter::EquipItem);
 	}
@@ -564,6 +582,22 @@ void AMultiplayerCharacter::StopAiming()
 	if (CombatSystem && CombatSystem->EquippedWeapon)
 	{
 		CombatSystem->SetAiming(false);
+	}
+}
+
+void AMultiplayerCharacter::FireButtonPressed()
+{
+	if (CombatSystem)
+	{
+		CombatSystem->FireButtonPressed(true);
+	}
+}
+
+void AMultiplayerCharacter::FireButtonReleased()
+{
+	if (CombatSystem)
+	{
+		CombatSystem->FireButtonPressed(false);
 	}
 }
 

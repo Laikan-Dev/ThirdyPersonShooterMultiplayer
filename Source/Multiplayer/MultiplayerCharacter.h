@@ -89,6 +89,8 @@ public:
 	UPROPERTY()
 	class UMultiplayerCharAnimInstance* AnimInstance;
 
+	void PlayFireMontage(bool bAiming);
+
 protected:
 	//Commands
 	/** Called for movement input */
@@ -101,6 +103,10 @@ protected:
 	void StartAiming();
 	UFUNCTION()
 	void StopAiming();
+
+	//Firing
+	void FireButtonPressed();
+	void FireButtonReleased();
 
 	//Jump
 	UFUNCTION()

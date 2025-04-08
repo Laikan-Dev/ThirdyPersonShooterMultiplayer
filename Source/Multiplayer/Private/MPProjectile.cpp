@@ -21,6 +21,11 @@ AMPProjectile::AMPProjectile()
 	SphereComponent = CreateDefaultSubobject<USphereComponent>(TEXT("RootComponent"));
 	SphereComponent->InitSphereRadius(20.5f);
 	SphereComponent->SetCollisionProfileName(TEXT("BlockAllDynamic"));
+	SphereComponent->SetCollisionObjectType(ECollisionChannel::ECC_WorldDynamic);
+	SphereComponent->SetCollisionEnabled(ECollisionEnabled::QueryAndPhysics);
+	SphereComponent->SetCollisionResponseToAllChannels(ECollisionResponse::ECR_Ignore);
+	SphereComponent->SetCollisionResponseToChannel(ECollisionChannel::ECC_Visibility, ECollisionResponse::ECR_Block);
+	SphereComponent->SetCollisionResponseToChannel(ECollisionChannel::ECC_WorldStatic, ECollisionResponse::ECR_Block);
 	RootComponent = SphereComponent;
 	if (GetLocalRole() == ROLE_Authority)
 	{

@@ -29,6 +29,10 @@ protected:
 	UFUNCTION(Server, Reliable)
 	void Server_SetAiming(bool bIsAiming);
 
+	
+
+	void FireButtonPressed(bool bPressed);
+
 private:
 	class AMultiplayerCharacter* Character;
 	UPROPERTY(Replicated)
@@ -40,6 +44,7 @@ private:
 	UPROPERTY(EditDefaultsOnly)
 	float AimWalkSpeed;
 
+	bool bFireButtonPressed;
 public:	
 	
 
