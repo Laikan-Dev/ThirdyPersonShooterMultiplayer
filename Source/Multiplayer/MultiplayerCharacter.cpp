@@ -22,6 +22,7 @@
 #include "Niagara/Public/NiagaraComponent.h"
 #include "Components/WidgetComponent.h"
 #include "Kismet/KismetMathLibrary.h"
+#include "Components/SceneCaptureComponent2D.h"
 
 DEFINE_LOG_CATEGORY(LogTemplateCharacter);
 
@@ -41,6 +42,10 @@ AMultiplayerCharacter::AMultiplayerCharacter()
 
 	//PlayerInfoWidget
 	PlayerInfo = CreateDefaultSubobject<UWidgetComponent>(TEXT("PlayerInfo"));
+
+	//Scene Capture to UI
+	UICameraVisualize = CreateDefaultSubobject<USceneCaptureComponent2D>(TEXT("UICamera"));
+	UICameraVisualize->SetupAttachment(GetMesh());
 
 	//DashDefaults
 	TimeDashCooldown = 3.0;

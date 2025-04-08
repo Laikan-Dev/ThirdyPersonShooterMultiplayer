@@ -18,6 +18,7 @@ class UInputMappingContext;
 class UInputAction;
 class UWidgetComponent;
 class UNiagaraComponent;
+class SceneCaptureComponent2D;
 struct FInputActionValue;
 struct FWeaponInformation;
 
@@ -44,6 +45,10 @@ class AMultiplayerCharacter : public ACharacter
 	/** Follow camera */
 	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = Camera, meta = (AllowPrivateAccess = "true"))
 	UCameraComponent* FollowCamera;
+
+	//RenderTarget To UI
+	UPROPERTY(VisibleAnywhere, BlueprintReadWrite, Category = "Components", meta = (AllowPrivateAccess = "true"))
+	USceneCaptureComponent2D* UICameraVisualize;
 	//WeaponSocket
 	UPROPERTY(VisibleAnywhere, BlueprintReadWrite, Category = "Components", meta = (AllowPrivateAccess = "true"))
 	USkeletalMeshComponent* WeaponSocket;
