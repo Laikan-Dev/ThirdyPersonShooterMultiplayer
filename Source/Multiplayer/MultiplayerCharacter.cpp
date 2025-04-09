@@ -46,6 +46,8 @@ AMultiplayerCharacter::AMultiplayerCharacter()
 	//Scene Capture to UI
 	UICameraVisualize = CreateDefaultSubobject<USceneCaptureComponent2D>(TEXT("UICamera"));
 	UICameraVisualize->SetupAttachment(GetMesh());
+	UICameraVisualize->SetRelativeLocation(FVector(0.f, 46.f, 128.f));
+	UICameraVisualize->SetRelativeRotation(FRotator(0.f, 0.f, -90.f));
 
 	//DashDefaults
 	TimeDashCooldown = 3.0;
