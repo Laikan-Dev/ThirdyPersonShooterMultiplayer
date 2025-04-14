@@ -19,7 +19,7 @@ struct FWeaponInformation
 	UPROPERTY(EditAnywhere, BlueprintReadWrite)
 	USkeletalMesh* Mesh;
 	UPROPERTY(EditAnywhere, BlueprintReadWrite)
-	UAnimMontage* FireAnimation;
+	UAnimationAsset* FireAnimation;
 	UPROPERTY(EditAnywhere, BlueprintReadWrite)
 	UAnimMontage* ReloadAnimation;
 	UPROPERTY(EditAnywhere, BlueprintReadWrite)
@@ -49,7 +49,7 @@ class MULTIPLAYER_API ABaseWeapon : public AActor
 public:
 	// Sets default values for this actor's properties
 	ABaseWeapon();
-
+	UAnimationAsset* ShootingAnim;
 	void GetLifetimeReplicatedProps(TArray<FLifetimeProperty>& OutLifetimeProps) const override;
 
 	// Struct Information
@@ -86,6 +86,8 @@ public:
 	FORCEINLINE USkeletalMeshComponent* GetWeaponMesh() const { return SkeletalMesh; }
 
 public:
+
+	void Fire();
 	UFUNCTION()
 	void OnComponentBeginOverlap(UPrimitiveComponent* OverlappedComponent, AActor* OtherActor, UPrimitiveComponent* OtherComp, int32 OtherBodyIndex, bool bFromSweep, const FHitResult& SweepResult);
 	UFUNCTION()

@@ -23,6 +23,7 @@ ABaseWeapon::ABaseWeapon()
 	PickupWidget = CreateDefaultSubobject<UWidgetComponent>(TEXT("PickupWidget"));
 	PickupWidget->SetupAttachment(RootComponent);
 
+	ShootingAnim = WeaponInformation.FireAnimation;
 }
 
 void ABaseWeapon::GetLifetimeReplicatedProps(TArray<FLifetimeProperty>& OutLifetimeProps) const
@@ -111,6 +112,14 @@ void ABaseWeapon::SetWeaponState(EWeaponState State)
 		break;
 	default:
 		break;
+	}
+}
+
+void ABaseWeapon::Fire()
+{
+	if (ShootingAnim)
+	{
+		SkeletalMesh->PlayAnimation(WeaponInformation.FireAnimation, false);
 	}
 }
 

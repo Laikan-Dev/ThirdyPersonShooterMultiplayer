@@ -332,7 +332,7 @@ void AMultiplayerCharacter::StartFire()
 			bIsFiringWeapon = true;
 			UWorld* World = GetWorld();
 			World->GetTimerManager().SetTimer(FiringTimer, this, &AMultiplayerCharacter::StopFire, WeaponInfo.FireRate, false);
-			Server_HandleFire(WeaponInfo.FireAnimation, MuzzleTranform.GetLocation(), MuzzleTranform.GetRotation().Rotator());
+			//Server_HandleFire(WeaponInfo.FireAnimation, MuzzleTranform.GetLocation(), MuzzleTranform.GetRotation().Rotator());
 		}
 	}
 }
@@ -495,10 +495,10 @@ void AMultiplayerCharacter::SetupPlayerInputComponent(UInputComponent* PlayerInp
 		EnhancedInputComponent->BindAction(AimingInput, ETriggerEvent::Completed, this, &AMultiplayerCharacter::StopAiming);
 
 		//Firing Projectiles
-		EnhancedInputComponent->BindAction(FireInput, ETriggerEvent::Started, this, &AMultiplayerCharacter::StartFire);
+		//EnhancedInputComponent->BindAction(FireInput, ETriggerEvent::Started, this, &AMultiplayerCharacter::StartFire);
 
 		//FiringInput
-		EnhancedInputComponent->BindAction(FireInput, ETriggerEvent::Triggered, this, &AMultiplayerCharacter::FireButtonPressed);
+		EnhancedInputComponent->BindAction(FireInput, ETriggerEvent::Started, this, &AMultiplayerCharacter::FireButtonPressed);
 		EnhancedInputComponent->BindAction(FireInput, ETriggerEvent::Completed, this, &AMultiplayerCharacter::FireButtonPressed);
 
 		//PickupItem
