@@ -6,6 +6,7 @@
 #include "Components/ActorComponent.h"
 #include "CombatComponent.generated.h"
 
+#define TRACE_LENGHT 80000.f;
 
 UCLASS( ClassGroup=(Custom), meta=(BlueprintSpawnableComponent) )
 class MULTIPLAYER_API UCombatComponent : public UActorComponent
