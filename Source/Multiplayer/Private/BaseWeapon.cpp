@@ -117,7 +117,7 @@ void ABaseWeapon::SetWeaponState(EWeaponState State)
 
 void ABaseWeapon::Fire()
 {
-	if (ShootingAnim)
+	if (WeaponInformation.FireAnimation)
 	{
 		SkeletalMesh->PlayAnimation(WeaponInformation.FireAnimation, false);
 	}

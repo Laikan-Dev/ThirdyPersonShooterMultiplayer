@@ -45,6 +45,14 @@ private:
 	float AimWalkSpeed;
 
 	bool bFireButtonPressed;
+
+	UFUNCTION(Server, Reliable)
+	void ServerFire();
+
+	UFUNCTION(NetMulticast, Reliable)
+	void MulticastFire();
+
+	void TraceUnderCrosshairs(FHitResult& TraceHitResult);
 public:	
 	
 
