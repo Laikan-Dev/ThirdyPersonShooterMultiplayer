@@ -54,6 +54,8 @@ private:
 	void MulticastFire();
 
 	void TraceUnderCrosshairs(FHitResult& TraceHitResult);
+
+	FVector HitTarget;
 public:	
 	
 

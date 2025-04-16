@@ -115,7 +115,7 @@ void ABaseWeapon::SetWeaponState(EWeaponState State)
 	}
 }
 
-void ABaseWeapon::Fire()
+void ABaseWeapon::Fire(const FVector& HitTarget)
 {
 	if (WeaponInformation.FireAnimation)
 	{

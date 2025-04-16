@@ -9,9 +9,16 @@
 /**
  * 
  */
+class AMPProjectile;
 UCLASS()
 class MULTIPLAYER_API AProjectileWeapon : public ABaseWeapon
 {
 	GENERATED_BODY()
 	
+public:
+	virtual void Fire(const FVector& HitTarget) override;
+
+private:
+	UPROPERTY(EditAnywhere)
+	TSubclassOf<AMPProjectile> ProjectileClass;
 };
