@@ -30,6 +30,8 @@ struct FWeaponInformation
 	float Damage;
 	UPROPERTY(EditAnywhere, BlueprintReadWrite)
 	int32 AmmoCap;;
+	UPROPERTY(EditAnywhere, BlueprintReadWrite)
+	TSubclassOf<class ACasing> CasingClass;
 };
 
 UENUM(BlueprintType)

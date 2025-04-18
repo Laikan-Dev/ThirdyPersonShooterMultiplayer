@@ -7,6 +7,8 @@
 #include "Multiplayer/MultiplayerGameMode.h"
 #include "Components/WidgetComponent.h"
 #include "Net/UnrealNetwork.h"
+#include "Casing.h"
+#include "Engine/SkeletalMeshSocket.h"
 
 // Sets default values
 ABaseWeapon::ABaseWeapon()
@@ -19,6 +21,8 @@ ABaseWeapon::ABaseWeapon()
 	SkeletalMesh = CreateDefaultSubobject<USkeletalMeshComponent>(TEXT("WeaponMesh"));
 	SkeletalMesh->SetupAttachment(RootComponent);
 	SkeletalMesh->SetSkeletalMesh(WeaponInformation.Mesh);
+	SkeletalMesh->SetCollisionResponseToChannel(ECollisionChannel::ECC_Pawn, ECollisionResponse::ECR_Ignore);
+
 
 	PickupWidget = CreateDefaultSubobject<UWidgetComponent>(TEXT("PickupWidget"));
 	PickupWidget->SetupAttachment(RootComponent);
@@ -120,6 +124,21 @@ void ABaseWeapon::Fire(const FVector& HitTarget)
 	if (WeaponInformation.FireAnimation)
 	{
 		SkeletalMesh->PlayAnimation(WeaponInformation.FireAnimation, false);
+	}
+	if (WeaponInformation.CasingClass)
+	{
+		const USkeletalMeshSocket* AmmoEjectSocket = SkeletalMesh->GetSocketByName(FName("AmmoEject"));
+		if (AmmoEjectSocket)
+		{
+			FTransform SocketTransform = AmmoEjectSocket->GetSocketTransform(SkeletalMesh);
+			
+			UWorld* World = GetWorld();
+			if (World)
+			{
+				World->SpawnActor<ACasing>(WeaponInformation.CasingClass, SocketTransform.GetLocation(), SocketTransform.GetRotation().Rotator());
+				
+			}
+		}
 	}
 }
 

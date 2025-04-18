@@ -9,7 +9,6 @@
 /**
  * 
  */
-class AMPProjectile;
 UCLASS()
 class MULTIPLAYER_API AProjectileWeapon : public ABaseWeapon
 {
@@ -20,5 +19,5 @@ public:
 
 private:
 	UPROPERTY(EditAnywhere)
-	TSubclassOf<AMPProjectile> ProjectileClass;
+	TSubclassOf<class AMPProjectile> ProjectileClass;
 };
