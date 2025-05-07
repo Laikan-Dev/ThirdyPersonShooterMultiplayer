@@ -32,6 +32,23 @@ struct FWeaponInformation
 	int32 AmmoCap;;
 	UPROPERTY(EditAnywhere, BlueprintReadWrite)
 	TSubclassOf<class ACasing> CasingClass;
+
+	// Textures for the weapon crosshairs
+
+	UPROPERTY(EditAnywhere, Category = Crosshairs)
+	class UTexture2D* CrosshairsCenter;
+
+	UPROPERTY(EditAnywhere, Category = Crosshairs)
+	UTexture2D* CrosshairsLeft;
+
+	UPROPERTY(EditAnywhere, Category = Crosshairs)
+	UTexture2D* CrosshairsRight;
+
+	UPROPERTY(EditAnywhere, Category = Crosshairs)
+	UTexture2D* CrosshairsTop;
+
+	UPROPERTY(EditAnywhere, Category = Crosshairs)
+	UTexture2D* CrosshairsBottom;
 };
 
 UENUM(BlueprintType)
