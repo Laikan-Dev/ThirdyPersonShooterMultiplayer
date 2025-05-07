@@ -14,7 +14,7 @@
 ABaseWeapon::ABaseWeapon()
 {
 	bReplicates = true;
-	
+	SetReplicateMovement(true);
 	SphereComponent = CreateDefaultSubobject<USphereComponent>(TEXT("RootComponent"));
 	RootComponent = SphereComponent;
 	
@@ -135,7 +135,7 @@ void ABaseWeapon::Fire(const FVector& HitTarget)
 			UWorld* World = GetWorld();
 			if (World)
 			{
-				World->SpawnActor<ACasing>(WeaponInformation.CasingClass, SocketTransform.GetLocation(), SocketTransform.GetRotation().Rotator());
+				//World->SpawnActor<ACasing>(WeaponInformation.CasingClass, SocketTransform.GetLocation(), SocketTransform.GetRotation().Rotator());
 				
 			}
 		}

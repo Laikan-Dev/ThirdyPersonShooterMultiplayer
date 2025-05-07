@@ -18,6 +18,7 @@
 AMPProjectile::AMPProjectile()
 {
 	bReplicates = true;
+	SetReplicateMovement(true);
 
 	BoxComponent = CreateDefaultSubobject<UBoxComponent>(TEXT("RootComponent"));
 	BoxComponent->SetCollisionProfileName(TEXT("BlockAllDynamic"));
