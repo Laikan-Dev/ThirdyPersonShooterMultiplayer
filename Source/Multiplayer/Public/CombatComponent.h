@@ -36,6 +36,8 @@ protected:
 
 private:
 	class AMultiplayerCharacter* Character;
+	class AMultiplayerPlayerController* PlayerController;
+	class AMultiplayerHud* HUD;
 	UPROPERTY(Replicated)
 	ABaseWeapon* EquippedWeapon;
 	UPROPERTY(Replicated)
@@ -54,6 +56,8 @@ private:
 	void MulticastFire(const FVector_NetQuantize& TraceHitTarget);
 
 	void TraceUnderCrosshairs(FHitResult& TraceHitResult);
+
+	void SetHUDCrosshairs(float DeltaTime);
 
 	FVector HitTarget;
 public:	
