@@ -6,6 +6,30 @@
 #include "BaseWeapon.generated.h"
 
 USTRUCT(BlueprintType)
+struct FCrosshairInfo
+{
+	GENERATED_BODY()
+
+	UPROPERTY(EditAnywhere, Category = Crosshairs)
+	class UTexture2D* CrosshairsCenter;
+
+	UPROPERTY(EditAnywhere, Category = Crosshairs)
+	UTexture2D* CrosshairsLeft;
+
+	UPROPERTY(EditAnywhere, Category = Crosshairs)
+	UTexture2D* CrosshairsRight;
+
+	UPROPERTY(EditAnywhere, Category = Crosshairs)
+	UTexture2D* CrosshairsTop;
+
+	UPROPERTY(EditAnywhere, Category = Crosshairs)
+	UTexture2D* CrosshairsBottom;
+
+	UPROPERTY(EditAnywhere, Category = Crosshairs)
+	float Spread;
+
+};
+USTRUCT(BlueprintType)
 struct FWeaponInformation
 {
 	GENERATED_BODY()
@@ -51,6 +75,9 @@ class MULTIPLAYER_API ABaseWeapon : public AActor
 public:
 	// Sets default values for this actor's properties
 	ABaseWeapon();
+	UPROPERTY(EditAnywhere, BlueprintReadWrite)
+	class UWeaponsDataAsset* WeaponData;
+
 	UAnimationAsset* ShootingAnim;
 	void GetLifetimeReplicatedProps(TArray<FLifetimeProperty>& OutLifetimeProps) const override;
 
