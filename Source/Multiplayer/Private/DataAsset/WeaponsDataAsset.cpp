@@ -3,3 +3,12 @@
 
 #include "DataAsset/WeaponsDataAsset.h"
 
+FWeaponInformation UWeaponsDataAsset::GetWeaponStats()
+{
+	return WeaponStats;
+}
+
+FCrosshairInfo UWeaponsDataAsset::GetCrosshairInfo()
+{
+	return CrosshairInfo;
+}

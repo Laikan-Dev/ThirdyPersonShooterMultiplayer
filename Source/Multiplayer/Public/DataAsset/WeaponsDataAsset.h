@@ -20,4 +20,8 @@ public:
 
 	UPROPERTY(EditAnywhere, BlueprintReadWrite)
 	FCrosshairInfo CrosshairInfo;
+
+public:
+	FWeaponInformation GetWeaponStats();
+	FCrosshairInfo GetCrosshairInfo();
 };

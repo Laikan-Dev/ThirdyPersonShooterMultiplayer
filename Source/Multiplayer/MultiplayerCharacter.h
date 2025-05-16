@@ -206,7 +206,7 @@ public:
 	EPlayerOverlayState CurrentState;
 
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, ReplicatedUsing = OnRep_CurrentWeapon)
-	FWeaponInformation WeaponInfo;
+	class UWeaponsDataAsset* WeaponData;
 
 protected:
 //ReplicatedProperties
@@ -266,13 +266,13 @@ public:
 	float TakeDamage(float DamageTaken, struct FDamageEvent const& DamageEvent, AController* EventInstigator, AActor* DamageCauser) override;
 
 	UFUNCTION()
-	void SetCurrentWeapon(FWeaponInformation CurrentWeapon);
+	void SetCurrentWeapon(UWeaponsDataAsset* CurrentWeapon);
 
 	UFUNCTION(Server, Reliable)
-	void Server_SetCurrentWeapon(FWeaponInformation CurrentWeapon);
+	void Server_SetCurrentWeapon(UWeaponsDataAsset* CurrentWeapon);
 
 	UFUNCTION(NetMulticast, Reliable)
-	void MC_SetCurrentWeapon(FWeaponInformation CurrentWeapon);
+	void MC_SetCurrentWeapon(UWeaponsDataAsset* CurrentWeapon);
 
 protected:
 	UPROPERTY(EditDefaultsOnly, Category="Gameplay|Projectile")

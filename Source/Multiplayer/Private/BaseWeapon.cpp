@@ -9,6 +9,7 @@
 #include "Net/UnrealNetwork.h"
 #include "Casing.h"
 #include "Engine/SkeletalMeshSocket.h"
+#include "Multiplayer/Public/DataAsset/WeaponsDataAsset.h"
 
 // Sets default values
 ABaseWeapon::ABaseWeapon()
@@ -20,14 +21,17 @@ ABaseWeapon::ABaseWeapon()
 	
 	SkeletalMesh = CreateDefaultSubobject<USkeletalMeshComponent>(TEXT("WeaponMesh"));
 	SkeletalMesh->SetupAttachment(RootComponent);
-	SkeletalMesh->SetSkeletalMesh(WeaponInformation.Mesh);
+	if (WeaponData)
+	{
+		SkeletalMesh->SetSkeletalMesh(WeaponData->GetWeaponStats().Mesh);
+	}
 	SkeletalMesh->SetCollisionResponseToChannel(ECollisionChannel::ECC_Pawn, ECollisionResponse::ECR_Ignore);
 
 
 	PickupWidget = CreateDefaultSubobject<UWidgetComponent>(TEXT("PickupWidget"));
 	PickupWidget->SetupAttachment(RootComponent);
 
-	ShootingAnim = WeaponInformation.FireAnimation;
+	//ShootingAnim = WeaponData->GetWeaponStats().FireAnimation;    //WeaponInformation.FireAnimation;
 }
 
 void ABaseWeapon::GetLifetimeReplicatedProps(TArray<FLifetimeProperty>& OutLifetimeProps) const
@@ -85,12 +89,12 @@ void ABaseWeapon::PickUp_Implementation(AMultiplayerCharacter* Player)
 	{
 		if (HasAuthority())
 		{
-			Player->MC_SetCurrentWeapon(WeaponInformation);
+			Player->MC_SetCurrentWeapon(WeaponData);
 			Destroy();
 		}
 		else
 		{
-			Player->Server_SetCurrentWeapon(WeaponInformation);
+			Player->Server_SetCurrentWeapon(WeaponData);
 			Destroy();
 		}
 	}
@@ -121,11 +125,11 @@ void ABaseWeapon::SetWeaponState(EWeaponState State)
 
 void ABaseWeapon::Fire(const FVector& HitTarget)
 {
-	if (WeaponInformation.FireAnimation)
+	if (WeaponData->GetWeaponStats().FireAnimation)
 	{
-		SkeletalMesh->PlayAnimation(WeaponInformation.FireAnimation, false);
+		SkeletalMesh->PlayAnimation(WeaponData->GetWeaponStats().FireAnimation, false);
 	}
-	if (WeaponInformation.CasingClass)
+	if (WeaponData->GetWeaponStats().CasingClass)
 	{
 		const USkeletalMeshSocket* AmmoEjectSocket = SkeletalMesh->GetSocketByName(FName("AmmoEject"));
 		if (AmmoEjectSocket)

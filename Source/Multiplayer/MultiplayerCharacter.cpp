@@ -23,6 +23,7 @@
 #include "Components/WidgetComponent.h"
 #include "Kismet/KismetMathLibrary.h"
 #include "Components/SceneCaptureComponent2D.h"
+#include "Multiplayer/Public/DataAsset/WeaponsDataAsset.h"
 
 DEFINE_LOG_CATEGORY(LogTemplateCharacter);
 
@@ -237,7 +238,7 @@ void AMultiplayerCharacter::GetLifetimeReplicatedProps(TArray<FLifetimeProperty>
 	DOREPLIFETIME(AMultiplayerCharacter, CurrentTeam);	    //Replicate Current Team
 	DOREPLIFETIME(AMultiplayerCharacter, bIsDead);			//Replicate boolean Death for ABP
 	DOREPLIFETIME(AMultiplayerCharacter, CurrentState);
-	DOREPLIFETIME(AMultiplayerCharacter, WeaponInfo);
+	DOREPLIFETIME(AMultiplayerCharacter, WeaponData);
 	DOREPLIFETIME_CONDITION(AMultiplayerCharacter, OverlappingWeapon, COND_OwnerOnly);
 }
 
@@ -288,7 +289,7 @@ float AMultiplayerCharacter::TakeDamage(float DamageTaken, FDamageEvent const& D
 	return damageApplied;
 }
 
-void AMultiplayerCharacter::SetCurrentWeapon(FWeaponInformation CurrentWeapon)
+void AMultiplayerCharacter::SetCurrentWeapon(UWeaponsDataAsset* CurrentWeapon)
 {
 	if(HasAuthority())
 	{
@@ -300,15 +301,13 @@ void AMultiplayerCharacter::SetCurrentWeapon(FWeaponInformation CurrentWeapon)
 	}
 }
 
-void AMultiplayerCharacter::MC_SetCurrentWeapon_Implementation(FWeaponInformation CurrentWeapon)
+void AMultiplayerCharacter::MC_SetCurrentWeapon_Implementation(UWeaponsDataAsset* CurrentWeapon)
 {
-	WeaponInfo = CurrentWeapon;
-	WeaponSocket->SetSkeletalMesh(WeaponInfo.Mesh);
-	
-	
+	WeaponData = CurrentWeapon;
+	WeaponSocket->SetSkeletalMesh(WeaponData->GetWeaponStats().Mesh);	
 }
 
-void AMultiplayerCharacter::Server_SetCurrentWeapon_Implementation(FWeaponInformation CurrentWeapon)
+void AMultiplayerCharacter::Server_SetCurrentWeapon_Implementation(UWeaponsDataAsset* CurrentWeapon)
 {
 	MC_SetCurrentWeapon(CurrentWeapon);
 	//WeaponInfo = CurrentWeapon;
@@ -331,7 +330,7 @@ void AMultiplayerCharacter::StartFire()
 		{
 			bIsFiringWeapon = true;
 			UWorld* World = GetWorld();
-			World->GetTimerManager().SetTimer(FiringTimer, this, &AMultiplayerCharacter::StopFire, WeaponInfo.FireRate, false);
+			World->GetTimerManager().SetTimer(FiringTimer, this, &AMultiplayerCharacter::StopFire, WeaponData->GetWeaponStats().FireRate, false);
 			//Server_HandleFire(WeaponInfo.FireAnimation, MuzzleTranform.GetLocation(), MuzzleTranform.GetRotation().Rotator());
 		}
 	}
