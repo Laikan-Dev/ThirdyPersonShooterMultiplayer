@@ -49,6 +49,9 @@ private:
 
 	bool bFireButtonPressed;
 
+	float CrosshairVelocityFactor;
+	float CrosshairInAirFactor;
+
 	UFUNCTION(Server, Reliable)
 	void ServerFire(const FVector_NetQuantize& TraceHitTarget);
 
