@@ -85,6 +85,12 @@ public:
 
 	ETurningInPlace TurningInPlace;
 
+	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = "MovementData")
+	FRotator RightHandRotation;
+
+	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = "MovementData")
+	bool bLocallyControlled;
+
 	//Functions
 	UFUNCTION(BlueprintCallable)
 	void GetAimOffset();

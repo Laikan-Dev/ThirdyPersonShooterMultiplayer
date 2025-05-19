@@ -424,6 +424,13 @@ ABaseWeapon* AMultiplayerCharacter::GetEquippedWeapon()
 
 }
 
+FVector AMultiplayerCharacter::GetHitTarget() const
+{
+	if (CombatSystem == nullptr) return FVector();
+
+	return CombatSystem->HitTarget;
+}
+
 void AMultiplayerCharacter::SelectTeam_Implementation()
 {
 	AMultiplayerPlayerController* PlayerController = Cast<AMultiplayerPlayerController>(GetController());

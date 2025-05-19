@@ -18,26 +18,32 @@ public:
 	UCombatComponent();
 	// Called every frame
 	virtual void TickComponent(float DeltaTime, ELevelTick TickType, FActorComponentTickFunction* ThisTickFunction) override;
-	void GetLifetimeReplicatedProps(TArray<FLifetimeProperty>& OutLifetimeProps) const override;
-	friend class AMultiplayerCharacter;
 
+	//Replicates
+	void GetLifetimeReplicatedProps(TArray<FLifetimeProperty>& OutLifetimeProps) const override;
+
+	//Setup Player and Weapon
+	friend class AMultiplayerCharacter;
 	void EquipWeapon(class ABaseWeapon* WeaponToEquip);
 
 protected:
 	// Called when the game starts
 	virtual void BeginPlay() override;
+
+	//Actions
 	void SetAiming(bool bIsAiming);
 	UFUNCTION(Server, Reliable)
 	void Server_SetAiming(bool bIsAiming);
 
-	
-
 	void FireButtonPressed(bool bPressed);
 
 private:
+	//References
 	class AMultiplayerCharacter* Character;
 	class AMultiplayerPlayerController* PlayerController;
 	class AMultiplayerHud* HUD;
+
+	//PlayerStats
 	UPROPERTY(Replicated)
 	ABaseWeapon* EquippedWeapon;
 	UPROPERTY(Replicated)
@@ -48,23 +54,18 @@ private:
 	float AimWalkSpeed;
 
 	bool bFireButtonPressed;
-
+	//Crosshair Config
+	void TraceUnderCrosshairs(FHitResult& TraceHitResult);
 	float CrosshairVelocityFactor;
 	float CrosshairInAirFactor;
+	void SetHUDCrosshairs(float DeltaTime);
 
+	//Fire
 	UFUNCTION(Server, Reliable)
 	void ServerFire(const FVector_NetQuantize& TraceHitTarget);
 
 	UFUNCTION(NetMulticast, Reliable)
 	void MulticastFire(const FVector_NetQuantize& TraceHitTarget);
 
-	void TraceUnderCrosshairs(FHitResult& TraceHitResult);
-
-	void SetHUDCrosshairs(float DeltaTime);
-
 	FVector HitTarget;
-public:	
-	
-
-		
 };

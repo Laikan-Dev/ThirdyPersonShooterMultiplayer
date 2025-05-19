@@ -15,29 +15,29 @@ void AMultiplayerHud::DrawHUD()
 
 		float SpreadScaled = CrosshairSpreadMax * HUDPackage.CrosshairSpread;
 
-		if (HUDPackage.CrosshairsCenter != nullptr)
+		if (HUDPackage.CrosshairsCenter)
 		{
 			FVector2D Spread(0.f, 0.f);
 			DrawCrosshair(HUDPackage.CrosshairsCenter, ViewportCenter, Spread);
 		}
-		if (HUDPackage.CrosshairsTop != nullptr)
+		if (HUDPackage.CrosshairsTop)
 		{
-			FVector2D Spread(0.f, SpreadScaled);
+			FVector2D Spread(0.f, -SpreadScaled);
 			DrawCrosshair(HUDPackage.CrosshairsTop, ViewportCenter, Spread);
 		}
-		if (HUDPackage.CrosshairsLeft != nullptr)
+		if (HUDPackage.CrosshairsLeft)
 		{
 			FVector2D Spread(-SpreadScaled, 0.f);
 			DrawCrosshair(HUDPackage.CrosshairsLeft, ViewportCenter, Spread);
 		}
-		if (HUDPackage.CrosshairsRight != nullptr)
+		if (HUDPackage.CrosshairsRight)
 		{
 			FVector2D Spread(SpreadScaled, 0.f);
 			DrawCrosshair(HUDPackage.CrosshairsRight, ViewportCenter, Spread);
 		}
-		if (HUDPackage.CrosshairsBottom != nullptr)
+		if (HUDPackage.CrosshairsBottom)
 		{
-			FVector2D Spread(0.f, -SpreadScaled);
+			FVector2D Spread(0.f, SpreadScaled);
 			DrawCrosshair(HUDPackage.CrosshairsBottom, ViewportCenter, Spread);
 		}
 	}
