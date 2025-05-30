@@ -1,18 +1,19 @@
 // Copyright Epic Games, Inc. All Rights Reserved.
 
 #pragma once
-
+#include "AbilitySystemInterface.h"
+#include "BaseWeapon.h"
 #include "GameFramework/Character.h"
 #include "Logging/LogMacros.h"
-#include "MultiplayerGameMode.h"
 #include "MPProjectile.h"
-#include "BaseWeapon.h"
-#include "PlayerOverlayStates.h"
+#include "MultiplayerGameMode.h"
 #include "Multiplayer/Enums/TurningInPlace.h"
+#include "PlayerOverlayStates.h"
 #include "MultiplayerCharacter.generated.h"
 
 class USpringArmComponent;
 class UCameraComponent;
+class UMultiplayerASComponent;
 class USkeletalMeshComponent;
 class UInputMappingContext;
 class UInputAction;
@@ -34,10 +35,12 @@ enum class ECharMovDirection : uint8
 
 DECLARE_LOG_CATEGORY_EXTERN(LogTemplateCharacter, Log, All);
 
-UCLASS(config=Game)
-class AMultiplayerCharacter : public ACharacter
+UCLASS(config = Game)
+class AMultiplayerCharacter : public ACharacter, public IAbilitySystemInterface
 {
 	GENERATED_BODY()
+
+protected:
 
 	/** Camera boom positioning the camera behind the character */
 	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = Camera, meta = (AllowPrivateAccess = "true"))
@@ -45,6 +48,9 @@ class AMultiplayerCharacter : public ACharacter
 	/** Follow camera */
 	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = Camera, meta = (AllowPrivateAccess = "true"))
 	UCameraComponent* FollowCamera;
+
+	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = AbilitySystem, meta = (AllowPrivateAccess = "true"))
+	TObjectPtr<UMultiplayerASComponent> AbilitySystemComponent;
 
 	//RenderTarget To UI
 	UPROPERTY(VisibleAnywhere, BlueprintReadWrite, Category = "Components", meta = (AllowPrivateAccess = "true"))
@@ -96,6 +102,7 @@ public:
 
 	void PlayFireMontage(bool bAiming);
 
+	virtual UAbilitySystemComponent* GetAbilitySystemComponent() const override;
 protected:
 	//Commands
 	/** Called for movement input */

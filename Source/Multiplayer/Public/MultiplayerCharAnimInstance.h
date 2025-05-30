@@ -2,7 +2,6 @@
 
 #pragma once
 
-#include "CoreMinimal.h"
 #include "Animation/AnimInstance.h"
 #include "Multiplayer/Enums/TurningInPlace.h"
 #include "MultiplayerCharAnimInstance.generated.h"
@@ -20,7 +19,7 @@ protected:
 	virtual void NativeUpdateAnimation(float DeltaTimeX) override;
 
 public:
-
+	//Static Refs of Player and Character Mov comp
 	UPROPERTY(VisibleAnywhere, BlueprintReadOnly)
 	class AMultiplayerCharacter* Character;
 	UPROPERTY(VisibleAnywhere, BlueprintReadOnly)
@@ -49,6 +48,7 @@ public:
 	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = "Combat")
 	bool bIsAiming;
 
+	//AimOffset Properties
 	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = "AimOffset")
 	float AimOffset;
 
@@ -67,6 +67,7 @@ public:
 	FRotator CharacterRotation;
 	FRotator DeltaRotation;
 
+	//Movement Properties
 	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = "MovementData")
 	FTransform LeftHandTransform;
 
@@ -91,13 +92,16 @@ public:
 	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = "MovementData")
 	bool bLocallyControlled;
 
-	//Functions
+public:
+
+	//AimOffset Functions
 	UFUNCTION(BlueprintCallable)
 	void GetAimOffset();
 
 	UFUNCTION(BlueprintCallable)
 	void GetDirection();
 
+	//Dash Ability Function
 	UFUNCTION(BlueprintCallable)
 	void SetMovDirection(float DirectionValue, float SpeedValue);
 

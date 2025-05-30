@@ -20,6 +20,7 @@
 #include "CombatComponent.h"
 #include "Multiplayer/Public/MultiplayerCharAnimInstance.h"
 #include "Niagara/Public/NiagaraComponent.h"
+#include "AbilitiesSystem/MultiplayerASComponent.h"
 #include "Components/WidgetComponent.h"
 #include "Kismet/KismetMathLibrary.h"
 #include "Components/SceneCaptureComponent2D.h"
@@ -32,6 +33,8 @@ DEFINE_LOG_CATEGORY(LogTemplateCharacter);
 
 AMultiplayerCharacter::AMultiplayerCharacter()
 {
+
+
 	//Replicate
 	bReplicates = true;
 	SetReplicateMovement(true);
@@ -141,6 +144,11 @@ void AMultiplayerCharacter::PlayFireMontage(bool bAiming)
 		SectionName = bAiming ? FName("RifleAim") : FName("RifleHip");
 		AnimInstanceRef->Montage_JumpToSection(SectionName);
 	}
+}
+
+UAbilitySystemComponent* AMultiplayerCharacter::GetAbilitySystemComponent() const
+{
+	return AbilitySystemComponent;
 }
 
 void AMultiplayerCharacter::BeginPlay()

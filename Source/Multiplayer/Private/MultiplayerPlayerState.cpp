@@ -4,12 +4,17 @@
 #include "MultiplayerPlayerState.h"
 #include "Net/UnrealNetwork.h"
 #include "Team.h"
+#include "Multiplayer/AbilitiesSystem/MultiplayerASComponent.h"
 
 AMultiplayerPlayerState::AMultiplayerPlayerState()
 {
 	TimeLeft = 300;
 	RedTeamScore = 0;
 	BlueTeamScore = 0;
+
+	NetUpdateFrequency = 100.f;
+	AbilitySystemComponent = CreateDefaultSubobject<UMultiplayerASComponent>("AbilitySystemComponent");
+	AbilitySystemComponent->SetReplicationMode(EGameplayEffectReplicationMode::Mixed);
 }
 void AMultiplayerPlayerState::BeginPlay()
 {
@@ -75,3 +80,9 @@ void AMultiplayerPlayerState::UpdateTimer()
 
 	}
 }
+
+UAbilitySystemComponent* AMultiplayerPlayerState::GetAbilitySystemComponent() const
+{
+	return AbilitySystemComponent;
+}
+ 

@@ -18,6 +18,7 @@ enum class EAbilityType : uint8
 /**
  * 
  */
+
 UCLASS()
 class MULTIPLAYER_API UBaseAbilityDataAsset : public UPrimaryDataAsset
 {

@@ -2,7 +2,6 @@
 
 #pragma once
 
-#include "CoreMinimal.h"
 #include "GameFramework/HUD.h"
 #include "MultiplayerHud.generated.h"
 
@@ -11,10 +10,10 @@ USTRUCT(BlueprintType)
 struct FHUDPackage
 {
 	GENERATED_BODY()
-public:
 
+public:
 	UPROPERTY(EditAnywhere, Category = Crosshairs)
-	class UTexture2D* CrosshairsCenter;
+	UTexture2D* CrosshairsCenter;
 
 	UPROPERTY(EditAnywhere, Category = Crosshairs)
 	UTexture2D* CrosshairsLeft;

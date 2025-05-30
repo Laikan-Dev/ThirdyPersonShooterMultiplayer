@@ -5,13 +5,15 @@
 #include "CoreMinimal.h"
 #include "GameFramework/PlayerState.h"
 #include "Team.h"
+#include "AbilitySystemInterface.h"
 #include "MultiplayerPlayerState.generated.h"
 
+class UMultiplayerASComponent;
 /**
  * 
  */
 UCLASS()
-class MULTIPLAYER_API AMultiplayerPlayerState : public APlayerState
+class MULTIPLAYER_API AMultiplayerPlayerState : public APlayerState, public IAbilitySystemInterface
 {
 	GENERATED_BODY()
 
@@ -38,5 +40,11 @@ public:
 	void SetScore(ETeam Team, int32 NewScore);
 	UFUNCTION()
 	void UpdateTimer();
+
+protected:
+	virtual UAbilitySystemComponent* GetAbilitySystemComponent() const override;
+public:
+	UPROPERTY()
+	TObjectPtr<UMultiplayerASComponent> AbilitySystemComponent;
 
 };

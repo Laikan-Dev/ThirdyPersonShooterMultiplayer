@@ -3,7 +3,6 @@
 #pragma once
 
 #include "Blueprint/UserWidget.h"
-#include "CoreMinimal.h"
 #include "Team.h"
 #include "WidgetCaptureProgressBar.generated.h"
 
