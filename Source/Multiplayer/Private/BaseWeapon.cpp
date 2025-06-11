@@ -16,6 +16,8 @@ ABaseWeapon::ABaseWeapon()
 {
 	bReplicates = true;
 	SetReplicateMovement(true);
+	SetReplicates(true);
+
 	SphereComponent = CreateDefaultSubobject<USphereComponent>(TEXT("RootComponent"));
 	RootComponent = SphereComponent;
 	
@@ -123,7 +125,7 @@ void ABaseWeapon::SetWeaponState(EWeaponState State)
 	}
 }
 
-void ABaseWeapon::Fire(const FVector& HitTarget)
+void ABaseWeapon::Fire_Implementation(const FVector& HitTarget)
 {
 	if (WeaponData->GetWeaponStats().FireAnimation)
 	{

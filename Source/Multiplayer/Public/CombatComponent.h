@@ -51,12 +51,14 @@ private:
 	float BaseWalkSpeed;
 	UPROPERTY(EditDefaultsOnly)
 	float AimWalkSpeed;
-
 	bool bFireButtonPressed;
+
 	//Crosshair Config
 	void TraceUnderCrosshairs(FHitResult& TraceHitResult);
 	float CrosshairVelocityFactor;
 	float CrosshairInAirFactor;
+	float CrosshairAimFactor;
+	float CrosshairShootingFactor;
 	void SetHUDCrosshairs(float DeltaTime);
 
 	//Fire

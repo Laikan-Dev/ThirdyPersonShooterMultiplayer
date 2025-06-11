@@ -138,7 +138,7 @@ public:
 	FORCEINLINE float GetZoomedFOV() const { return ZoomedFOV; }
 
 public:
-
+	UFUNCTION(Server, Reliable)
 	virtual void Fire(const FVector& HitTarget);
 
 	UFUNCTION()
