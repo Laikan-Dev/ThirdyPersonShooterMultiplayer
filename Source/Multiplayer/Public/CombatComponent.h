@@ -3,6 +3,7 @@
 #pragma once
 
 #include "Components/ActorComponent.h"
+#include "MultiplayerHud.h"
 #include "CombatComponent.generated.h"
 
 #define TRACE_LENGHT 80000.f;
@@ -61,6 +62,8 @@ private:
 	float CrosshairShootingFactor;
 	void SetHUDCrosshairs(float DeltaTime);
 
+	FHUDPackage HUDPackage;
+
 	//Fire
 	UFUNCTION(Server, Reliable)
 	void ServerFire(const FVector_NetQuantize& TraceHitTarget);
@@ -80,8 +83,4 @@ private:
 	float ZoomInterpSpeed;
 
 	void InterpFOV(float DeltaTime);
-
-public:
-
-
 };

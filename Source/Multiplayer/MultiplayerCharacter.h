@@ -9,6 +9,7 @@
 #include "MultiplayerGameMode.h"
 #include "Multiplayer/Enums/TurningInPlace.h"
 #include "PlayerOverlayStates.h"
+#include "Interfaces/InteractWithCrosshairsInterface.h"
 #include "MultiplayerCharacter.generated.h"
 
 class USpringArmComponent;
@@ -36,7 +37,7 @@ enum class ECharMovDirection : uint8
 DECLARE_LOG_CATEGORY_EXTERN(LogTemplateCharacter, Log, All);
 
 UCLASS(config = Game)
-class AMultiplayerCharacter : public ACharacter, public IAbilitySystemInterface
+class AMultiplayerCharacter : public ACharacter, public IAbilitySystemInterface, public IInteractWithCrosshairsInterface
 {
 	GENERATED_BODY()
 

@@ -115,7 +115,11 @@ AMultiplayerCharacter::AMultiplayerCharacter()
 
 	//Capsule Comp
 	GetCapsuleComponent()->SetCollisionResponseToChannel(ECollisionChannel::ECC_Camera, ECollisionResponse::ECR_Ignore);
+
+	//Mesh
 	GetMesh()->SetCollisionResponseToChannel(ECollisionChannel::ECC_Camera, ECollisionResponse::ECR_Ignore);
+	GetMesh()->SetCollisionResponseToChannel(ECollisionChannel::ECC_Visibility, ECollisionResponse::ECR_Block);
+
 
 	TurningInPlace = ETurningInPlace::ETIP_NotTurning;
 	// Note: The skeletal mesh and anim blueprint references on the Mesh component (inherited from Character) 
