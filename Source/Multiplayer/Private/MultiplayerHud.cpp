@@ -22,7 +22,7 @@ void AMultiplayerHud::DrawHUD()
 		}
 		if (HUDPackage.CrosshairsTop != nullptr)
 		{
-			FVector2D Spread(0.f, SpreadScaled);
+			FVector2D Spread(0.f, -SpreadScaled);
 			DrawCrosshair(HUDPackage.CrosshairsTop, ViewportCenter, Spread);
 		}
 		if (HUDPackage.CrosshairsLeft != nullptr)
@@ -37,7 +37,7 @@ void AMultiplayerHud::DrawHUD()
 		}
 		if (HUDPackage.CrosshairsBottom != nullptr)
 		{
-			FVector2D Spread(0.f, -SpreadScaled);
+			FVector2D Spread(0.f, SpreadScaled);
 			DrawCrosshair(HUDPackage.CrosshairsBottom, ViewportCenter, Spread);
 		}
 	}

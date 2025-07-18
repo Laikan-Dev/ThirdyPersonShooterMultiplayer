@@ -68,6 +68,11 @@ void UMultiplayerCharAnimInstance::NativeUpdateAnimation(float DeltaTimeX)
 			Character->GetMesh()->TransformToBoneSpace(FName("hand_r"), LeftHandTransform.GetLocation(), FRotator::ZeroRotator, OutPosition, OutRotation);
 			LeftHandTransform.SetLocation(OutPosition);
 			LeftHandTransform.SetRotation(FQuat(OutRotation));
+
+			FTransform MuzzleTipTransform = EquippedWeapon->GetWeaponMesh()->GetSocketTransform(FName("MuzzleSocket"), ERelativeTransformSpace::RTS_World);
+			FVector MuzzleX(FRotationMatrix(MuzzleTipTransform.GetRotation().Rotator()).GetScaledAxis(EAxis::X));
+			DrawDebugLine(GetWorld(), MuzzleTipTransform.GetLocation(), MuzzleTipTransform.GetLocation() + MuzzleX * 1000.0f, FColor::Red, false, -1.0f, 0, 5.0f);
+			DrawDebugLine(GetWorld(), MuzzleTipTransform.GetLocation(), MuzzleTipTransform.GetLocation(), FColor::Orange);
 		}
 	}
 }
