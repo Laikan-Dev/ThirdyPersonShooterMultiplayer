@@ -18,14 +18,13 @@
 #include "Blueprint/WidgetBlueprintLibrary.h"
 #include "CaptureFlagArea.h"
 #include "CombatComponent.h"
+#include "Multiplayer.h"
 #include "Multiplayer/Public/MultiplayerCharAnimInstance.h"
 #include "Niagara/Public/NiagaraComponent.h"
-#include "AbilitiesSystem/MultiplayerASComponent.h"
 #include "Components/WidgetComponent.h"
 #include "Kismet/KismetMathLibrary.h"
 #include "Components/SceneCaptureComponent2D.h"
 #include "Multiplayer/Public/DataAsset/WeaponsDataAsset.h"
-
 DEFINE_LOG_CATEGORY(LogTemplateCharacter);
 
 //////////////////////////////////////////////////////////////////////////
@@ -33,8 +32,6 @@ DEFINE_LOG_CATEGORY(LogTemplateCharacter);
 
 AMultiplayerCharacter::AMultiplayerCharacter()
 {
-
-
 	//Replicate
 	bReplicates = true;
 	SetReplicateMovement(true);
@@ -78,7 +75,7 @@ AMultiplayerCharacter::AMultiplayerCharacter()
 
 	// Configure character movement
 	GetCharacterMovement()->bOrientRotationToMovement = true; // Character moves in the direction of input...	
-	GetCharacterMovement()->RotationRate = FRotator(0.0f, 500.0f, 0.0f); // ...at this rotation rate
+	GetCharacterMovement()->RotationRate = FRotator(360.0f, 0.0f, 0.0f); // ...at this rotation rate
 	GetCharacterMovement()->NavAgentProps.bCanCrouch = true;
 
 	// Note: For faster iteration times these variables, and many more, can be tweaked in the Character Blueprint
@@ -115,11 +112,10 @@ AMultiplayerCharacter::AMultiplayerCharacter()
 
 	//Capsule Comp
 	GetCapsuleComponent()->SetCollisionResponseToChannel(ECollisionChannel::ECC_Camera, ECollisionResponse::ECR_Ignore);
-
 	//Mesh
+	GetMesh()->SetCollisionObjectType(ECC_SkeletalMesh);
 	GetMesh()->SetCollisionResponseToChannel(ECollisionChannel::ECC_Camera, ECollisionResponse::ECR_Ignore);
 	GetMesh()->SetCollisionResponseToChannel(ECollisionChannel::ECC_Visibility, ECollisionResponse::ECR_Block);
-
 
 	TurningInPlace = ETurningInPlace::ETIP_NotTurning;
 	// Note: The skeletal mesh and anim blueprint references on the Mesh component (inherited from Character) 
@@ -150,9 +146,22 @@ void AMultiplayerCharacter::PlayFireMontage(bool bAiming)
 	}
 }
 
-UAbilitySystemComponent* AMultiplayerCharacter::GetAbilitySystemComponent() const
+void AMultiplayerCharacter::PlayHitReactMontage()
 {
-	return AbilitySystemComponent;
+	if (CombatSystem == nullptr || CombatSystem->EquippedWeapon == nullptr) return;
+	
+	UAnimInstance* AnimInstanceRef = GetMesh()->GetAnimInstance();
+	if (AnimInstanceRef && HitReactMontage)
+	{
+		AnimInstance->Montage_Play(HitReactMontage);
+		FName SectionName("FromFront");
+		AnimInstanceRef->Montage_JumpToSection(SectionName);
+	}
+}
+
+void AMultiplayerCharacter::MulticastHit_Implementation()
+{
+	PlayHitReactMontage();
 }
 
 void AMultiplayerCharacter::BeginPlay()
@@ -168,6 +177,7 @@ void AMultiplayerCharacter::Tick(float DeltaTime)
 	Super::Tick(DeltaTime);
 	UpdateCamera();
 	AimOffset(DeltaTime);
+	HideCameraIfCharacterClose();
 }
 
 void AMultiplayerCharacter::UpdateCamera()
@@ -175,6 +185,28 @@ void AMultiplayerCharacter::UpdateCamera()
 	bool bIsMoving = !GetVelocity().IsNearlyZero();
 	bUseControllerRotationYaw = bIsMoving || bIsAiming();
 }
+
+void AMultiplayerCharacter::HideCameraIfCharacterClose()
+{
+	if (!IsLocallyControlled()) return;
+	if ((FollowCamera->GetComponentLocation() - GetActorLocation()).Size() < CameraThreshold)
+	{
+		GetMesh()->SetVisibility(false);
+		if (CombatSystem && CombatSystem->EquippedWeapon && CombatSystem->EquippedWeapon->GetWeaponMesh())
+		{
+			CombatSystem->EquippedWeapon->GetWeaponMesh()->bOwnerNoSee = true;
+		}
+	}
+	else
+	{
+		GetMesh()->SetVisibility(true);
+		if (CombatSystem && CombatSystem->EquippedWeapon && CombatSystem->EquippedWeapon->GetWeaponMesh())
+		{
+			CombatSystem->EquippedWeapon->GetWeaponMesh()->bOwnerNoSee = false;
+		}
+	}
+}
+
 void AMultiplayerCharacter::SetOverlappingWeapon(ABaseWeapon* Weapon)
 {
 	if (OverlappingWeapon)
@@ -411,7 +443,7 @@ void AMultiplayerCharacter::TurnInPlace(float DeltaTime)
 	{
 		InterpAO_Yaw = FMath::FInterpTo(InterpAO_Yaw, 0.f, DeltaTime, 4.f);
 		AO_Yaw = InterpAO_Yaw;
-		if (FMath::Abs(AO_Yaw) < 16.f)
+		if (FMath::Abs(AO_Yaw) < 15.f)
 		{
 			TurningInPlace = ETurningInPlace::ETIP_NotTurning;
 			StartAimRotation = FRotator(0.f, GetBaseAimRotation().Yaw, 0.f);

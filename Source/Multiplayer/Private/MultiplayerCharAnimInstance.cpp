@@ -10,16 +10,16 @@
 void UMultiplayerCharAnimInstance::NativeInitializeAnimation()
 {
 	Super::NativeInitializeAnimation();
-	Character = Cast<AMultiplayerCharacter>(GetOwningActor());
+	Character = Cast<AMultiplayerCharacter>(TryGetPawnOwner());
 	if (Character)
 	{
 		CharMovComponent = Character->GetCharacterMovement();
 	}
 }
 
-void UMultiplayerCharAnimInstance::NativeUpdateAnimation(float DeltaTimeX)
+void UMultiplayerCharAnimInstance::NativeUpdateAnimation(float DeltaTime)
 {
-	Super::NativeUpdateAnimation(DeltaTimeX);
+	Super::NativeUpdateAnimation(DeltaTime);
 	if (Character && CharMovComponent)
 	{
 		//Set velocity and ground speed from the movement components velocity. Ground speed is calculated from only the X and Y axis of the velocity, so moving up or down does not affect it.
@@ -42,19 +42,19 @@ void UMultiplayerCharAnimInstance::NativeUpdateAnimation(float DeltaTimeX)
 		FRotator AimRotation = Character->GetBaseAimRotation();
 		FRotator MovementRotation = UKismetMathLibrary::MakeRotFromX(Character->GetVelocity());
 		FRotator DeltaRot = UKismetMathLibrary::NormalizedDeltaRotator(MovementRotation, AimRotation);
-		DeltaRotation = FMath::RInterpTo(DeltaRotation, DeltaRot, DeltaTimeX, 15.f);
+		DeltaRotation = FMath::RInterpTo(DeltaRotation, DeltaRot, DeltaTime, 6.f);
 		YawOffset = DeltaRotation.Yaw;
+
+		AO_Yaw = Character->GetAO_Yaw();
+		AO_Pitch = Character->GetAO_Pitch();
 
 		
 		CharacterRotation = Character->GetActorRotation();
 		CharacterRotationLastFrame = CharacterRotation;
 		const FRotator Delta = UKismetMathLibrary::NormalizedDeltaRotator(CharacterRotation, CharacterRotationLastFrame);
-		const float Target = Delta.Yaw / DeltaTimeX;
-		const float Interp = FMath::FInterpTo(Lean, Target, DeltaTimeX, 6.f);
+		const float Target = Delta.Yaw / DeltaTime;
+		const float Interp = FMath::FInterpTo(Lean, Target, DeltaTime, 6.f);
 		Lean = FMath::Clamp(Interp, -90.f, 90.f);
-	
-		AO_Yaw = Character->GetAO_Yaw();
-		AO_Pitch = Character->GetAO_Pitch();
 
 		//GetAimOffset();
 		GetDirection();
@@ -69,21 +69,23 @@ void UMultiplayerCharAnimInstance::NativeUpdateAnimation(float DeltaTimeX)
 			LeftHandTransform.SetLocation(OutPosition);
 			LeftHandTransform.SetRotation(FQuat(OutRotation));
 
-			if (Character->IsLocallyControlled())
+
+			if (Character->IsLocallyControlled()) 
 			{
-				bLocallyControlled = true;
+				bIsLocallyControlled = true;
 				FTransform RightHandTransform = Character->GetMesh()->GetSocketTransform(FName("hand_r"), ERelativeTransformSpace::RTS_World);
 				FRotator LookAtRotation = UKismetMathLibrary::FindLookAtRotation(RightHandTransform.GetLocation(), RightHandTransform.GetLocation() + (RightHandTransform.GetLocation() - Character->GetHitTarget()));
-				RightHandRotation = FMath::RInterpTo(RightHandRotation, LookAtRotation, DeltaTimeX, 30.f);
-
-				FTransform MuzzleTipTransform = EquippedWeapon->GetWeaponMesh()->GetSocketTransform(FName("MuzzleFlash"), ERelativeTransformSpace::RTS_World);
-				FVector MuzzleX(FRotationMatrix(MuzzleTipTransform.GetRotation().Rotator()).GetUnitAxis(EAxis::X));
-				DrawDebugLine(GetWorld(), MuzzleTipTransform.GetLocation(), MuzzleTipTransform.GetLocation() + MuzzleX * 1000.f, FColor::Red);
-				DrawDebugLine(GetWorld(), MuzzleTipTransform.GetLocation(), Character->GetHitTarget(), FColor::Orange);
-				DrawDebugCoordinateSystem(GetWorld(), MuzzleTipTransform.GetLocation(), MuzzleTipTransform.GetRotation().Rotator(), 20.0f, false, -1, 0, 1.0f);
-
+				RightHandRot = FMath::RInterpTo(RightHandRot, LookAtRotation, DeltaTime, 30.f);
+				
 			}
+			
+			FTransform MuzzleTipTransform = EquippedWeapon->GetWeaponMesh()->GetSocketTransform(FName("MuzzleFlash"), ERelativeTransformSpace::RTS_World);
+			FVector MuzzleX(FRotationMatrix(MuzzleTipTransform.GetRotation().Rotator()).GetScaledAxis(EAxis::X));
+			DrawDebugLine(GetWorld(), MuzzleTipTransform.GetLocation(), MuzzleTipTransform.GetLocation() + MuzzleX * 1000.0, FColor::Red, false, 0.1f, 0, 1.0f);
+			DrawDebugLine(GetWorld(), MuzzleTipTransform.GetLocation(), Character->GetHitTarget(), FColor::Orange);
+
 		}
+
 	}
 }
 
@@ -100,6 +102,9 @@ void UMultiplayerCharAnimInstance::GetAimOffset()
 		AimOffset = 0.0;
 	}
 }
+
+
+//For Dash Animations
 
 void UMultiplayerCharAnimInstance::GetDirection()
 {

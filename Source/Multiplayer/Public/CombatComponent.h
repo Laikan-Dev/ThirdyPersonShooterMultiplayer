@@ -2,8 +2,9 @@
 
 #pragma once
 
-#include "Components/ActorComponent.h"
+#include "CoreMinimal.h"
 #include "MultiplayerHud.h"
+#include "Components/ActorComponent.h"
 #include "CombatComponent.generated.h"
 
 #define TRACE_LENGHT 80000.f;
@@ -18,32 +19,27 @@ public:
 	UCombatComponent();
 	// Called every frame
 	virtual void TickComponent(float DeltaTime, ELevelTick TickType, FActorComponentTickFunction* ThisTickFunction) override;
-
-	//Replicates
 	void GetLifetimeReplicatedProps(TArray<FLifetimeProperty>& OutLifetimeProps) const override;
-
-	//Setup Player and Weapon
 	friend class AMultiplayerCharacter;
+
 	void EquipWeapon(class ABaseWeapon* WeaponToEquip);
 
 protected:
 	// Called when the game starts
 	virtual void BeginPlay() override;
-
-	//Actions
 	void SetAiming(bool bIsAiming);
 	UFUNCTION(Server, Reliable)
 	void Server_SetAiming(bool bIsAiming);
 
+	
+
 	void FireButtonPressed(bool bPressed);
 
 private:
-	//References
 	class AMultiplayerCharacter* Character;
 	class AMultiplayerPlayerController* PlayerController;
 	class AMultiplayerHud* HUD;
-
-	//PlayerStats
+	FHUDPackage HUDPackage;
 	UPROPERTY(Replicated)
 	ABaseWeapon* EquippedWeapon;
 	UPROPERTY(Replicated)
@@ -52,35 +48,39 @@ private:
 	float BaseWalkSpeed;
 	UPROPERTY(EditDefaultsOnly)
 	float AimWalkSpeed;
+
 	bool bFireButtonPressed;
 
-	//Crosshair Config
-	void TraceUnderCrosshairs(FHitResult& TraceHitResult);
 	float CrosshairVelocityFactor;
 	float CrosshairInAirFactor;
 	float CrosshairAimFactor;
 	float CrosshairShootingFactor;
-	void SetHUDCrosshairs(float DeltaTime);
 
-	FHUDPackage HUDPackage;
-
-	//Fire
 	UFUNCTION(Server, Reliable)
 	void ServerFire(const FVector_NetQuantize& TraceHitTarget);
 
 	UFUNCTION(NetMulticast, Reliable)
 	void MulticastFire(const FVector_NetQuantize& TraceHitTarget);
 
+	void TraceUnderCrosshairs(FHitResult& TraceHitResult);
+
+	void SetHUDCrosshairs(float DeltaTime);
+
 	FVector HitTarget;
 
 	float DefaultFOV;
-	UPROPERTY(EditAnywhere, Category = "Combat")
-	float ZoomedFOV = 30.f;
+	UPROPERTY(EditDefaultsOnly)
 
+	
 	float CurrentFOV;
 
-	UPROPERTY(EditAnywhere, Category = "Combat")
-	float ZoomInterpSpeed;
+	float ZoomedFOV = 30.f;
+	UPROPERTY(EditDefaultsOnly)
+	float ZoomInterpSpeed = 20.f;
 
 	void InterpFOV(float DeltaTime);
+public:	
+	
+
+		
 };

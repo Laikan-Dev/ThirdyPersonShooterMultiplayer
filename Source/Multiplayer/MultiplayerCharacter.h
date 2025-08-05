@@ -1,20 +1,19 @@
 // Copyright Epic Games, Inc. All Rights Reserved.
 
 #pragma once
-#include "AbilitySystemInterface.h"
-#include "BaseWeapon.h"
+
 #include "GameFramework/Character.h"
 #include "Logging/LogMacros.h"
-#include "MPProjectile.h"
 #include "MultiplayerGameMode.h"
-#include "Multiplayer/Enums/TurningInPlace.h"
+#include "MPProjectile.h"
+#include "BaseWeapon.h"
+#include "InteractWithCrosshairs.h"
 #include "PlayerOverlayStates.h"
-#include "Interfaces/InteractWithCrosshairsInterface.h"
+#include "Multiplayer/Enums/TurningInPlace.h"
 #include "MultiplayerCharacter.generated.h"
 
 class USpringArmComponent;
 class UCameraComponent;
-class UMultiplayerASComponent;
 class USkeletalMeshComponent;
 class UInputMappingContext;
 class UInputAction;
@@ -36,12 +35,10 @@ enum class ECharMovDirection : uint8
 
 DECLARE_LOG_CATEGORY_EXTERN(LogTemplateCharacter, Log, All);
 
-UCLASS(config = Game)
-class AMultiplayerCharacter : public ACharacter, public IAbilitySystemInterface, public IInteractWithCrosshairsInterface
+UCLASS(config=Game)
+class AMultiplayerCharacter : public ACharacter, public IInteractWithCrosshairs
 {
 	GENERATED_BODY()
-
-protected:
 
 	/** Camera boom positioning the camera behind the character */
 	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = Camera, meta = (AllowPrivateAccess = "true"))
@@ -49,9 +46,6 @@ protected:
 	/** Follow camera */
 	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = Camera, meta = (AllowPrivateAccess = "true"))
 	UCameraComponent* FollowCamera;
-
-	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = AbilitySystem, meta = (AllowPrivateAccess = "true"))
-	TObjectPtr<UMultiplayerASComponent> AbilitySystemComponent;
 
 	//RenderTarget To UI
 	UPROPERTY(VisibleAnywhere, BlueprintReadWrite, Category = "Components", meta = (AllowPrivateAccess = "true"))
@@ -103,7 +97,9 @@ public:
 
 	void PlayFireMontage(bool bAiming);
 
-	virtual UAbilitySystemComponent* GetAbilitySystemComponent() const override;
+	UFUNCTION(NetMulticast, Unreliable)
+	void MulticastHit();
+
 protected:
 	//Commands
 	/** Called for movement input */
@@ -111,6 +107,8 @@ protected:
 	/** Called for looking input */
 	void Look(const FInputActionValue& Value);
 
+	//HitReact
+	void PlayHitReactMontage();
 	//Aiming
 	UFUNCTION()
 	void StartAiming();
@@ -190,6 +188,9 @@ private:
 	class UCombatComponent* CombatSystem;
 	UFUNCTION(Server, Reliable)
 	void ServerEquipItem();
+	void HideCameraIfCharacterClose();
+	UPROPERTY(EditAnywhere)
+	float CameraThreshold = 200.f;
 
 public:
 	/** Returns CameraBoom subobject **/
@@ -338,8 +339,8 @@ public:
 	TSubclassOf<UUserWidget> SelectTeamWidget;
 
 	//Animation
-	UPROPERTY(EditDefaultsOnly, Replicated, Category = "Montages")
-	UAnimMontage* AimingMontage;
+	UPROPERTY(EditDefaultsOnly, Category = "Montages")
+	UAnimMontage* HitReactMontage;
 	UPROPERTY(EditDefaultsOnly, Category = "Montages")
 	UAnimMontage* ShootingMontage;
 
@@ -352,7 +353,7 @@ public:
 	float RunningVelocity = 700.f;
 
 	//WeaponInfo
-	UAnimationAsset* WeaponShotAnim;
+	TObjectPtr<UAnimationAsset> WeaponShotAnim;
 	
 	//Montages
 	UPROPERTY(EditDefaultsOnly, BlueprintReadWrite, Category = "Montages")
@@ -373,7 +374,6 @@ public:
 	ABaseWeapon* GetEquippedWeapon();
 
 	FORCEINLINE ETurningInPlace GetTurningInPlace() const { return TurningInPlace; }
-	
 	FVector GetHitTarget() const;
 };
 
