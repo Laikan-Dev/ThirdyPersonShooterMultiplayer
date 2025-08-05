@@ -7,6 +7,7 @@
 #include "MultiplayerGameMode.h"
 #include "MPProjectile.h"
 #include "BaseWeapon.h"
+#include "InteractWithCrosshairs.h"
 #include "PlayerOverlayStates.h"
 #include "Multiplayer/Enums/TurningInPlace.h"
 #include "MultiplayerCharacter.generated.h"
@@ -35,7 +36,7 @@ enum class ECharMovDirection : uint8
 DECLARE_LOG_CATEGORY_EXTERN(LogTemplateCharacter, Log, All);
 
 UCLASS(config=Game)
-class AMultiplayerCharacter : public ACharacter
+class AMultiplayerCharacter : public ACharacter, public IInteractWithCrosshairs
 {
 	GENERATED_BODY()
 
@@ -96,6 +97,9 @@ public:
 
 	void PlayFireMontage(bool bAiming);
 
+	UFUNCTION(NetMulticast, Unreliable)
+	void MulticastHit();
+
 protected:
 	//Commands
 	/** Called for movement input */
@@ -103,6 +107,8 @@ protected:
 	/** Called for looking input */
 	void Look(const FInputActionValue& Value);
 
+	//HitReact
+	void PlayHitReactMontage();
 	//Aiming
 	UFUNCTION()
 	void StartAiming();
@@ -182,6 +188,9 @@ private:
 	class UCombatComponent* CombatSystem;
 	UFUNCTION(Server, Reliable)
 	void ServerEquipItem();
+	void HideCameraIfCharacterClose();
+	UPROPERTY(EditAnywhere)
+	float CameraThreshold = 200.f;
 
 public:
 	/** Returns CameraBoom subobject **/
@@ -330,8 +339,8 @@ public:
 	TSubclassOf<UUserWidget> SelectTeamWidget;
 
 	//Animation
-	UPROPERTY(EditDefaultsOnly, Replicated, Category = "Montages")
-	UAnimMontage* AimingMontage;
+	UPROPERTY(EditDefaultsOnly, Category = "Montages")
+	UAnimMontage* HitReactMontage;
 	UPROPERTY(EditDefaultsOnly, Category = "Montages")
 	UAnimMontage* ShootingMontage;
 
@@ -344,7 +353,7 @@ public:
 	float RunningVelocity = 700.f;
 
 	//WeaponInfo
-	UAnimationAsset* WeaponShotAnim;
+	TObjectPtr<UAnimationAsset> WeaponShotAnim;
 	
 	//Montages
 	UPROPERTY(EditDefaultsOnly, BlueprintReadWrite, Category = "Montages")
@@ -365,6 +374,7 @@ public:
 	ABaseWeapon* GetEquippedWeapon();
 
 	FORCEINLINE ETurningInPlace GetTurningInPlace() const { return TurningInPlace; }
+	FVector GetHitTarget() const;
 };
 
 

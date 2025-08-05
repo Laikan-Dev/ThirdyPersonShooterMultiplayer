@@ -3,6 +3,7 @@
 #pragma once
 
 #include "CoreMinimal.h"
+#include "MultiplayerHud.h"
 #include "Components/ActorComponent.h"
 #include "CombatComponent.generated.h"
 
@@ -38,6 +39,7 @@ private:
 	class AMultiplayerCharacter* Character;
 	class AMultiplayerPlayerController* PlayerController;
 	class AMultiplayerHud* HUD;
+	FHUDPackage HUDPackage;
 	UPROPERTY(Replicated)
 	ABaseWeapon* EquippedWeapon;
 	UPROPERTY(Replicated)
@@ -51,6 +53,8 @@ private:
 
 	float CrosshairVelocityFactor;
 	float CrosshairInAirFactor;
+	float CrosshairAimFactor;
+	float CrosshairShootingFactor;
 
 	UFUNCTION(Server, Reliable)
 	void ServerFire(const FVector_NetQuantize& TraceHitTarget);
@@ -63,6 +67,18 @@ private:
 	void SetHUDCrosshairs(float DeltaTime);
 
 	FVector HitTarget;
+
+	float DefaultFOV;
+	UPROPERTY(EditDefaultsOnly)
+
+	
+	float CurrentFOV;
+
+	float ZoomedFOV = 30.f;
+	UPROPERTY(EditDefaultsOnly)
+	float ZoomInterpSpeed = 20.f;
+
+	void InterpFOV(float DeltaTime);
 public:	
 	
 

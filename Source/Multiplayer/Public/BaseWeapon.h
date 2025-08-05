@@ -103,6 +103,10 @@ public:
 	UPROPERTY(EditAnywhere, Category = Crosshairs)
 	UTexture2D* CrosshairsBottom;
 
+	UPROPERTY(EditAnywhere, Category = Crosshairs)
+	float ZoomedFOV = 30.0f;
+	UPROPERTY(EditAnywhere, Category = Crosshairs)
+	float ZoomInterpSpeed = 20.0f;
 private:
 	UPROPERTY(VisibleAnywhere, Category = "Components")
 	class USphereComponent* SphereComponent;
@@ -127,6 +131,8 @@ public:
 	void SetWeaponState(EWeaponState State);
 	FORCEINLINE USphereComponent* GetAreaSphere() const { return SphereComponent; }
 	FORCEINLINE USkeletalMeshComponent* GetWeaponMesh() const { return SkeletalMesh; }
+	FORCEINLINE float GetZoomedFOV() const { return ZoomedFOV; }
+	FORCEINLINE float GetZoomInterpSpeed() const { return ZoomedFOV; }
 
 public:
 

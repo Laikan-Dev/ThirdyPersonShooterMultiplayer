@@ -9,6 +9,7 @@
 #include "Net/UnrealNetwork.h"
 #include "Casing.h"
 #include "Engine/SkeletalMeshSocket.h"
+#include "Components/SkeletalMeshComponent.h"
 #include "Multiplayer/Public/DataAsset/WeaponsDataAsset.h"
 
 // Sets default values
@@ -16,16 +17,23 @@ ABaseWeapon::ABaseWeapon()
 {
 	bReplicates = true;
 	SetReplicateMovement(true);
-	SphereComponent = CreateDefaultSubobject<USphereComponent>(TEXT("RootComponent"));
-	RootComponent = SphereComponent;
-	
+
 	SkeletalMesh = CreateDefaultSubobject<USkeletalMeshComponent>(TEXT("WeaponMesh"));
-	SkeletalMesh->SetupAttachment(RootComponent);
+	RootComponent = SkeletalMesh;
+	SkeletalMesh->MarkRenderStateDirty();
+	SkeletalMesh->SetCollisionResponseToAllChannels(ECollisionResponse::ECR_Block);
+	SkeletalMesh->SetCollisionResponseToChannel(ECollisionChannel::ECC_Pawn, ECollisionResponse::ECR_Ignore);
+	SkeletalMesh->SetCollisionEnabled(ECollisionEnabled::NoCollision);
+
+	SphereComponent = CreateDefaultSubobject<USphereComponent>(TEXT("SphereComponent"));
+	SphereComponent->SetupAttachment(RootComponent);
+
 	if (WeaponData)
 	{
 		SkeletalMesh->SetSkeletalMesh(WeaponData->GetWeaponStats().Mesh);
 	}
-	SkeletalMesh->SetCollisionResponseToChannel(ECollisionChannel::ECC_Pawn, ECollisionResponse::ECR_Ignore);
+
+	
 
 
 	PickupWidget = CreateDefaultSubobject<UWidgetComponent>(TEXT("PickupWidget"));
@@ -74,6 +82,8 @@ void ABaseWeapon::BeginPlay()
 	Super::BeginPlay();
 	if (HasAuthority())
 	{
+		SphereComponent->SetCollisionEnabled(ECollisionEnabled::QueryAndPhysics);
+		SphereComponent->SetCollisionResponseToChannel(ECollisionChannel::ECC_Pawn, ECollisionResponse::ECR_Overlap);
 		SphereComponent->OnComponentBeginOverlap.AddDynamic(this, &ABaseWeapon::OnComponentBeginOverlap);
 		SphereComponent->OnComponentEndOverlap.AddDynamic(this, &ABaseWeapon::OnComponentEndOverlap);
 	}

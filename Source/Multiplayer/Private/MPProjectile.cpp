@@ -12,6 +12,7 @@
 #include "Multiplayer/MultiplayerCharacter.h"
 #include "UObject/ConstructorHelpers.h"
 #include "Sound/SoundCue.h"
+#include "Multiplayer/Multiplayer.h"
 
 
 // Sets default values
@@ -27,6 +28,8 @@ AMPProjectile::AMPProjectile()
 	BoxComponent->SetCollisionResponseToAllChannels(ECollisionResponse::ECR_Ignore);
 	BoxComponent->SetCollisionResponseToChannel(ECollisionChannel::ECC_Visibility, ECollisionResponse::ECR_Block);
 	BoxComponent->SetCollisionResponseToChannel(ECollisionChannel::ECC_WorldStatic, ECollisionResponse::ECR_Block);
+	BoxComponent->SetCollisionResponseToChannel(ECC_SkeletalMesh, ECollisionResponse::ECR_Block);
+
 	RootComponent = BoxComponent;
 
 	if (GetLocalRole() == ROLE_Authority)
@@ -80,6 +83,7 @@ void AMPProjectile::OnProjectileImpact(UPrimitiveComponent* HitComponent, AActor
 		if(TeamCheck(Player, Player->CurrentTeam))
 		{
 			UGameplayStatics::ApplyPointDamage(OtherActor, Damage, NormalImpulse, Hit, GetInstigator()->Controller, this, DamageType);
+			Player->MulticastHit();
 		}
 	}
 	Destroy();

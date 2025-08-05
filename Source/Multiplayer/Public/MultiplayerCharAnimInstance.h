@@ -69,6 +69,8 @@ public:
 
 	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = "MovementData")
 	FTransform LeftHandTransform;
+	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = "MovementData")
+	FRotator RightHandRot;
 
 	class ABaseWeapon* EquippedWeapon;
 
@@ -84,6 +86,9 @@ public:
 	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = "MovementData")
 
 	ETurningInPlace TurningInPlace;
+
+	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = "MovementData")
+	bool bIsLocallyControlled;
 
 	//Functions
 	UFUNCTION(BlueprintCallable)
