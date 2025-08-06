@@ -99,6 +99,8 @@ public:
 
 	UFUNCTION(NetMulticast, Unreliable)
 	void MulticastHit();
+	
+	virtual void OnRep_ReplicatedMovement() override;
 
 protected:
 	//Commands
@@ -119,6 +121,9 @@ protected:
 	void FireButtonPressed();
 	void FireButtonReleased();
 
+	//Proxies
+	void SimProxiesTurn();
+	void CalculateAO_Pitch();
 	//Jump
 	UFUNCTION()
 	void StartJump();
@@ -191,12 +196,22 @@ private:
 	void HideCameraIfCharacterClose();
 	UPROPERTY(EditAnywhere)
 	float CameraThreshold = 200.f;
+	
+	bool bRotateRootBone;
+	float TurnThreshold = 0.5f;
+	FRotator ProxyRotationLastFrame;
+	FRotator ProxyRotation;
+	float ProxyRotationYaw;
+	float TimeSinceLastMovementReplication;
+	float CalculateSpeed();
 
 public:
 	/** Returns CameraBoom subobject **/
 	FORCEINLINE class USpringArmComponent* GetCameraBoom() const { return CameraBoom; }
 	/** Returns FollowCamera subobject **/
 	FORCEINLINE class UCameraComponent* GetFollowCamera() const { return FollowCamera; }
+	//** Return bRotateRootBone**/
+	FORCEINLINE bool ShouldRotateRootBone() const { return bRotateRootBone; }
 
 	UPROPERTY(ReplicatedUsing = OnRep_PlayerTeam, BlueprintReadWrite)
 	ETeam CurrentTeam = ETeam::ET_NoTeam;

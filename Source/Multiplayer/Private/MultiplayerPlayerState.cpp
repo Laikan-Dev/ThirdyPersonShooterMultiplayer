@@ -12,7 +12,7 @@ AMultiplayerPlayerState::AMultiplayerPlayerState()
 	RedTeamScore = 0;
 	BlueTeamScore = 0;
 
-	NetUpdateFrequency = 100.f;
+	SetNetUpdateFrequency(100.f);
 	AbilitySystemComponent = CreateDefaultSubobject<UMultiplayerASComponent>("AbilitySystemComponent");
 	AbilitySystemComponent->SetReplicationMode(EGameplayEffectReplicationMode::Mixed);
 }

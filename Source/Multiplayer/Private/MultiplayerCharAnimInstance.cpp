@@ -37,7 +37,7 @@ void UMultiplayerCharAnimInstance::NativeUpdateAnimation(float DeltaTime)
 		bIsCrouched = Character->bIsCrouched;
 		bIsAiming = Character->bIsAiming();
 		TurningInPlace = Character->GetTurningInPlace();
-
+		bRotateRootBone = Character->ShouldRotateRootBone();
 		//YawOffset
 		FRotator AimRotation = Character->GetBaseAimRotation();
 		FRotator MovementRotation = UKismetMathLibrary::MakeRotFromX(Character->GetVelocity());

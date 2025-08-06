@@ -176,7 +176,19 @@ void AMultiplayerCharacter::Tick(float DeltaTime)
 {
 	Super::Tick(DeltaTime);
 	UpdateCamera();
-	AimOffset(DeltaTime);
+	if (GetLocalRole() > ENetRole::ROLE_SimulatedProxy && IsLocallyControlled())
+	{
+		AimOffset(DeltaTime);
+	}
+	else
+	{
+		TimeSinceLastMovementReplication += DeltaTime;
+		if (TimeSinceLastMovementReplication > 0.25f)
+		{
+			OnRep_ReplicatedMovement();
+		}
+		CalculateAO_Pitch();
+	}
 	HideCameraIfCharacterClose();
 }
 
@@ -205,6 +217,13 @@ void AMultiplayerCharacter::HideCameraIfCharacterClose()
 			CombatSystem->EquippedWeapon->GetWeaponMesh()->bOwnerNoSee = false;
 		}
 	}
+}
+
+float AMultiplayerCharacter::CalculateSpeed()
+{
+	FVector Velocity = GetVelocity();
+	Velocity.Z = 0.f;
+	return Velocity.Size();
 }
 
 void AMultiplayerCharacter::SetOverlappingWeapon(ABaseWeapon* Weapon)
@@ -394,13 +413,12 @@ void AMultiplayerCharacter::ServerSetTeam_Implementation(ETeam NewTeam)
 void AMultiplayerCharacter::AimOffset(float DeltaTime)
 {
 	if (CombatSystem && CombatSystem->EquippedWeapon == nullptr) return;
-	FVector Velocity = GetVelocity();
-	Velocity.Z = 0.f;
-	float Speed = Velocity.Size();
 	bool bIsInAir = GetCharacterMovement()->IsFalling();
-
+	float Speed = CalculateSpeed();
+	
 	if (Speed == 0.f && !bIsInAir) // standing still, not jumping
 	{
+		bRotateRootBone = true;
 		FRotator CurrentAimRotation = FRotator(0.f, GetBaseAimRotation().Yaw, 0.f);
 		FRotator DeltaAimRotation = UKismetMathLibrary::NormalizedDeltaRotator(CurrentAimRotation, StartAimRotation);
 		AO_Yaw = DeltaAimRotation.Yaw;
@@ -413,12 +431,20 @@ void AMultiplayerCharacter::AimOffset(float DeltaTime)
 	}
 	if (Speed > 0.f || bIsInAir) // running, or jumping
 	{
+		bRotateRootBone = false;
 		StartAimRotation = FRotator(0.f, GetBaseAimRotation().Yaw, 0.f);
 		AO_Yaw = 0.f;
 		bUseControllerRotationYaw = true;
 		TurningInPlace = ETurningInPlace::ETIP_NotTurning;
 	}
+	CalculateAO_Pitch();
 
+	
+	
+}
+
+void AMultiplayerCharacter::CalculateAO_Pitch()
+{
 	AO_Pitch = GetBaseAimRotation().Pitch;
 	if (AO_Pitch > 90.f && !IsLocallyControlled())
 	{
@@ -560,6 +586,13 @@ void AMultiplayerCharacter::SetupPlayerInputComponent(UInputComponent* PlayerInp
 	}
 }
 
+void AMultiplayerCharacter::OnRep_ReplicatedMovement()
+{
+	Super::OnRep_ReplicatedMovement();
+	SimProxiesTurn();
+	TimeSinceLastMovementReplication = 0.f;
+}
+
 void AMultiplayerCharacter::Move(const FInputActionValue& Value)
 {
 	// input is a Vector2D
@@ -657,6 +690,43 @@ void AMultiplayerCharacter::FireButtonReleased()
 		CombatSystem->FireButtonPressed(false);
 	}
 }
+
+void AMultiplayerCharacter::SimProxiesTurn()
+{
+	if (CombatSystem == nullptr || CombatSystem->EquippedWeapon == nullptr) return;
+	float Speed = CalculateSpeed();
+	bRotateRootBone = false;
+	if (Speed > 0.f)
+	{
+		TurningInPlace = ETurningInPlace::ETIP_NotTurning;
+		return;
+	}
+	
+	ProxyRotationLastFrame = ProxyRotation;
+	ProxyRotation = GetActorRotation();
+	ProxyRotationYaw = UKismetMathLibrary::NormalizedDeltaRotator(ProxyRotation, ProxyRotation).Yaw;
+
+	UE_LOG(LogTemp, Warning, TEXT("ProxyYaw: %f"), ProxyRotationYaw);
+	if (UKismetMathLibrary::Abs(ProxyRotationYaw) > TurnThreshold)
+	{
+		if (ProxyRotationYaw > TurnThreshold)
+		{
+			TurningInPlace = ETurningInPlace::ETIP_Right;
+		}
+		else if (ProxyRotationYaw < -TurnThreshold)
+		{
+			TurningInPlace = ETurningInPlace::ETIP_Left;
+		}
+		else
+		{
+			TurningInPlace = ETurningInPlace::ETIP_NotTurning;
+		}
+		return;
+	}
+	TurningInPlace = ETurningInPlace::ETIP_NotTurning;
+}
+
+
 
 void AMultiplayerCharacter::StartJump()
 {

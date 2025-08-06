@@ -90,6 +90,8 @@ public:
 	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = "MovementData")
 	bool bIsLocallyControlled;
 
+	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = "MovementData")
+	bool bRotateRootBone;
 	//Functions
 	UFUNCTION(BlueprintCallable)
 	void GetAimOffset();
