@@ -236,10 +236,12 @@ public:
 protected:
 //ReplicatedProperties
 	//Health
-	UPROPERTY(EditDefaultsOnly, Category = "Health")
+	UPROPERTY(EditDefaultsOnly, Category = "PlayerStats")
 	float MaxHealth;
-	UPROPERTY(ReplicatedUsing = OnRep_CurrentHealth)
+	UPROPERTY(VisibleAnywhere, ReplicatedUsing = OnRep_CurrentHealth, Category = PlayerStats)
 	float CurrentHealth;
+
+	class AMultiplayerPlayerController* MultiplayerPlayerController;
 
 	//Death
 	UPROPERTY(Replicated)

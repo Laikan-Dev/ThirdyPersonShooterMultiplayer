@@ -2,10 +2,15 @@
 
 
 #include "MultiplayerPlayerController.h"
+
+#include "MultiplayerHud.h"
 #include "Blueprint/UserWidget.h"
 #include "Blueprint/WidgetBlueprintLibrary.h"
+#include "Components/ProgressBar.h"
+#include "Components/TextBlock.h"
 #include "Multiplayer/MultiplayerCharacter.h"
 #include "Kismet/GameplayStatics.h"
+#include "Multiplayer/HUD/CharacterOverlay.h"
 
 void AMultiplayerPlayerController::AddCaptureFlagWidget(TSubclassOf<UUserWidget> CurrentWidget)
 {
@@ -49,8 +54,24 @@ void AMultiplayerPlayerController::AddMatchResultWidget(ETeam VictoriusTeam)
 	}
 }
 
+void AMultiplayerPlayerController::SetHudHealth(float CurrentHealth, float MaxHealth)
+{
+	MultiplayerHUD = MultiplayerHUD ==nullptr ? Cast<AMultiplayerHud>(GetHUD()) : MultiplayerHUD;
+	bool bHUDValid = MultiplayerHUD && MultiplayerHUD->CharacterOverlay && MultiplayerHUD->CharacterOverlay->HPBar && MultiplayerHUD->CharacterOverlay->HPText;
+	if (bHUDValid)
+	{
+		const float HealthPercent = CurrentHealth / MaxHealth;
+		MultiplayerHUD->CharacterOverlay->HPBar->SetPercent(HealthPercent);
+		FString HealthText = FString::Printf(TEXT("%d/%d"), FMath::CeilToInt(CurrentHealth), FMath::CeilToInt(MaxHealth));
+		MultiplayerHUD->CharacterOverlay->HPText->SetText(FText::FromString(HealthText));
+	}
+}
+
 void AMultiplayerPlayerController::BeginPlay()
 {
+	Super::BeginPlay();
+	MultiplayerHUD = Cast<AMultiplayerHud>(GetHUD());
+	
 	if (IsLocalController())
 	{
 		if (CaptureFlagWidget)

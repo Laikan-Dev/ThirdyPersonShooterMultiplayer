@@ -14,10 +14,10 @@ class MULTIPLAYER_API AMultiplayerPlayerController : public APlayerController
 {
 	GENERATED_BODY()
 
+protected:
+	virtual void BeginPlay();
 
 public:
-
-	virtual void BeginPlay();
 	
 	UPROPERTY(EditDefaultsOnly, BlueprintReadOnly)
 	TSubclassOf<UUserWidget> CaptureFlagWidget;
@@ -31,5 +31,9 @@ public:
 	void AddCaptureFlagWidget(TSubclassOf<UUserWidget> CurrentWidget);
 	UFUNCTION()
 	void AddMatchResultWidget(ETeam VictoriusTeam);
-	
+
+	void SetHudHealth(float CurrentHealth, float MaxHealth);
+
+private:
+	class AMultiplayerHud* MultiplayerHUD;
 };

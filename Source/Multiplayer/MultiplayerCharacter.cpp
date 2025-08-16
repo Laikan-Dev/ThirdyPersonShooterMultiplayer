@@ -169,6 +169,12 @@ void AMultiplayerCharacter::BeginPlay()
 {
 	// Call the base class  
 	Super::BeginPlay();
+
+	MultiplayerPlayerController = Cast<AMultiplayerPlayerController>(Controller);
+	if (MultiplayerPlayerController)
+	{
+		MultiplayerPlayerController->SetHudHealth(CurrentHealth, MaxHealth);
+	}
 	SelectTeam();
 	bUseControllerRotationYaw = true;
 	GetCharacterMovement()->bOrientRotationToMovement = false;

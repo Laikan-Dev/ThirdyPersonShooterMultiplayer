@@ -2,6 +2,9 @@
 
 
 #include "MultiplayerHud.h"
+#include "MultiplayerPlayerController.h"
+#include "Blueprint/UserWidget.h"
+#include "Multiplayer/HUD/CharacterOverlay.h"
 
 void AMultiplayerHud::DrawHUD()
 {
@@ -40,6 +43,22 @@ void AMultiplayerHud::DrawHUD()
 			FVector2D Spread(0.f, SpreadScaled);
 			DrawCrosshair(HUDPackage.CrosshairsBottom, ViewportCenter, Spread, HUDPackage.CrosshairColor);
 		}
+	}
+}
+
+void AMultiplayerHud::BeginPlay()
+{
+	Super::BeginPlay();
+	AddCharacterOverlay();
+}
+
+void AMultiplayerHud::AddCharacterOverlay()
+{
+	APlayerController* PlayerController = GetOwningPlayerController();
+	if (PlayerController && CharacterOverlayClass)
+	{
+		CharacterOverlay = CreateWidget<UCharacterOverlay>(PlayerController, CharacterOverlayClass);
+		CharacterOverlay->AddToViewport();
 	}
 }
 
