@@ -34,6 +34,13 @@ protected:
 	
 
 	void FireButtonPressed(bool bPressed);
+	void Fire();
+
+	FTimerHandle FireTimer;
+	bool bCanFire = true;
+
+	void StartFireTimer();
+	void FireTimerFinished();
 
 private:
 	class AMultiplayerCharacter* Character;

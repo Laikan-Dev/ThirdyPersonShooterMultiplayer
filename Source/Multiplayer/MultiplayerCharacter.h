@@ -189,6 +189,7 @@ protected:
 	void UpdateCamera();
 
 private:
+	void RotateInPlace(float DeltaTime);
 	UPROPERTY(VisibleAnywhere)
 	class UCombatComponent* CombatSystem;
 	UFUNCTION(Server, Reliable)

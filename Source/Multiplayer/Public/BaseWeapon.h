@@ -107,6 +107,11 @@ public:
 	float ZoomedFOV = 30.0f;
 	UPROPERTY(EditAnywhere, Category = Crosshairs)
 	float ZoomInterpSpeed = 20.0f;
+
+	UPROPERTY(EditAnywhere, Category = Combat)
+	float FireDelay = .15f;
+	UPROPERTY(EditAnywhere, Category = Combat)
+	bool bAutomatic = true;
 private:
 	UPROPERTY(VisibleAnywhere, Category = "Components")
 	class USphereComponent* SphereComponent;

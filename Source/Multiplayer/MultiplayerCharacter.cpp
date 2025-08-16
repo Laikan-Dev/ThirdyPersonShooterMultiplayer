@@ -25,6 +25,7 @@
 #include "Kismet/KismetMathLibrary.h"
 #include "Components/SceneCaptureComponent2D.h"
 #include "Multiplayer/Public/DataAsset/WeaponsDataAsset.h"
+#include "Windows/AllowWindowsPlatformTypes.h"
 DEFINE_LOG_CATEGORY(LogTemplateCharacter);
 
 //////////////////////////////////////////////////////////////////////////
@@ -169,13 +170,24 @@ void AMultiplayerCharacter::BeginPlay()
 	// Call the base class  
 	Super::BeginPlay();
 	SelectTeam();
+	bUseControllerRotationYaw = true;
+	GetCharacterMovement()->bOrientRotationToMovement = false;
+	
+	GetCharacterMovement()->RotationRate = FRotator(0.f, 720.f, 0.f);
 	AnimInstance = Cast<UMultiplayerCharAnimInstance>(GetMesh()->GetAnimInstance());
 }
 
 void AMultiplayerCharacter::Tick(float DeltaTime)
 {
 	Super::Tick(DeltaTime);
-	UpdateCamera();
+	RotateInPlace(DeltaTime);
+	HideCameraIfCharacterClose();
+}
+
+void AMultiplayerCharacter::RotateInPlace(float DeltaTime)
+{
+	if (CombatSystem && CombatSystem->EquippedWeapon) GetCharacterMovement()->bOrientRotationToMovement = false;
+	if (CombatSystem && CombatSystem->EquippedWeapon) bUseControllerRotationYaw = true;
 	if (GetLocalRole() > ENetRole::ROLE_SimulatedProxy && IsLocallyControlled())
 	{
 		AimOffset(DeltaTime);
@@ -189,13 +201,6 @@ void AMultiplayerCharacter::Tick(float DeltaTime)
 		}
 		CalculateAO_Pitch();
 	}
-	HideCameraIfCharacterClose();
-}
-
-void AMultiplayerCharacter::UpdateCamera()
-{
-	bool bIsMoving = !GetVelocity().IsNearlyZero();
-	bUseControllerRotationYaw = bIsMoving || bIsAiming();
 }
 
 void AMultiplayerCharacter::HideCameraIfCharacterClose()
@@ -413,8 +418,8 @@ void AMultiplayerCharacter::ServerSetTeam_Implementation(ETeam NewTeam)
 void AMultiplayerCharacter::AimOffset(float DeltaTime)
 {
 	if (CombatSystem && CombatSystem->EquippedWeapon == nullptr) return;
-	bool bIsInAir = GetCharacterMovement()->IsFalling();
 	float Speed = CalculateSpeed();
+	bool bIsInAir = GetCharacterMovement()->IsFalling();
 	
 	if (Speed == 0.f && !bIsInAir) // standing still, not jumping
 	{
@@ -438,9 +443,6 @@ void AMultiplayerCharacter::AimOffset(float DeltaTime)
 		TurningInPlace = ETurningInPlace::ETIP_NotTurning;
 	}
 	CalculateAO_Pitch();
-
-	
-	
 }
 
 void AMultiplayerCharacter::CalculateAO_Pitch()
@@ -575,7 +577,7 @@ void AMultiplayerCharacter::SetupPlayerInputComponent(UInputComponent* PlayerInp
 
 		//FiringInput
 		EnhancedInputComponent->BindAction(FireInput, ETriggerEvent::Started, this, &AMultiplayerCharacter::FireButtonPressed);
-		EnhancedInputComponent->BindAction(FireInput, ETriggerEvent::Completed, this, &AMultiplayerCharacter::FireButtonPressed);
+		EnhancedInputComponent->BindAction(FireInput, ETriggerEvent::Completed, this, &AMultiplayerCharacter::FireButtonReleased);
 
 		//PickupItem
 		EnhancedInputComponent->BindAction(PickUpInput, ETriggerEvent::Started, this, &AMultiplayerCharacter::EquipItem);
@@ -688,14 +690,15 @@ void AMultiplayerCharacter::FireButtonReleased()
 	if (CombatSystem)
 	{
 		CombatSystem->FireButtonPressed(false);
+		//CombatSystem->FireTimerFinished();
 	}
 }
 
 void AMultiplayerCharacter::SimProxiesTurn()
 {
 	if (CombatSystem == nullptr || CombatSystem->EquippedWeapon == nullptr) return;
-	float Speed = CalculateSpeed();
 	bRotateRootBone = false;
+	float Speed = CalculateSpeed();
 	if (Speed > 0.f)
 	{
 		TurningInPlace = ETurningInPlace::ETIP_NotTurning;
@@ -704,10 +707,10 @@ void AMultiplayerCharacter::SimProxiesTurn()
 	
 	ProxyRotationLastFrame = ProxyRotation;
 	ProxyRotation = GetActorRotation();
-	ProxyRotationYaw = UKismetMathLibrary::NormalizedDeltaRotator(ProxyRotation, ProxyRotation).Yaw;
+	ProxyRotationYaw = UKismetMathLibrary::NormalizedDeltaRotator(ProxyRotation, ProxyRotationLastFrame).Yaw;
 
 	UE_LOG(LogTemp, Warning, TEXT("ProxyYaw: %f"), ProxyRotationYaw);
-	if (UKismetMathLibrary::Abs(ProxyRotationYaw) > TurnThreshold)
+	if (FMath::Abs(ProxyRotationYaw) > TurnThreshold)
 	{
 		if (ProxyRotationYaw > TurnThreshold)
 		{
