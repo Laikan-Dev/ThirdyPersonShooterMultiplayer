@@ -46,7 +46,7 @@ public:
 	TSubclassOf<class UDamageType> DamageType;
 
 	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = "Damage")
-	float Damage;
+	float Damage = 10.f;
 
 protected:
 	virtual void Destroyed() override;

@@ -25,7 +25,9 @@
 #include "Kismet/KismetMathLibrary.h"
 #include "Components/SceneCaptureComponent2D.h"
 #include "Multiplayer/Public/DataAsset/WeaponsDataAsset.h"
+#include "AsTheCaosRemainsGameMode.h"
 #include "Windows/AllowWindowsPlatformTypes.h"
+#include "TimerManager.h"
 DEFINE_LOG_CATEGORY(LogTemplateCharacter);
 
 //////////////////////////////////////////////////////////////////////////
@@ -160,9 +162,45 @@ void AMultiplayerCharacter::PlayHitReactMontage()
 	}
 }
 
-void AMultiplayerCharacter::MulticastHit_Implementation()
+void AMultiplayerCharacter::PlayDeathMontage()
 {
+	UAnimInstance* AnimInstanceRef = GetMesh()->GetAnimInstance();
+	if (AnimInstanceRef && DeathMontage)
+	{
+		AnimInstance->Montage_Play(DeathMontage);
+		/**
+		FName SectionName;
+		SectionName = bAiming ? FName("RifleAim") : FName("RifleHip");
+		AnimInstanceRef->Montage_JumpToSection(SectionName);
+		**/
+	}
+}
+
+void AMultiplayerCharacter::ReceiveDamage(AActor* DamagedActor, float Damage, const UDamageType* DamageType, class AController* InstigatorController, class AActor* DamageCauser)
+{
+	CurrentHealth = FMath::Clamp(CurrentHealth - Damage, 0.0f, MaxHealth);
 	PlayHitReactMontage();
+	UpdateHUDHealth();
+
+	if (CurrentHealth <= 0)
+	{
+		AAsTheCaosRemainsGameMode* GameMode = GetWorld()->GetAuthGameMode<AAsTheCaosRemainsGameMode>();
+		if (GameMode)
+		{
+			MultiplayerPlayerController = MultiplayerPlayerController == nullptr ? Cast<AMultiplayerPlayerController>(Controller) : MultiplayerPlayerController;
+			AMultiplayerPlayerController* AttackerController = Cast<AMultiplayerPlayerController>(InstigatorController);
+			GameMode->PlayerEliminated(this, MultiplayerPlayerController, AttackerController);
+		}
+	}
+}
+
+void AMultiplayerCharacter::UpdateHUDHealth()
+{
+	MultiplayerPlayerController = MultiplayerPlayerController == nullptr ? Cast<AMultiplayerPlayerController>(Controller) : MultiplayerPlayerController;
+	if (MultiplayerPlayerController)
+	{
+		MultiplayerPlayerController->SetHudHealth(CurrentHealth, MaxHealth);
+	}
 }
 
 void AMultiplayerCharacter::BeginPlay()
@@ -170,10 +208,10 @@ void AMultiplayerCharacter::BeginPlay()
 	// Call the base class  
 	Super::BeginPlay();
 
-	MultiplayerPlayerController = Cast<AMultiplayerPlayerController>(Controller);
-	if (MultiplayerPlayerController)
+	UpdateHUDHealth();
+	if (HasAuthority())
 	{
-		MultiplayerPlayerController->SetHudHealth(CurrentHealth, MaxHealth);
+		OnTakeAnyDamage.AddDynamic(this, &AMultiplayerCharacter::ReceiveDamage);
 	}
 	SelectTeam();
 	bUseControllerRotationYaw = true;
@@ -272,24 +310,9 @@ bool AMultiplayerCharacter::IWeaponEquipped()
 
 void AMultiplayerCharacter::OnRep_CurrentHealth()
 {
-	OnHealthUpdate();
+	UpdateHUDHealth();
+	PlayHitReactMontage();
 }
-
-void AMultiplayerCharacter::OnDeathUpdate()
-{
-		GetMesh()->SetSimulatePhysics(true);
-		GetCapsuleComponent()->SetCollisionResponseToChannel(ECollisionChannel::ECC_Vehicle, ECollisionResponse::ECR_Ignore);
-		GetMesh()->SetCollisionProfileName(TEXT("Ragdoll"));
-		MulticastOnDeath();
-
-}
-
-void AMultiplayerCharacter::MulticastOnDeath_Implementation()
-{
-	GetMesh()->SetSimulatePhysics(true);
-	GetMesh()->SetCollisionProfileName(TEXT("Ragdoll"));
-}
-
 void AMultiplayerCharacter::OnRep_PlayerTeam()
 {
 	if (CurrentTeam == ETeam::ET_RedTeam && Red)
@@ -309,33 +332,10 @@ void AMultiplayerCharacter::GetLifetimeReplicatedProps(TArray<FLifetimeProperty>
 
 
 	DOREPLIFETIME(AMultiplayerCharacter, CurrentHealth); 	//Replicate Current Health
-	DOREPLIFETIME(AMultiplayerCharacter, CurrentTeam);	    //Replicate Current Team
-	DOREPLIFETIME(AMultiplayerCharacter, bIsDead);			//Replicate boolean Death for ABP
+	DOREPLIFETIME(AMultiplayerCharacter, CurrentTeam);	    //Replicate Current Team//Replicate boolean Death for ABP
 	DOREPLIFETIME(AMultiplayerCharacter, CurrentState);
 	DOREPLIFETIME(AMultiplayerCharacter, WeaponData);
 	DOREPLIFETIME_CONDITION(AMultiplayerCharacter, OverlappingWeapon, COND_OwnerOnly);
-}
-
-void AMultiplayerCharacter::OnHealthUpdate()
-{
-	if (CurrentHealth <= 0)
-	{
-		FString deathMessage = FString::Printf(TEXT("You have been killed"));
-		GEngine->AddOnScreenDebugMessage(-1, 15.f, FColor::Red, deathMessage);
-
-		bIsDead = true;
-		OnDeathUpdate();
-	}
-	if (IsLocallyControlled())
-	{
-		FString healthMessage = FString::Printf(TEXT("You now have %f Health remaining"), CurrentHealth);
-		GEngine->AddOnScreenDebugMessage(-1, 15.f, FColor::Blue, healthMessage);
-	}
-	if (GetLocalRole() == ROLE_Authority)
-	{
-		FString healthMessage = FString::Printf(TEXT("%s now has %f health remaining."), *GetFName().ToString(), CurrentHealth);
-		GEngine->AddOnScreenDebugMessage(-1, 5.f, FColor::Blue, healthMessage);
-	}
 }
 
 void AMultiplayerCharacter::OnRep_CurrentWeapon()
@@ -352,15 +352,7 @@ void AMultiplayerCharacter::SetCurrentHealth(float healthValue)
 	if (GetLocalRole() == ROLE_Authority)
 	{
 		CurrentHealth = FMath::Clamp(healthValue, 0.f, MaxHealth);
-		OnHealthUpdate();
 	}
-}
-
-float AMultiplayerCharacter::TakeDamage(float DamageTaken, FDamageEvent const& DamageEvent, AController* EventInstigator, AActor* DamageCauser)
-{
-	float damageApplied = CurrentHealth - DamageTaken;
-	SetCurrentHealth(damageApplied);
-	return damageApplied;
 }
 
 void AMultiplayerCharacter::SetCurrentWeapon(UWeaponsDataAsset* CurrentWeapon)
@@ -601,6 +593,18 @@ void AMultiplayerCharacter::OnRep_ReplicatedMovement()
 	TimeSinceLastMovementReplication = 0.f;
 }
 
+void AMultiplayerCharacter::Elim()
+{
+	MulticastElim();
+	GetWorldTimerManager().SetTimer(ElimTimer, this, &AMultiplayerCharacter::ElimTimerFinished, ElimDelay);
+}
+
+void AMultiplayerCharacter::MulticastElim_Implementation()
+{
+	bElimmed = true;
+	PlayDeathMontage();
+}
+
 void AMultiplayerCharacter::Move(const FInputActionValue& Value)
 {
 	// input is a Vector2D
@@ -651,6 +655,15 @@ void AMultiplayerCharacter::ServerSetRuning_Implementation(bool bIsRunning)
 	}
 }
 
+void AMultiplayerCharacter::ElimTimerFinished()
+{
+	AAsTheCaosRemainsGameMode* GameMode = GetWorld()->GetAuthGameMode<AAsTheCaosRemainsGameMode>();
+	if (GameMode)
+	{
+		GameMode->RequestRespawn(this, Controller);
+	}
+}
+
 void AMultiplayerCharacter::OnRep_Aiming()
 {
 	if (bIsAiming())
@@ -696,7 +709,7 @@ void AMultiplayerCharacter::FireButtonReleased()
 	if (CombatSystem)
 	{
 		CombatSystem->FireButtonPressed(false);
-		//CombatSystem->FireTimerFinished();
+		CombatSystem->FireTimerFinished();
 	}
 }
 

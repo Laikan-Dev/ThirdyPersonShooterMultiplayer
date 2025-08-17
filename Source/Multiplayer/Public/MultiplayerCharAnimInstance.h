@@ -92,6 +92,9 @@ public:
 
 	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = "MovementData")
 	bool bRotateRootBone;
+
+	UPROPERTY(VisibleAnywhere, meta = (AllowPrivateAccess = "true"), BlueprintReadOnly, Category = "MovementData")
+	bool bElimmed;
 	//Functions
 	UFUNCTION(BlueprintCallable)
 	void GetAimOffset();

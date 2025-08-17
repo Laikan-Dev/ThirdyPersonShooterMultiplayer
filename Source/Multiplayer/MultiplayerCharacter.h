@@ -96,11 +96,11 @@ public:
 	class UMultiplayerCharAnimInstance* AnimInstance;
 
 	void PlayFireMontage(bool bAiming);
-
-	UFUNCTION(NetMulticast, Unreliable)
-	void MulticastHit();
-	
 	virtual void OnRep_ReplicatedMovement() override;
+
+	void Elim();
+	UFUNCTION(NetMulticast, Reliable)
+	void MulticastElim();
 
 protected:
 	//Commands
@@ -111,6 +111,12 @@ protected:
 
 	//HitReact
 	void PlayHitReactMontage();
+	void PlayDeathMontage();
+
+	//Damage
+	UFUNCTION()
+	void ReceiveDamage(AActor* DamagedActor, float Damage, const UDamageType* DamageType, class AController* InstigatedController, class AActor* DamageCauser);
+	void UpdateHUDHealth();
 	//Aiming
 	UFUNCTION()
 	void StartAiming();
@@ -237,15 +243,20 @@ protected:
 //ReplicatedProperties
 	//Health
 	UPROPERTY(EditDefaultsOnly, Category = "PlayerStats")
-	float MaxHealth;
+	float MaxHealth = 100.f;
 	UPROPERTY(VisibleAnywhere, ReplicatedUsing = OnRep_CurrentHealth, Category = PlayerStats)
 	float CurrentHealth;
+
+	bool bIsDead = false;
 
 	class AMultiplayerPlayerController* MultiplayerPlayerController;
 
 	//Death
-	UPROPERTY(Replicated)
-	bool bIsDead;
+	bool bElimmed = false;
+	FTimerHandle ElimTimer;
+	void ElimTimerFinished();
+	UPROPERTY(EditDefaultsOnly)
+	float ElimDelay = 3.f;
 
 	//Movement
 	UPROPERTY()
@@ -260,17 +271,11 @@ protected:
 //FunctionRep for Health
 	UFUNCTION()
 	void OnRep_CurrentHealth();
-	void OnDeathUpdate();
-
-	//FunctionRep for Death
-	UFUNCTION(Server, NetMulticast, Reliable)
-	void MulticastOnDeath();
 
 	//FunctionRep
 	UFUNCTION()
 	void OnRep_PlayerTeam();
 	void GetLifetimeReplicatedProps(TArray<FLifetimeProperty>& OutLifetimeProps) const override;
-	void OnHealthUpdate();
 
 	//FunctionRep for Weapon
 	UFUNCTION()
@@ -288,9 +293,6 @@ public:
 
 	UFUNCTION(BlueprintCallable, Category = "Health")
 	void SetCurrentHealth(float healthValue);
-
-	UFUNCTION(BlueprintCallable, Category = "Health")
-	float TakeDamage(float DamageTaken, struct FDamageEvent const& DamageEvent, AController* EventInstigator, AActor* DamageCauser) override;
 
 	UFUNCTION()
 	void SetCurrentWeapon(UWeaponsDataAsset* CurrentWeapon);
@@ -359,6 +361,9 @@ public:
 	//Animation
 	UPROPERTY(EditDefaultsOnly, Category = "Montages")
 	UAnimMontage* HitReactMontage;
+
+	UPROPERTY(EditDefaultsOnly, Category = "Montages")
+	UAnimMontage* DeathMontage;
 	UPROPERTY(EditDefaultsOnly, Category = "Montages")
 	UAnimMontage* ShootingMontage;
 
@@ -392,6 +397,7 @@ public:
 	ABaseWeapon* GetEquippedWeapon();
 
 	FORCEINLINE ETurningInPlace GetTurningInPlace() const { return TurningInPlace; }
+	FORCEINLINE bool IsElimmed() const {return bElimmed; }
 	FVector GetHitTarget() const;
 };
 

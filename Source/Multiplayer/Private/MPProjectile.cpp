@@ -77,15 +77,16 @@ void AMPProjectile::Destroyed()
 
 void AMPProjectile::OnProjectileImpact(UPrimitiveComponent* HitComponent, AActor* OtherActor, UPrimitiveComponent* OtherComp, FVector NormalImpulse, const FHitResult& Hit)
 {
+	/**
 	AMultiplayerCharacter* Player = Cast<AMultiplayerCharacter>(OtherActor);
 	if (Player)
 	{
 		if(TeamCheck(Player, Player->CurrentTeam))
 		{
 			UGameplayStatics::ApplyPointDamage(OtherActor, Damage, NormalImpulse, Hit, GetInstigator()->Controller, this, DamageType);
-			Player->MulticastHit();
 		}
 	}
+	**/
 	Destroy();
 }
 
