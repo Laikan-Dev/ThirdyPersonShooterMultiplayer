@@ -67,6 +67,28 @@ void AMultiplayerPlayerController::SetHudHealth(float CurrentHealth, float MaxHe
 	}
 }
 
+void AMultiplayerPlayerController::SetHUDScore(float Score)
+{
+	MultiplayerHUD = MultiplayerHUD == nullptr ? Cast<AMultiplayerHud>(GetHUD()) : MultiplayerHUD;
+	bool bHUDValid = MultiplayerHUD && MultiplayerHUD->CharacterOverlay && MultiplayerHUD->CharacterOverlay->ScoreAmount;
+	if (bHUDValid)
+	{
+		FString ScoreText = FString::Printf(TEXT("%d"), FMath::FloorToInt(Score));
+		MultiplayerHUD->CharacterOverlay->ScoreAmount->SetText(FText::FromString(ScoreText));
+	}
+}
+
+void AMultiplayerPlayerController::SetHUDDefeats(int32 Defeats)
+{
+	MultiplayerHUD = MultiplayerHUD == nullptr ? Cast<AMultiplayerHud>(GetHUD()) : MultiplayerHUD;
+	bool bHUDValid = MultiplayerHUD && MultiplayerHUD->CharacterOverlay && MultiplayerHUD->CharacterOverlay->ScoreAmount;
+	if (bHUDValid)
+	{
+		FString DefeatsText = FString::Printf(TEXT("%d"), Defeats);
+		MultiplayerHUD->CharacterOverlay->DefeatsAmount->SetText(FText::FromString(DefeatsText));
+	}
+}
+
 void AMultiplayerPlayerController::BeginPlay()
 {
 	Super::BeginPlay();
@@ -82,5 +104,16 @@ void AMultiplayerPlayerController::BeginPlay()
 				WidgetInstance->AddToViewport();
 			}
 		}
+	}
+}
+
+void AMultiplayerPlayerController::OnPossess(APawn* inPawn)
+{
+	Super::OnPossess(inPawn);
+
+	AMultiplayerCharacter* PlayerCharacter = Cast<AMultiplayerCharacter>(inPawn);
+	if (Player)
+	{
+		SetHudHealth(PlayerCharacter->GetCurrentHealth(), PlayerCharacter->GetMaxHealth());
 	}
 }

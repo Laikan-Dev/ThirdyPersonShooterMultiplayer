@@ -16,6 +16,7 @@ class MULTIPLAYER_API AMultiplayerPlayerController : public APlayerController
 
 protected:
 	virtual void BeginPlay();
+	virtual void OnPossess(APawn *inPawn) override;
 
 public:
 	
@@ -33,7 +34,10 @@ public:
 	void AddMatchResultWidget(ETeam VictoriusTeam);
 
 	void SetHudHealth(float CurrentHealth, float MaxHealth);
+	void SetHUDScore(float Score);
+	void SetHUDDefeats(int32 Defeats);
 
 private:
+	UPROPERTY()
 	class AMultiplayerHud* MultiplayerHUD;
 };

@@ -30,8 +30,8 @@ protected:
 	void SetAiming(bool bIsAiming);
 	UFUNCTION(Server, Reliable)
 	void Server_SetAiming(bool bIsAiming);
-
-	
+	UFUNCTION()
+	void OnRep_EquippedWeapon();
 
 	void FireButtonPressed(bool bPressed);
 	void Fire();
@@ -43,11 +43,15 @@ protected:
 	void FireTimerFinished();
 
 private:
+	UPROPERTY()
 	class AMultiplayerCharacter* Character;
+	UPROPERTY()
 	class AMultiplayerPlayerController* PlayerController;
+	UPROPERTY()
 	class AMultiplayerHud* HUD;
+	
 	FHUDPackage HUDPackage;
-	UPROPERTY(Replicated)
+	UPROPERTY(ReplicatedUsing = OnRep_EquippedWeapon)
 	ABaseWeapon* EquippedWeapon;
 	UPROPERTY(Replicated)
 	bool bAiming;

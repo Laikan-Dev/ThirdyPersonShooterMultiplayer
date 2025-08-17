@@ -18,4 +18,8 @@ public:
 	class UProgressBar* HPBar;
 	UPROPERTY(meta = (BindWidget))
 	class UTextBlock* HPText;
+	UPROPERTY(meta = (BindWidget))
+	UTextBlock* ScoreAmount;
+	UPROPERTY(meta = (BindWidget))
+	UTextBlock* DefeatsAmount;
 };

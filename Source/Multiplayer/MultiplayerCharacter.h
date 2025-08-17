@@ -9,6 +9,7 @@
 #include "BaseWeapon.h"
 #include "InteractWithCrosshairs.h"
 #include "PlayerOverlayStates.h"
+#include "Components/TimelineComponent.h"
 #include "Multiplayer/Enums/TurningInPlace.h"
 #include "MultiplayerCharacter.generated.h"
 
@@ -134,6 +135,8 @@ protected:
 	UFUNCTION()
 	void StartJump();
 
+	//Poll for ani relevant class spawning
+	void PollInit();
 	//Select Team
 	UFUNCTION(BlueprintCallable)
 	void ChoseRed();
@@ -249,6 +252,7 @@ protected:
 
 	bool bIsDead = false;
 
+	UPROPERTY()
 	class AMultiplayerPlayerController* MultiplayerPlayerController;
 
 	//Death
@@ -257,6 +261,29 @@ protected:
 	void ElimTimerFinished();
 	UPROPERTY(EditDefaultsOnly)
 	float ElimDelay = 3.f;
+
+	//DissolveEffect
+	UPROPERTY(VisibleAnywhere)
+	UTimelineComponent* DissolveTimeline;
+	FOnTimelineFloat DissolveTrack;
+	UPROPERTY(EditDefaultsOnly)
+	UCurveFloat* DissolveCurve;
+	//Dynamic instance that we can change at runtime
+	UPROPERTY(VisibleAnywhere)
+	UMaterialInstanceDynamic* DynamicDissolveMaterialInstance1;
+	UPROPERTY(VisibleAnywhere)
+	UMaterialInstanceDynamic* DynamicDissolveMaterialInstance2;
+
+	class AChaosRemPlayerState* PossessedPlayerState;
+	
+	// Material instance set on blueprints, used with the dynamic material instance
+	UPROPERTY(EditAnywhere)
+	UMaterialInstance* DissolveMaterialInstance1;
+	UPROPERTY(EditAnywhere)
+	UMaterialInstance* DissolveMaterialInstance2;
+	UFUNCTION()
+	void UpdateDissolveMaterial(float DissolveValue);
+	void StartDissolve();
 
 	//Movement
 	UPROPERTY()
@@ -284,7 +311,6 @@ protected:
 
 public:
 	//Getter for max health
-	UFUNCTION(BlueprintPure, Category = "Health")
 	FORCEINLINE float GetMaxHealth() const { return MaxHealth; }
 
 	//Getter for current health

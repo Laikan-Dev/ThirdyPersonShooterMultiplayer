@@ -28,6 +28,7 @@
 #include "AsTheCaosRemainsGameMode.h"
 #include "Windows/AllowWindowsPlatformTypes.h"
 #include "TimerManager.h"
+#include "Player/ChaosRemPlayerState.h"
 DEFINE_LOG_CATEGORY(LogTemplateCharacter);
 
 //////////////////////////////////////////////////////////////////////////
@@ -46,6 +47,9 @@ AMultiplayerCharacter::AMultiplayerCharacter()
 
 	//PlayerInfoWidget
 	PlayerInfo = CreateDefaultSubobject<UWidgetComponent>(TEXT("PlayerInfo"));
+
+	//DissolveTimeline
+	DissolveTimeline = CreateDefaultSubobject<UTimelineComponent>(TEXT("DissolveTimelineComponent"));
 
 	//Scene Capture to UI
 	UICameraVisualize = CreateDefaultSubobject<USceneCaptureComponent2D>(TEXT("UICamera"));
@@ -226,6 +230,7 @@ void AMultiplayerCharacter::Tick(float DeltaTime)
 	Super::Tick(DeltaTime);
 	RotateInPlace(DeltaTime);
 	HideCameraIfCharacterClose();
+	PollInit();
 }
 
 void AMultiplayerCharacter::RotateInPlace(float DeltaTime)
@@ -595,6 +600,10 @@ void AMultiplayerCharacter::OnRep_ReplicatedMovement()
 
 void AMultiplayerCharacter::Elim()
 {
+	if (CombatSystem && CombatSystem->EquippedWeapon)
+	{
+		CombatSystem->EquippedWeapon->Dropped();
+	}
 	MulticastElim();
 	GetWorldTimerManager().SetTimer(ElimTimer, this, &AMultiplayerCharacter::ElimTimerFinished, ElimDelay);
 }
@@ -603,6 +612,31 @@ void AMultiplayerCharacter::MulticastElim_Implementation()
 {
 	bElimmed = true;
 	PlayDeathMontage();
+
+	//Start dissolve Character Effect
+	if (DissolveMaterialInstance1 && DissolveMaterialInstance2)
+	{
+		DynamicDissolveMaterialInstance1 = UMaterialInstanceDynamic::Create(DissolveMaterialInstance1, this);
+		GetMesh()->SetMaterial(0, DynamicDissolveMaterialInstance1);
+		DynamicDissolveMaterialInstance1->SetScalarParameterValue(TEXT("DissolveValue"), 0.55f);
+		DynamicDissolveMaterialInstance1->SetScalarParameterValue(TEXT("GlowValue"), 200.f);
+
+		DynamicDissolveMaterialInstance2 = UMaterialInstanceDynamic::Create(DissolveMaterialInstance2, this);
+		GetMesh()->SetMaterial(1, DynamicDissolveMaterialInstance2);
+		DynamicDissolveMaterialInstance2->SetScalarParameterValue(TEXT("DissolveValue"), 0.55f);
+		DynamicDissolveMaterialInstance2->SetScalarParameterValue(TEXT("GlowValue"), 200.f);
+	}
+	StartDissolve();
+	//Disable Movement
+	GetCharacterMovement()->DisableMovement();
+	GetCharacterMovement()->StopMovementImmediately();
+	if (MultiplayerPlayerController)
+	{
+		DisableInput(MultiplayerPlayerController);
+	}
+	//Disable Collision
+	GetCapsuleComponent()->SetCollisionEnabled(ECollisionEnabled::NoCollision);
+	GetMesh()->SetCollisionEnabled(ECollisionEnabled::NoCollision);
 }
 
 void AMultiplayerCharacter::Move(const FInputActionValue& Value)
@@ -661,6 +695,25 @@ void AMultiplayerCharacter::ElimTimerFinished()
 	if (GameMode)
 	{
 		GameMode->RequestRespawn(this, Controller);
+	}
+}
+
+void AMultiplayerCharacter::UpdateDissolveMaterial(float DissolveValue)
+{
+	if (DynamicDissolveMaterialInstance1 && DynamicDissolveMaterialInstance2)
+	{
+		DynamicDissolveMaterialInstance1->SetScalarParameterValue(TEXT("DissolveValue"), DissolveValue);
+		DynamicDissolveMaterialInstance2->SetScalarParameterValue(TEXT("DissolveValue"), DissolveValue);
+	}
+}
+
+void AMultiplayerCharacter::StartDissolve()
+{
+	DissolveTrack.BindDynamic(this, &AMultiplayerCharacter::UpdateDissolveMaterial);
+	if (DissolveCurve && DissolveTimeline)
+	{
+		DissolveTimeline->AddInterpFloat(DissolveCurve, DissolveTrack);
+		DissolveTimeline->Play();
 	}
 }
 
@@ -755,6 +808,19 @@ void AMultiplayerCharacter::StartJump()
 	if (!bIsAiming())
 	{
 		Jump();
+	}
+}
+
+void AMultiplayerCharacter::PollInit()
+{
+	if (PossessedPlayerState == nullptr)
+	{
+		PossessedPlayerState = GetPlayerState<AChaosRemPlayerState>();
+		if (PossessedPlayerState)
+		{
+			PossessedPlayerState->AddToScore(0.f);
+			PossessedPlayerState->AddToDefeats(0);
+		}
 	}
 }
 
