@@ -89,6 +89,17 @@ void AMultiplayerPlayerController::SetHUDDefeats(int32 Defeats)
 	}
 }
 
+void AMultiplayerPlayerController::SetHUDWeaponAmmo(int32 Ammo)
+{
+	MultiplayerHUD = MultiplayerHUD == nullptr ? Cast<AMultiplayerHud>(GetHUD()) : MultiplayerHUD;
+	bool bHUDValid = MultiplayerHUD && MultiplayerHUD->CharacterOverlay && MultiplayerHUD->CharacterOverlay->WeaponAmmoAmount;
+	if (bHUDValid)
+	{
+		FString AmmoText = FString::Printf(TEXT("%d"), Ammo);
+		MultiplayerHUD->CharacterOverlay->WeaponAmmoAmount->SetText(FText::FromString(AmmoText));
+	}
+}
+
 void AMultiplayerPlayerController::BeginPlay()
 {
 	Super::BeginPlay();

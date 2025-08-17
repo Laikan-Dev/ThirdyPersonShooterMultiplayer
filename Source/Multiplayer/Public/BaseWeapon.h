@@ -53,7 +53,7 @@ struct FWeaponInformation
 	UPROPERTY(EditAnywhere, BlueprintReadWrite)
 	float Damage;
 	UPROPERTY(EditAnywhere, BlueprintReadWrite)
-	int32 AmmoCap;;
+	int32 AmmoCap;
 	UPROPERTY(EditAnywhere, BlueprintReadWrite)
 	TSubclassOf<class ACasing> CasingClass;
 };
@@ -79,7 +79,10 @@ public:
 	class UWeaponsDataAsset* WeaponData;
 
 	UAnimationAsset* ShootingAnim;
-	void GetLifetimeReplicatedProps(TArray<FLifetimeProperty>& OutLifetimeProps) const override;
+	virtual void GetLifetimeReplicatedProps(TArray<FLifetimeProperty>& OutLifetimeProps) const override;
+	virtual void OnRep_Owner() override;
+	void SetHUDAmmo();
+	
 
 	UPROPERTY(VisibleAnywhere, Category = "Weapon Properties")
 	class UWidgetComponent* PickupWidget;
@@ -121,6 +124,22 @@ private:
 
 	UPROPERTY(VisibleAnywhere, ReplicatedUsing = OnRep_WeaponState, Category = "Weapon Properties")
 	EWeaponState WeaponState;
+
+	UPROPERTY(EditAnywhere, ReplicatedUsing = OnRep_Ammo)
+	int32 Ammo;
+	
+	UFUNCTION()
+	void OnRep_Ammo();
+
+	void SpendRound();
+	
+	UPROPERTY(EditAnywhere)
+	int32 MagCapacity;
+
+	UPROPERTY()
+	class AMultiplayerCharacter* OwnerCharacter;
+	UPROPERTY()
+	class AMultiplayerPlayerController* OwnerController;
 
 	UFUNCTION()
 	void OnRep_WeaponState();

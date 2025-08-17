@@ -270,7 +270,10 @@ void UCombatComponent::GetLifetimeReplicatedProps(TArray<FLifetimeProperty>& Out
 void UCombatComponent::EquipWeapon(ABaseWeapon* WeaponToEquip)
 {
 	if (Character == nullptr || WeaponToEquip == nullptr) return;
-
+	if (EquippedWeapon)
+	{
+		EquippedWeapon->Dropped();
+	}
 	EquippedWeapon = WeaponToEquip;
 	EquippedWeapon->SetWeaponState(EWeaponState::EWS_Equipped);
 	const USkeletalMeshSocket* HandSocket = Character->GetMesh()->GetSocketByName(FName("hand_rSocket"));
@@ -279,6 +282,7 @@ void UCombatComponent::EquipWeapon(ABaseWeapon* WeaponToEquip)
 		HandSocket->AttachActor(EquippedWeapon, Character->GetMesh());
 	}
 	EquippedWeapon->SetOwner(Character);
+	EquippedWeapon->SetHUDAmmo();
 }
 
 void UCombatComponent::OnRep_EquippedWeapon()

@@ -11,6 +11,7 @@
 #include "Engine/SkeletalMeshSocket.h"
 #include "Components/SkeletalMeshComponent.h"
 #include "Multiplayer/Public/DataAsset/WeaponsDataAsset.h"
+#include "MultiplayerPlayerController.h"
 
 // Sets default values
 ABaseWeapon::ABaseWeapon()
@@ -46,6 +47,21 @@ void ABaseWeapon::GetLifetimeReplicatedProps(TArray<FLifetimeProperty>& OutLifet
 {
 	Super::GetLifetimeReplicatedProps(OutLifetimeProps);
 	DOREPLIFETIME(ABaseWeapon, WeaponState);
+	DOREPLIFETIME(ABaseWeapon, Ammo);
+}
+
+void ABaseWeapon::OnRep_Owner()
+{
+	Super::OnRep_Owner();
+	if (Owner == nullptr)
+	{
+		OwnerCharacter = nullptr;
+		OwnerController = nullptr;
+	}
+	else
+	{
+		SetHUDAmmo();
+	}
 }
 
 void ABaseWeapon::ShowPickupWidget(bool bShowWidget)
@@ -54,6 +70,32 @@ void ABaseWeapon::ShowPickupWidget(bool bShowWidget)
 	{
 		PickupWidget->SetVisibility(bShowWidget);
 	}
+}
+
+void ABaseWeapon::OnRep_Ammo()
+{
+	--Ammo;
+	SetHUDAmmo();
+}
+
+void ABaseWeapon::SetHUDAmmo()
+{
+	OwnerCharacter = OwnerCharacter == nullptr ? Cast<AMultiplayerCharacter>(GetOwner()) : OwnerCharacter;
+	if (OwnerCharacter)
+	{
+		OwnerController = OwnerController == nullptr ? Cast<AMultiplayerPlayerController>(OwnerCharacter->Controller) : OwnerController;
+		if (OwnerController)
+		{
+			OwnerController->SetHUDWeaponAmmo(Ammo);
+		}
+	}
+}
+
+void ABaseWeapon::SpendRound()
+{
+	--Ammo;
+	SetHUDAmmo();
+	
 }
 
 void ABaseWeapon::OnRep_WeaponState()
@@ -170,6 +212,7 @@ void ABaseWeapon::Fire(const FVector& HitTarget)
 			}
 		}
 	}
+	SpendRound();
 }
 
 void ABaseWeapon::Dropped()
@@ -178,6 +221,8 @@ void ABaseWeapon::Dropped()
 	FDetachmentTransformRules DetachRules(EDetachmentRule::KeepWorld, true);
 	SkeletalMesh->DetachFromComponent(DetachRules);
 	SetOwner(nullptr);
+	OwnerCharacter = nullptr;
+	OwnerController = nullptr;
 }
 
 void ABaseWeapon::OnComponentBeginOverlap(UPrimitiveComponent* OverlappedComponent, AActor* OtherActor, UPrimitiveComponent* OtherComp, int32 OtherBodyIndex, bool bFromSweep, const FHitResult& SweepResult)
