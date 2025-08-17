@@ -3,6 +3,7 @@
 #pragma once
 
 #include "GameFramework/Actor.h"
+#include "Multiplayer/Weapon/WeaponTypes.h"
 #include "BaseWeapon.generated.h"
 
 USTRUCT(BlueprintType)
@@ -141,6 +142,9 @@ private:
 	UPROPERTY()
 	class AMultiplayerPlayerController* OwnerController;
 
+	UPROPERTY(EditAnywhere)
+	EWeaponType WeaponType;
+
 	UFUNCTION()
 	void OnRep_WeaponState();
 
@@ -157,6 +161,8 @@ public:
 	FORCEINLINE USkeletalMeshComponent* GetWeaponMesh() const { return SkeletalMesh; }
 	FORCEINLINE float GetZoomedFOV() const { return ZoomedFOV; }
 	FORCEINLINE float GetZoomInterpSpeed() const { return ZoomedFOV; }
+	FORCEINLINE EWeaponType GetWeaponType() const { return WeaponType;}
+	bool IsEmpty();
 
 public:
 

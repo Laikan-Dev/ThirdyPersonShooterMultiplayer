@@ -5,6 +5,7 @@
 #include "CoreMinimal.h"
 #include "MultiplayerHud.h"
 #include "Components/ActorComponent.h"
+#include "Multiplayer/Weapon/WeaponTypes.h"
 #include "CombatComponent.generated.h"
 
 #define TRACE_LENGHT 80000.f;
@@ -38,6 +39,20 @@ protected:
 
 	FTimerHandle FireTimer;
 	bool bCanFire = true;
+	bool CanFire();
+
+	// Carried ammo for the currently-equipped weapon
+	UPROPERTY(ReplicatedUsing = OnRep_CarriedAmmo)
+	int32 CarriedAmmo;
+	
+	UFUNCTION()
+	void OnRep_CarriedAmmo();
+
+	TMap<EWeaponType, int32> CarriedAmmoMap;
+
+	UPROPERTY()
+	int32 StartARAmmo = 30;
+	void InitializeCarriedAmmo();
 
 	void StartFireTimer();
 	void FireTimerFinished();
