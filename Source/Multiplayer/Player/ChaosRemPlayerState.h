@@ -17,7 +17,7 @@ public:
 	virtual void GetLifetimeReplicatedProps(TArray<class FLifetimeProperty>& OutLifetimeProps) const override;
 	virtual void OnRep_Score() override;
 	void AddToScore(float ScoreAmount);
-	void AddToDefeats(float DefeatsAmount);
+	void AddToDefeats(int32 DefeatsAmount);
 	UFUNCTION()
 	void OnRep_Defeats();
 	
@@ -26,6 +26,6 @@ private:
 	class AMultiplayerCharacter* PlayerCharacter;
 	UPROPERTY()
 	class AMultiplayerPlayerController* PlayerController;
-	UPROPERTY(ReplicatedUsing = OnRep_Defeats)
+	UPROPERTY(ReplicatedUsing=OnRep_Defeats)
 	int32 Defeats;
 };

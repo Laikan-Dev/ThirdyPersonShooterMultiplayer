@@ -30,7 +30,7 @@ void AChaosRemPlayerState::AddToScore(float ScoreAmount)
 {
 	SetScore(GetScore() + ScoreAmount);
 	PlayerCharacter = PlayerCharacter == nullptr ? Cast<AMultiplayerCharacter>(GetPawn()) : PlayerCharacter;
-	if (PlayerCharacter && PlayerCharacter->Controller)
+	if (PlayerCharacter)
 	{
 		PlayerController = PlayerController == nullptr ? Cast<AMultiplayerPlayerController>(PlayerCharacter->Controller) : PlayerController;
 		if (PlayerController)
@@ -40,11 +40,11 @@ void AChaosRemPlayerState::AddToScore(float ScoreAmount)
 	}
 }
 
-void AChaosRemPlayerState::AddToDefeats(float DefeatsAmount)
+void AChaosRemPlayerState::AddToDefeats(int32 DefeatsAmount)
 {
 	Defeats += DefeatsAmount;
 	PlayerCharacter = PlayerCharacter == nullptr ? Cast<AMultiplayerCharacter>(GetPawn()) : PlayerCharacter;
-	if (PlayerCharacter && PlayerCharacter->Controller)
+	if (PlayerCharacter)
 	{
 		PlayerController = PlayerController == nullptr ? Cast<AMultiplayerPlayerController>(PlayerCharacter->Controller) : PlayerController;
 		if (PlayerController)

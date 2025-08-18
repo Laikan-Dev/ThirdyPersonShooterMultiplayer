@@ -81,7 +81,7 @@ void AMultiplayerPlayerController::SetHUDScore(float Score)
 void AMultiplayerPlayerController::SetHUDDefeats(int32 Defeats)
 {
 	MultiplayerHUD = MultiplayerHUD == nullptr ? Cast<AMultiplayerHud>(GetHUD()) : MultiplayerHUD;
-	bool bHUDValid = MultiplayerHUD && MultiplayerHUD->CharacterOverlay && MultiplayerHUD->CharacterOverlay->ScoreAmount;
+	bool bHUDValid = MultiplayerHUD && MultiplayerHUD->CharacterOverlay && MultiplayerHUD->CharacterOverlay->DefeatsAmount;
 	if (bHUDValid)
 	{
 		FString DefeatsText = FString::Printf(TEXT("%d"), Defeats);
