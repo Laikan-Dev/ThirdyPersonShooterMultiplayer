@@ -14,6 +14,7 @@
 #include "Multiplayer/HUD/Announcement.h"
 #include "Multiplayer/HUD/CharacterOverlay.h"
 #include "Net/UnrealNetwork.h"
+#include "AsTheCaosRemainsGameMode.h"
 
 void AMultiplayerPlayerController::CheckTimeSync(float DeltaTime)
 {
@@ -51,6 +52,33 @@ void AMultiplayerPlayerController::HandleMatchHasStarted()
 		if (MultiplayerHUD->Announcement)
 		{
 			MultiplayerHUD->Announcement->SetVisibility(ESlateVisibility::Hidden);
+		}
+	}
+}
+
+void AMultiplayerPlayerController::ClientJoinMidGame_Implementation(FName StateMatch, float Warmup, float Match, float StartingTime)
+{
+	WarmupTime = Warmup;
+	MatchTime = Match;
+	LevelStartingTime = StartingTime;
+	MatchState = StateMatch;
+	OnMatchStateSet(MatchState);
+}
+
+void AMultiplayerPlayerController::ServerCheckMatchState_Implementation()
+{
+	AAsTheCaosRemainsGameMode* GameMode = Cast<AAsTheCaosRemainsGameMode>(UGameplayStatics::GetGameMode(this));
+	if (GameMode)
+	{
+		WarmupTime = GameMode->WarmupTime;
+		MatchTime = GameMode->MatchTime;
+		LevelStartingTime = GameMode->LevelStartingTime;
+		MatchState = GameMode->GetMatchState();
+		ClientJoinMidGame(MatchState, WarmupTime, MatchTime, LevelStartingTime);
+
+		if (MultiplayerHUD && MatchState == MatchState::WaitingToStart)
+		{
+			MultiplayerHUD->AddAnnouncement();
 		}
 	}
 }
@@ -193,6 +221,20 @@ void AMultiplayerPlayerController::OnMatchStateSet(FName State)
 	}
 }
 
+void AMultiplayerPlayerController::SetHUDAnnouncementCountdown(float CountdownTime)
+{
+	MultiplayerHUD = MultiplayerHUD == nullptr ? Cast<AMultiplayerHud>(GetHUD()) : MultiplayerHUD;
+	bool bHUDValid = MultiplayerHUD && MultiplayerHUD->Announcement && MultiplayerHUD->Announcement->WarmupTime;
+	if (bHUDValid)
+	{
+		int32 Minutes = FMath::FloorToInt( CountdownTime / 60.0f );
+		int32 Seconds = CountdownTime - Minutes * 60.0f;
+		
+		FString CountdownText = FString::Printf(TEXT("%02d:%02d"), Minutes, Seconds);
+		MultiplayerHUD->Announcement->WarmupTime->SetText(FText::FromString(CountdownText));
+	}
+}
+
 void AMultiplayerPlayerController::GetLifetimeReplicatedProps(TArray<class FLifetimeProperty>& OutLifetimeProps) const
 {
 	Super::GetLifetimeReplicatedProps(OutLifetimeProps);
@@ -226,12 +268,9 @@ void AMultiplayerPlayerController::OnRep_MatchState()
 void AMultiplayerPlayerController::BeginPlay()
 {
 	Super::BeginPlay();
+	ServerCheckMatchState();
+	
 	MultiplayerHUD = Cast<AMultiplayerHud>(GetHUD());
-
-	if (MultiplayerHUD)
-	{
-		MultiplayerHUD->AddAnnouncement();
-	}
 	if (IsLocalController())
 	{
 		if (CaptureFlagWidget)
@@ -266,10 +305,20 @@ void AMultiplayerPlayerController::Tick(float DeltaTime)
 
 void AMultiplayerPlayerController::SetHUDTime()
 {
+	float TimeLeft = 0.f;
+	if (MatchState == MatchState::WaitingToStart) TimeLeft = WarmupTime - GetServerTime() + LevelStartingTime;
+	else if (MatchState == MatchState::InProgress) TimeLeft = WarmupTime + MatchTime - GetServerTime() + LevelStartingTime;
 	uint32 SecondLeft = FMath::CeilToInt(MatchTime - GetServerTime());
 	if (CountdownInt != SecondLeft)
 	{
-		SetHUDMatchCountdown(MatchTime - GetServerTime());	
+		if (MatchState == MatchState::WaitingToStart)
+		{
+			SetHUDAnnouncementCountdown(TimeLeft);
+		}
+		if (MatchState == MatchState::InProgress)
+		{
+			SetHUDMatchCountdown(TimeLeft);
+		}
 	}
 	CountdownInt = SecondLeft;
 }

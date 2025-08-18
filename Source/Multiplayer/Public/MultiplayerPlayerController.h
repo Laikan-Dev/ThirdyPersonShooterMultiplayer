@@ -30,10 +30,14 @@ protected:
 
 	float TimeSyncRunningTime = 0.f;
 	void CheckTimeSync(float DeltaTime);
-
 	void PollInit();
-
 	void HandleMatchHasStarted();
+
+	UFUNCTION(Server, Reliable)
+	void ServerCheckMatchState();
+
+	UFUNCTION(Client, Reliable)
+	void ClientJoinMidGame(FName StateMatch, float Warmup, float Match, float StartingTime);
 
 public:
 	
@@ -57,6 +61,8 @@ public:
 	void SetHUDCarriedAmmo(int32 Ammo);
 	void SetHUDMatchCountdown(float CountdownTime);
 	void OnMatchStateSet(FName State);
+	void SetHUDAnnouncementCountdown(float CountdownTime);
+	
 	virtual void GetLifetimeReplicatedProps(TArray<class FLifetimeProperty>& OutLifetimeProps) const override;
 
 	virtual float GetServerTime();
@@ -66,8 +72,10 @@ private:
 	UPROPERTY()
 	class AMultiplayerHud* MultiplayerHUD;
 
-	float MatchTime = 120.f;
-	uint32 CountdownInt;
+	float LevelStartingTime = 0.f;
+	float MatchTime = 0.f;
+	float WarmupTime = 0.f;
+	uint32 CountdownInt = 0;
 
 	UPROPERTY(ReplicatedUsing = OnRep_MatchState)
 	FName MatchState;
