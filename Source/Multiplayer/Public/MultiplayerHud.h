@@ -42,11 +42,21 @@ public:
 	virtual void DrawHUD() override;
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = PlayerStats)
 	TSubclassOf<class UUserWidget> CharacterOverlayClass;
+	UPROPERTY()
 	class UCharacterOverlay* CharacterOverlay;
+	void AddCharacterOverlay();
+
+	UPROPERTY(EditAnywhere)
+	TSubclassOf<class UUserWidget> AnnouncementClass;
+
+	UPROPERTY()
+	class UAnnouncement* Announcement;
+
+	void AddAnnouncement();
+
 
 protected:
 	virtual void BeginPlay() override;
-	void AddCharacterOverlay();
 
 private:
 	FHUDPackage HUDPackage;

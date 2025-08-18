@@ -8,6 +8,46 @@
 #include "Kismet/GameplayStatics.h"
 #include "Multiplayer/Player/ChaosRemPlayerState.h"
 
+AAsTheCaosRemainsGameMode::AAsTheCaosRemainsGameMode()
+{
+	bDelayedStart = true;
+	
+}
+void AAsTheCaosRemainsGameMode::BeginPlay()
+{
+	Super::BeginPlay();
+	
+	LevelStartingTime = GetWorld()->GetTimeSeconds();
+}
+
+void AAsTheCaosRemainsGameMode::OnMatchStateSet()
+{
+	Super::OnMatchStateSet();
+
+	for (FConstPlayerControllerIterator It = GetWorld()->GetPlayerControllerIterator(); It; It++)
+	{
+		AMultiplayerPlayerController* PlayerController = Cast<AMultiplayerPlayerController>(*It);
+		if (PlayerController)
+		{
+			PlayerController->OnMatchStateSet(MatchState);
+		}
+	}
+}
+
+void AAsTheCaosRemainsGameMode::Tick(float DeltaSeconds)
+{
+	Super::Tick(DeltaSeconds);
+
+	if (MatchState == MatchState::WaitingToStart)
+	{
+		CountdownTime = WarmupTime - GetWorld()->GetTimeSeconds() + LevelStartingTime;
+		if (CountdownTime <= 0.f)
+		{
+			StartMatch();
+		}
+	}
+}
+
 void AAsTheCaosRemainsGameMode::PlayerEliminated(class AMultiplayerCharacter* ElimmedCharacter, class AMultiplayerPlayerController* VictimController, AMultiplayerPlayerController* AttackerController)
 {
 	if (AttackerController == nullptr || AttackerController->PlayerState == nullptr) return;

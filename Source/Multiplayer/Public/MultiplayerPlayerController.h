@@ -17,6 +17,23 @@ class MULTIPLAYER_API AMultiplayerPlayerController : public APlayerController
 protected:
 	virtual void BeginPlay();
 	virtual void OnPossess(APawn *inPawn) override;
+	virtual void Tick(float DeltaTime) override;
+	void SetHUDTime();
+	UFUNCTION(Server, Reliable)
+	void ServerResquestServerTime(float TimeOfClientRequest);
+	UFUNCTION(Client, Reliable)
+	void ClientReportServerTime(float TimeOfClientRequest, float TimeServerReceivedClientRequest);
+
+	float ClientServerDelta = 0.f;
+	UPROPERTY(EditAnywhere)
+	float TimeSyncFrequency = 5.f;
+
+	float TimeSyncRunningTime = 0.f;
+	void CheckTimeSync(float DeltaTime);
+
+	void PollInit();
+
+	void HandleMatchHasStarted();
 
 public:
 	
@@ -38,8 +55,35 @@ public:
 	void SetHUDDefeats(int32 Defeats);
 	void SetHUDWeaponAmmo(int32 Ammo);
 	void SetHUDCarriedAmmo(int32 Ammo);
+	void SetHUDMatchCountdown(float CountdownTime);
+	void OnMatchStateSet(FName State);
+	virtual void GetLifetimeReplicatedProps(TArray<class FLifetimeProperty>& OutLifetimeProps) const override;
+
+	virtual float GetServerTime();
+	virtual void ReceivedPlayer() override;
 
 private:
 	UPROPERTY()
 	class AMultiplayerHud* MultiplayerHUD;
+
+	float MatchTime = 120.f;
+	uint32 CountdownInt;
+
+	UPROPERTY(ReplicatedUsing = OnRep_MatchState)
+	FName MatchState;
+
+	UFUNCTION()
+	void OnRep_MatchState();
+
+	UPROPERTY()
+	class UCharacterOverlay* CharacterOverlay;
+	bool InitializeCharacterOverlay = false;
+
+	float HUDHealth;
+	float HUDMaxHealth;
+	float HUDScore;
+	int32 HUDDefeats;
+	
+
+	
 };
