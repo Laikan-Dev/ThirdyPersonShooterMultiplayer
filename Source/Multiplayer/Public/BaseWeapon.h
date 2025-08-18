@@ -116,6 +116,8 @@ public:
 	float FireDelay = .15f;
 	UPROPERTY(EditAnywhere, Category = Combat)
 	bool bAutomatic = true;
+	UPROPERTY(EditAnywhere, Category = Combat)
+	class USoundCue* EquipSound;
 private:
 	UPROPERTY(VisibleAnywhere, Category = "Components")
 	class USphereComponent* SphereComponent;
@@ -162,12 +164,15 @@ public:
 	FORCEINLINE float GetZoomedFOV() const { return ZoomedFOV; }
 	FORCEINLINE float GetZoomInterpSpeed() const { return ZoomedFOV; }
 	FORCEINLINE EWeaponType GetWeaponType() const { return WeaponType;}
+	FORCEINLINE int32 GetAmmo() const {return Ammo;};
+	FORCEINLINE int32 GetMagCapacity() const {return MagCapacity;};
 	bool IsEmpty();
 
 public:
 
 	virtual void Fire(const FVector& HitTarget);
 	void Dropped();
+	void AddAmmo(int32 AmmoToAdd);
 
 	UFUNCTION()
 	void OnComponentBeginOverlap(UPrimitiveComponent* OverlappedComponent, AActor* OtherActor, UPrimitiveComponent* OtherComp, int32 OtherBodyIndex, bool bFromSweep, const FHitResult& SweepResult);

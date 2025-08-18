@@ -6,6 +6,7 @@
 #include "MultiplayerHud.h"
 #include "Components/ActorComponent.h"
 #include "Multiplayer/Weapon/WeaponTypes.h"
+#include  "Multiplayer/Player/CombatState.h"
 #include "CombatComponent.generated.h"
 
 #define TRACE_LENGHT 80000.f;
@@ -24,6 +25,10 @@ public:
 	friend class AMultiplayerCharacter;
 
 	void EquipWeapon(class ABaseWeapon* WeaponToEquip);
+	void Reload();
+	UFUNCTION(BlueprintCallable, Category = "Combat")
+	void FinishReload();
+	void UpdateAmmoValues();
 
 protected:
 	// Called when the game starts
@@ -33,6 +38,12 @@ protected:
 	void Server_SetAiming(bool bIsAiming);
 	UFUNCTION()
 	void OnRep_EquippedWeapon();
+	UFUNCTION(Server, Reliable)
+	void ServerReload();
+
+	int32 AmountToReload();
+
+	void HandleReload();
 
 	void FireButtonPressed(bool bPressed);
 	void Fire();
@@ -53,6 +64,10 @@ protected:
 	UPROPERTY()
 	int32 StartARAmmo = 30;
 	void InitializeCarriedAmmo();
+	UPROPERTY(ReplicatedUsing = OnRep_CombatState)
+	ECombatState CombatState = ECombatState::ECS_Idle;
+	UFUNCTION()
+	void OnRep_CombatState();
 
 	void StartFireTimer();
 	void FireTimerFinished();

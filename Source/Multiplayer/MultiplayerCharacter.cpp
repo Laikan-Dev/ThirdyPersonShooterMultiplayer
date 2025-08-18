@@ -29,6 +29,7 @@
 #include "Windows/AllowWindowsPlatformTypes.h"
 #include "TimerManager.h"
 #include "Player/ChaosRemPlayerState.h"
+#include "Multiplayer/Weapon/WeaponTypes.h"
 DEFINE_LOG_CATEGORY(LogTemplateCharacter);
 
 //////////////////////////////////////////////////////////////////////////
@@ -506,6 +507,12 @@ FVector AMultiplayerCharacter::GetHitTarget() const
 	return CombatSystem->HitTarget;
 }
 
+ECombatState AMultiplayerCharacter::GetCombatState() const
+{
+	if (CombatSystem == nullptr) return ECombatState::ECS_MAX;
+	return CombatSystem->CombatState;
+}
+
 void AMultiplayerCharacter::SelectTeam_Implementation()
 {
 	AMultiplayerPlayerController* PlayerController = Cast<AMultiplayerPlayerController>(GetController());
@@ -582,6 +589,8 @@ void AMultiplayerCharacter::SetupPlayerInputComponent(UInputComponent* PlayerInp
 		EnhancedInputComponent->BindAction(FireInput, ETriggerEvent::Started, this, &AMultiplayerCharacter::FireButtonPressed);
 		EnhancedInputComponent->BindAction(FireInput, ETriggerEvent::Completed, this, &AMultiplayerCharacter::FireButtonReleased);
 
+		EnhancedInputComponent->BindAction(ReloadAction, ETriggerEvent::Started, this, &AMultiplayerCharacter::ReloadButtonPressed);
+		
 		//PickupItem
 		EnhancedInputComponent->BindAction(PickUpInput, ETriggerEvent::Started, this, &AMultiplayerCharacter::EquipItem);
 	}
@@ -676,6 +685,34 @@ void AMultiplayerCharacter::Look(const FInputActionValue& Value)
 		// add yaw and pitch input to controller
 		AddControllerYawInput(LookAxisVector.X);
 		AddControllerPitchInput(LookAxisVector.Y);
+	}
+}
+
+void AMultiplayerCharacter::ReloadButtonPressed()
+{
+	if (CombatSystem)
+	{
+		CombatSystem->Reload();
+	}
+}
+
+void AMultiplayerCharacter::PlayReloadMontage()
+{
+	if (CombatSystem == nullptr || CombatSystem->EquippedWeapon == nullptr) return;
+	
+	UAnimInstance* AnimInstanceRef = GetMesh()->GetAnimInstance();
+	if (AnimInstanceRef && ReloadMontage)
+	{
+		AnimInstance->Montage_Play(ReloadMontage);
+		FName SectionName;
+		switch (CombatSystem->EquippedWeapon->GetWeaponType())
+		{
+		case EWeaponType::EWT_AssaultRifle:
+			SectionName = FName("Rifle");
+			break;
+		default: ;
+		}
+		AnimInstanceRef->Montage_JumpToSection(SectionName);
 	}
 }
 
@@ -856,11 +893,6 @@ void AMultiplayerCharacter::ChoseBlue()
 			ServerSetTeam(ETeam::ET_BlueTeam);
 		}
 	}   
-
-
-
-
-
 }
 
 void AMultiplayerCharacter::Running()

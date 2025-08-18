@@ -229,6 +229,12 @@ void ABaseWeapon::Dropped()
 	OwnerController = nullptr;
 }
 
+void ABaseWeapon::AddAmmo(int32 AmmoToAdd)
+{
+	Ammo = FMath::Clamp(Ammo - AmmoToAdd, 0 , MagCapacity);
+	SetHUDAmmo();
+}
+
 void ABaseWeapon::OnComponentBeginOverlap(UPrimitiveComponent* OverlappedComponent, AActor* OtherActor, UPrimitiveComponent* OtherComp, int32 OtherBodyIndex, bool bFromSweep, const FHitResult& SweepResult)
 {
 	AMultiplayerCharacter* Player = Cast<AMultiplayerCharacter>(OtherActor);

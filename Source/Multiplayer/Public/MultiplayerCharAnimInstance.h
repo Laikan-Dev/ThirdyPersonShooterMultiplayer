@@ -93,6 +93,15 @@ public:
 	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = "MovementData")
 	bool bRotateRootBone;
 
+	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = "MovementData")
+	bool bUseFabrik;
+
+	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = "MovementData")
+	bool bUseAimOffsets;
+
+	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = "MovementData")
+	bool bTransformRightHand;
+
 	UPROPERTY(VisibleAnywhere, meta = (AllowPrivateAccess = "true"), BlueprintReadOnly, Category = "MovementData")
 	bool bElimmed;
 	//Functions

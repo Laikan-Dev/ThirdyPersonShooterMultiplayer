@@ -6,6 +6,7 @@
 #include "Gameframework/CharacterMovementComponent.h"
 #include "Kismet/KismetMathLibrary.h"
 #include "BaseWeapon.h"
+#include "Multiplayer/Player/CombatState.h"
 
 void UMultiplayerCharAnimInstance::NativeInitializeAnimation()
 {
@@ -84,10 +85,11 @@ void UMultiplayerCharAnimInstance::NativeUpdateAnimation(float DeltaTime)
 			FVector MuzzleX(FRotationMatrix(MuzzleTipTransform.GetRotation().Rotator()).GetScaledAxis(EAxis::X));
 			DrawDebugLine(GetWorld(), MuzzleTipTransform.GetLocation(), MuzzleTipTransform.GetLocation() + MuzzleX * 1000.0, FColor::Red, false, 0.1f, 0, 1.0f);
 			DrawDebugLine(GetWorld(), MuzzleTipTransform.GetLocation(), Character->GetHitTarget(), FColor::Orange);
-
 		}
-
 	}
+	bUseFabrik = Character->GetCombatState() != ECombatState::ECS_Reloading;
+	bUseAimOffsets = Character->GetCombatState() != ECombatState::ECS_Reloading;
+	bTransformRightHand = Character->GetCombatState() != ECombatState::ECS_Reloading;
 }
 
 void UMultiplayerCharAnimInstance::GetAimOffset()

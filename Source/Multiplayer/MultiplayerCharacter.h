@@ -11,6 +11,7 @@
 #include "PlayerOverlayStates.h"
 #include "Components/TimelineComponent.h"
 #include "Multiplayer/Enums/TurningInPlace.h"
+#include "Multiplayer/Player/CombatState.h"
 #include "MultiplayerCharacter.generated.h"
 
 class USpringArmComponent;
@@ -81,6 +82,9 @@ class AMultiplayerCharacter : public ACharacter, public IInteractWithCrosshairs
 	/** Look Input Action */
 	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = Input, meta = (AllowPrivateAccess = "true"))
 	UInputAction* LookAction;
+	
+	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = Input, meta = (AllowPrivateAccess = "true"))
+	UInputAction* ReloadAction;
 	//FireInputs
 	UPROPERTY(EditDefaultsOnly, Category = "Input")
 	UInputAction* FireInput;
@@ -97,6 +101,7 @@ public:
 	class UMultiplayerCharAnimInstance* AnimInstance;
 
 	void PlayFireMontage(bool bAiming);
+	void PlayReloadMontage();
 	virtual void OnRep_ReplicatedMovement() override;
 
 	void Elim();
@@ -109,6 +114,9 @@ protected:
 	void Move(const FInputActionValue& Value);
 	/** Called for looking input */
 	void Look(const FInputActionValue& Value);
+
+	//Reload
+	void ReloadButtonPressed();
 
 	//HitReact
 	void PlayHitReactMontage();
@@ -199,7 +207,8 @@ protected:
 
 private:
 	void RotateInPlace(float DeltaTime);
-	UPROPERTY(VisibleAnywhere)
+	
+	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = Camera, meta = (AllowPrivateAccess = "true"))
 	class UCombatComponent* CombatSystem;
 	UFUNCTION(Server, Reliable)
 	void ServerEquipItem();
@@ -384,15 +393,6 @@ public:
 	UPROPERTY(EditDefaultsOnly)
 	TSubclassOf<UUserWidget> SelectTeamWidget;
 
-	//Animation
-	UPROPERTY(EditDefaultsOnly, Category = "Montages")
-	UAnimMontage* HitReactMontage;
-
-	UPROPERTY(EditDefaultsOnly, Category = "Montages")
-	UAnimMontage* DeathMontage;
-	UPROPERTY(EditDefaultsOnly, Category = "Montages")
-	UAnimMontage* ShootingMontage;
-
 	//Movement Properties
 	UPROPERTY(EditDefaultsOnly, BlueprintReadWrite, Category = "Movement")
 	float NormalVelocity = 500.f;
@@ -413,7 +413,15 @@ public:
 	UAnimMontage* DashLeft;
 	UPROPERTY(EditDefaultsOnly, BlueprintReadWrite, Category = "Montages")
 	UAnimMontage* DashRight;
-
+	UPROPERTY(EditDefaultsOnly, Category = "Montages")
+	UAnimMontage* HitReactMontage;
+	UPROPERTY(EditDefaultsOnly, Category = "Montages")
+	UAnimMontage* DeathMontage;
+	UPROPERTY(EditDefaultsOnly, Category = "Montages")
+	UAnimMontage* ShootingMontage;
+	UPROPERTY(EditDefaultsOnly, Category = "Montages")
+	UAnimMontage* ReloadMontage;
+	
 	//VFX
 	UFUNCTION()
 	void OnAbilityVFX(bool bNewActivate);
@@ -425,6 +433,8 @@ public:
 	FORCEINLINE ETurningInPlace GetTurningInPlace() const { return TurningInPlace; }
 	FORCEINLINE bool IsElimmed() const {return bElimmed; }
 	FVector GetHitTarget() const;
+
+	ECombatState GetCombatState() const;
 };
 
 
