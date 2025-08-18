@@ -86,10 +86,11 @@ void UMultiplayerCharAnimInstance::NativeUpdateAnimation(float DeltaTime)
 			DrawDebugLine(GetWorld(), MuzzleTipTransform.GetLocation(), MuzzleTipTransform.GetLocation() + MuzzleX * 1000.0, FColor::Red, false, 0.1f, 0, 1.0f);
 			DrawDebugLine(GetWorld(), MuzzleTipTransform.GetLocation(), Character->GetHitTarget(), FColor::Orange);
 		}
+		bUseFabrik = Character->GetCombatState() != ECombatState::ECS_Reloading;
+		bUseAimOffsets = Character->GetCombatState() != ECombatState::ECS_Reloading;
+		bTransformRightHand = Character->GetCombatState() != ECombatState::ECS_Reloading;
 	}
-	bUseFabrik = Character->GetCombatState() != ECombatState::ECS_Reloading;
-	bUseAimOffsets = Character->GetCombatState() != ECombatState::ECS_Reloading;
-	bTransformRightHand = Character->GetCombatState() != ECombatState::ECS_Reloading;
+	
 }
 
 void UMultiplayerCharAnimInstance::GetAimOffset()
@@ -105,8 +106,6 @@ void UMultiplayerCharAnimInstance::GetAimOffset()
 		AimOffset = 0.0;
 	}
 }
-
-
 //For Dash Animations
 
 void UMultiplayerCharAnimInstance::GetDirection()
