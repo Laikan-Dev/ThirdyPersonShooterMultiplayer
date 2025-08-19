@@ -6,6 +6,12 @@
 #include "GameFramework/GameMode.h"
 #include "AsTheCaosRemainsGameMode.generated.h"
 
+
+namespace MatchState
+{
+	extern MULTIPLAYER_API const FName Cooldown; // Match duration has been reached. Display winner and begin
+}
+
 /**
  * 
  */
@@ -24,6 +30,8 @@ public:
 
 	UPROPERTY(EditDefaultsOnly)
 	float MatchTime = 120.f;
+	UPROPERTY(EditDefaultsOnly)
+	float CooldownTime = 10.f;
 
 	float LevelStartingTime;
 
@@ -32,4 +40,7 @@ protected:
 	virtual void OnMatchStateSet() override;
 private:
 	float CountdownTime = 0.f;
+
+public:
+	FORCEINLINE float GetCountdownTime() const { return CooldownTime; }
 };

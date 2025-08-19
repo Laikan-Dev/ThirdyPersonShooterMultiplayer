@@ -226,6 +226,15 @@ void AMultiplayerCharacter::BeginPlay()
 	AnimInstance = Cast<UMultiplayerCharAnimInstance>(GetMesh()->GetAnimInstance());
 }
 
+void AMultiplayerCharacter::Destroyed()
+{
+	Super::Destroyed();
+	if (CombatSystem && CombatSystem->EquippedWeapon)
+	{
+		CombatSystem->EquippedWeapon->Destroy();
+	}
+}
+
 void AMultiplayerCharacter::Tick(float DeltaTime)
 {
 	Super::Tick(DeltaTime);
@@ -236,6 +245,12 @@ void AMultiplayerCharacter::Tick(float DeltaTime)
 
 void AMultiplayerCharacter::RotateInPlace(float DeltaTime)
 {
+	if (bDisableGameplay)
+	{
+		bUseControllerRotationYaw = false;
+		TurningInPlace = ETurningInPlace::ETIP_NotTurning;
+		return;
+	}
 	if (CombatSystem && CombatSystem->EquippedWeapon) GetCharacterMovement()->bOrientRotationToMovement = false;
 	if (CombatSystem && CombatSystem->EquippedWeapon) bUseControllerRotationYaw = true;
 	if (GetLocalRole() > ENetRole::ROLE_SimulatedProxy && IsLocallyControlled())
@@ -341,6 +356,7 @@ void AMultiplayerCharacter::GetLifetimeReplicatedProps(TArray<FLifetimeProperty>
 	DOREPLIFETIME(AMultiplayerCharacter, CurrentTeam);	    //Replicate Current Team//Replicate boolean Death for ABP
 	DOREPLIFETIME(AMultiplayerCharacter, CurrentState);
 	DOREPLIFETIME(AMultiplayerCharacter, WeaponData);
+	DOREPLIFETIME(AMultiplayerCharacter, bDisableGameplay);
 	DOREPLIFETIME_CONDITION(AMultiplayerCharacter, OverlappingWeapon, COND_OwnerOnly);
 }
 
@@ -643,10 +659,7 @@ void AMultiplayerCharacter::MulticastElim_Implementation()
 	//Disable Movement
 	GetCharacterMovement()->DisableMovement();
 	GetCharacterMovement()->StopMovementImmediately();
-	if (MultiplayerPlayerController)
-	{
-		DisableInput(MultiplayerPlayerController);
-	}
+	bDisableGameplay = true;
 	//Disable Collision
 	GetCapsuleComponent()->SetCollisionEnabled(ECollisionEnabled::NoCollision);
 	GetMesh()->SetCollisionEnabled(ECollisionEnabled::NoCollision);
@@ -656,7 +669,7 @@ void AMultiplayerCharacter::Move(const FInputActionValue& Value)
 {
 	// input is a Vector2D
 	FVector2D MovementVector = Value.Get<FVector2D>();
-
+	if(bDisableGameplay) return;
 	if (Controller != nullptr)
 	{
 		// find out which way is forward
@@ -690,6 +703,7 @@ void AMultiplayerCharacter::Look(const FInputActionValue& Value)
 
 void AMultiplayerCharacter::ReloadButtonPressed()
 {
+	if(bDisableGameplay) return;
 	if (CombatSystem)
 	{
 		CombatSystem->Reload();
@@ -776,6 +790,7 @@ void AMultiplayerCharacter::OnRep_Aiming()
 
 void AMultiplayerCharacter::StartAiming()
 {
+	if(bDisableGameplay) return;
 	if (CombatSystem && CombatSystem->EquippedWeapon)
 	{
 		CombatSystem->SetAiming(true);
@@ -792,6 +807,7 @@ void AMultiplayerCharacter::StopAiming()
 
 void AMultiplayerCharacter::FireButtonPressed()
 {
+	if(bDisableGameplay) return;
 	if (CombatSystem)
 	{
 		CombatSystem->FireButtonPressed(true);
@@ -800,6 +816,7 @@ void AMultiplayerCharacter::FireButtonPressed()
 
 void AMultiplayerCharacter::FireButtonReleased()
 {
+	if(bDisableGameplay) return;
 	if (CombatSystem)
 	{
 		CombatSystem->FireButtonPressed(false);
@@ -846,6 +863,7 @@ void AMultiplayerCharacter::SimProxiesTurn()
 
 void AMultiplayerCharacter::StartJump()
 {
+	if (bDisableGameplay) return;
 	if (!bIsAiming())
 	{
 		Jump();
@@ -917,6 +935,7 @@ void AMultiplayerCharacter::StopRunning()
 
 void AMultiplayerCharacter::StartCrounch()
 {
+	if(bDisableGameplay) return;
 	if (bIsCrouched)
 	{
 		UnCrouch();
@@ -1032,6 +1051,7 @@ void AMultiplayerCharacter::Server_AbilityDash_Implementation(ECharMovDirection 
 
 void AMultiplayerCharacter::EquipItem()
 {
+	if(bDisableGameplay) return;
 	if (CombatSystem)
 	{
 		if (HasAuthority())

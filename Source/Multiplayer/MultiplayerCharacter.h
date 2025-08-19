@@ -108,6 +108,9 @@ public:
 	UFUNCTION(NetMulticast, Reliable)
 	void MulticastElim();
 
+	UPROPERTY(Replicated)
+	bool bDisableGameplay = false;
+
 protected:
 	//Commands
 	/** Called for movement input */
@@ -199,6 +202,8 @@ protected:
 	// To add mapping context
 	virtual void BeginPlay();
 
+	virtual void Destroyed() override;
+
 	//To Check Camera
 	virtual void Tick(float DeltaTime) override;
 
@@ -231,6 +236,10 @@ public:
 	FORCEINLINE class UCameraComponent* GetFollowCamera() const { return FollowCamera; }
 	//** Return bRotateRootBone**/
 	FORCEINLINE bool ShouldRotateRootBone() const { return bRotateRootBone; }
+
+	FORCEINLINE UCombatComponent* GetCombatSystem() const { return CombatSystem; }
+
+	FORCEINLINE bool GetDisableGameplay() const { return bDisableGameplay; }
 
 	UPROPERTY(ReplicatedUsing = OnRep_PlayerTeam, BlueprintReadWrite)
 	ETeam CurrentTeam = ETeam::ET_NoTeam;

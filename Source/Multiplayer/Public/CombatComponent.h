@@ -29,6 +29,7 @@ public:
 	UFUNCTION(BlueprintCallable, Category = "Combat")
 	void FinishReload();
 	void UpdateAmmoValues();
+	void FireButtonPressed(bool bPressed);
 
 protected:
 	// Called when the game starts
@@ -45,7 +46,7 @@ protected:
 
 	void HandleReload();
 
-	void FireButtonPressed(bool bPressed);
+	
 	void Fire();
 
 	FTimerHandle FireTimer;

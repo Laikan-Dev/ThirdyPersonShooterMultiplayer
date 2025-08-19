@@ -37,7 +37,7 @@ protected:
 	void ServerCheckMatchState();
 
 	UFUNCTION(Client, Reliable)
-	void ClientJoinMidGame(FName StateMatch, float Warmup, float Match, float StartingTime);
+	void ClientJoinMidGame(FName StateMatch, float Warmup, float Match, float Cooldown,float StartingTime);
 
 public:
 	
@@ -62,6 +62,7 @@ public:
 	void SetHUDMatchCountdown(float CountdownTime);
 	void OnMatchStateSet(FName State);
 	void SetHUDAnnouncementCountdown(float CountdownTime);
+	void HandleCooldown();
 	
 	virtual void GetLifetimeReplicatedProps(TArray<class FLifetimeProperty>& OutLifetimeProps) const override;
 
@@ -72,9 +73,13 @@ private:
 	UPROPERTY()
 	class AMultiplayerHud* MultiplayerHUD;
 
+	UPROPERTY()
+	class AAsTheCaosRemainsGameMode* GameMode;
+
 	float LevelStartingTime = 0.f;
 	float MatchTime = 0.f;
 	float WarmupTime = 0.f;
+	float CooldownTime = 0.f;
 	uint32 CountdownInt = 0;
 
 	UPROPERTY(ReplicatedUsing = OnRep_MatchState)

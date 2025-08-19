@@ -87,8 +87,8 @@ void UMultiplayerCharAnimInstance::NativeUpdateAnimation(float DeltaTime)
 			DrawDebugLine(GetWorld(), MuzzleTipTransform.GetLocation(), Character->GetHitTarget(), FColor::Orange);
 		}
 		bUseFabrik = Character->GetCombatState() != ECombatState::ECS_Reloading;
-		bUseAimOffsets = Character->GetCombatState() != ECombatState::ECS_Reloading;
-		bTransformRightHand = Character->GetCombatState() != ECombatState::ECS_Reloading;
+		bUseAimOffsets = Character->GetCombatState() != ECombatState::ECS_Reloading && !Character->GetDisableGameplay();
+		bTransformRightHand = Character->GetCombatState() != ECombatState::ECS_Reloading && !Character->GetDisableGameplay();
 	}
 	
 }

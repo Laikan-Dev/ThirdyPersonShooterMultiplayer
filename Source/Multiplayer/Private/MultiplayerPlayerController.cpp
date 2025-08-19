@@ -15,6 +15,7 @@
 #include "Multiplayer/HUD/CharacterOverlay.h"
 #include "Net/UnrealNetwork.h"
 #include "AsTheCaosRemainsGameMode.h"
+#include "CombatComponent.h"
 
 void AMultiplayerPlayerController::CheckTimeSync(float DeltaTime)
 {
@@ -56,10 +57,11 @@ void AMultiplayerPlayerController::HandleMatchHasStarted()
 	}
 }
 
-void AMultiplayerPlayerController::ClientJoinMidGame_Implementation(FName StateMatch, float Warmup, float Match, float StartingTime)
+void AMultiplayerPlayerController:: ClientJoinMidGame_Implementation(FName StateMatch, float Warmup, float Match, float Cooldown,float StartingTime)
 {
 	WarmupTime = Warmup;
 	MatchTime = Match;
+	CooldownTime = Cooldown;
 	LevelStartingTime = StartingTime;
 	MatchState = StateMatch;
 	OnMatchStateSet(MatchState);
@@ -67,14 +69,16 @@ void AMultiplayerPlayerController::ClientJoinMidGame_Implementation(FName StateM
 
 void AMultiplayerPlayerController::ServerCheckMatchState_Implementation()
 {
-	AAsTheCaosRemainsGameMode* GameMode = Cast<AAsTheCaosRemainsGameMode>(UGameplayStatics::GetGameMode(this));
+	GameMode = GameMode == nullptr ? Cast<AAsTheCaosRemainsGameMode>(UGameplayStatics::GetGameMode(this)) : GameMode;
+
 	if (GameMode)
 	{
 		WarmupTime = GameMode->WarmupTime;
 		MatchTime = GameMode->MatchTime;
+		CooldownTime = GameMode->CooldownTime;
 		LevelStartingTime = GameMode->LevelStartingTime;
 		MatchState = GameMode->GetMatchState();
-		ClientJoinMidGame(MatchState, WarmupTime, MatchTime, LevelStartingTime);
+		ClientJoinMidGame(MatchState, WarmupTime, MatchTime, CooldownTime, LevelStartingTime);
 
 		if (MultiplayerHUD && MatchState == MatchState::WaitingToStart)
 		{
@@ -204,6 +208,11 @@ void AMultiplayerPlayerController::SetHUDMatchCountdown(float CountdownTime)
 	bool bHUDValid = MultiplayerHUD && MultiplayerHUD->CharacterOverlay && MultiplayerHUD->CharacterOverlay->TimerCountdownText;
 	if (bHUDValid)
 	{
+		if (CountdownTime <= 0.f)
+		{
+			MultiplayerHUD->CharacterOverlay->TimerCountdownText->SetText(FText());
+			return;
+		}
 		int32 Minutes = FMath::FloorToInt( CountdownTime / 60.0f );
 		int32 Seconds = CountdownTime - Minutes * 60.0f;
 		FString CountdownText = FString::Printf(TEXT("%02d:%02d"), Minutes, Seconds);
@@ -219,6 +228,10 @@ void AMultiplayerPlayerController::OnMatchStateSet(FName State)
 	{
 		HandleMatchHasStarted();
 	}
+	else if (MatchState == MatchState::Cooldown)
+	{
+		HandleCooldown();
+	}
 }
 
 void AMultiplayerPlayerController::SetHUDAnnouncementCountdown(float CountdownTime)
@@ -227,11 +240,40 @@ void AMultiplayerPlayerController::SetHUDAnnouncementCountdown(float CountdownTi
 	bool bHUDValid = MultiplayerHUD && MultiplayerHUD->Announcement && MultiplayerHUD->Announcement->WarmupTime;
 	if (bHUDValid)
 	{
+		if (CountdownTime <= 0.f)
+		{
+			MultiplayerHUD->Announcement->WarmupTime->SetText(FText());
+			return;
+		}
 		int32 Minutes = FMath::FloorToInt( CountdownTime / 60.0f );
 		int32 Seconds = CountdownTime - Minutes * 60.0f;
 		
 		FString CountdownText = FString::Printf(TEXT("%02d:%02d"), Minutes, Seconds);
 		MultiplayerHUD->Announcement->WarmupTime->SetText(FText::FromString(CountdownText));
+	}
+}
+
+void AMultiplayerPlayerController::HandleCooldown()
+{
+	MultiplayerHUD = MultiplayerHUD == nullptr ? Cast<AMultiplayerHud>(GetHUD()) : MultiplayerHUD;
+	if (MultiplayerHUD)
+	{
+		MultiplayerHUD->CharacterOverlay->RemoveFromParent();
+		bool bHUDValid = MultiplayerHUD->Announcement && MultiplayerHUD->Announcement->AnnouncementText && MultiplayerHUD->Announcement->InfoText;
+		if (bHUDValid)
+		{
+			MultiplayerHUD->Announcement->SetVisibility(ESlateVisibility::Visible);
+			FString AnnouncementText("New Match Start In: ");
+			MultiplayerHUD->Announcement->AnnouncementText->SetText(FText::FromString(AnnouncementText));
+			MultiplayerHUD->Announcement->InfoText->SetText(FText());
+		}
+	}
+	AMultiplayerCharacter* ChaosCharacter = Cast<AMultiplayerCharacter>(GetPawn());
+	if (ChaosCharacter && ChaosCharacter->GetCombatSystem())
+	{
+		ChaosCharacter->bDisableGameplay = true;
+		ChaosCharacter->GetCombatSystem()->FireButtonPressed(false);
+		
 	}
 }
 
@@ -262,6 +304,10 @@ void AMultiplayerPlayerController::OnRep_MatchState()
 	if (MatchState == MatchState::InProgress)
 	{
 		HandleMatchHasStarted();
+	}
+	else if (MatchState == MatchState::Cooldown)
+	{
+		HandleCooldown();
 	}
 }
 
@@ -308,10 +354,21 @@ void AMultiplayerPlayerController::SetHUDTime()
 	float TimeLeft = 0.f;
 	if (MatchState == MatchState::WaitingToStart) TimeLeft = WarmupTime - GetServerTime() + LevelStartingTime;
 	else if (MatchState == MatchState::InProgress) TimeLeft = WarmupTime + MatchTime - GetServerTime() + LevelStartingTime;
+	else if (MatchState == MatchState::Cooldown) TimeLeft = WarmupTime + MatchTime - GetServerTime() + LevelStartingTime;
 	uint32 SecondLeft = FMath::CeilToInt(MatchTime - GetServerTime());
+
+	if (HasAuthority())
+	{
+		GameMode = GameMode == nullptr ? Cast<AAsTheCaosRemainsGameMode>(UGameplayStatics::GetGameMode(this)) : GameMode;
+		if (GameMode)
+		{
+			SecondLeft = FMath::CeilToInt(GameMode->GetCountdownTime() + LevelStartingTime);
+		}
+	}
+	
 	if (CountdownInt != SecondLeft)
 	{
-		if (MatchState == MatchState::WaitingToStart)
+		if (MatchState == MatchState::WaitingToStart || MatchState == MatchState::Cooldown)
 		{
 			SetHUDAnnouncementCountdown(TimeLeft);
 		}
@@ -336,5 +393,3 @@ void AMultiplayerPlayerController::ClientReportServerTime_Implementation(float T
 	float CurrentServerTime = TimeServerReceivedClientRequest + (0.5f * RoundTripTime);
 	ClientServerDelta = CurrentServerTime - GetWorld()->GetTimeSeconds();
 }
-
-
