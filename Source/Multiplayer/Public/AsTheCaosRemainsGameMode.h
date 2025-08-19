@@ -9,7 +9,7 @@
 
 namespace MatchState
 {
-	extern MULTIPLAYER_API const FName Cooldown; // Match duration has been reached. Display winner and begin
+	extern MULTIPLAYER_API const FName Cooldown;// Match duration has been reached. Display winner and begin
 }
 
 /**

@@ -20,7 +20,7 @@ protected:
 	virtual void Tick(float DeltaTime) override;
 	void SetHUDTime();
 	UFUNCTION(Server, Reliable)
-	void ServerResquestServerTime(float TimeOfClientRequest);
+	void ServerRequestServerTime(float TimeOfClientRequest);
 	UFUNCTION(Client, Reliable)
 	void ClientReportServerTime(float TimeOfClientRequest, float TimeServerReceivedClientRequest);
 

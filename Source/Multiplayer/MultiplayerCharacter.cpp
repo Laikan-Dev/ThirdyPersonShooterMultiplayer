@@ -28,6 +28,7 @@
 #include "AsTheCaosRemainsGameMode.h"
 #include "Windows/AllowWindowsPlatformTypes.h"
 #include "TimerManager.h"
+#include "Kismet/GameplayStatics.h"
 #include "Player/ChaosRemPlayerState.h"
 #include "Multiplayer/Weapon/WeaponTypes.h"
 DEFINE_LOG_CATEGORY(LogTemplateCharacter);
@@ -229,7 +230,10 @@ void AMultiplayerCharacter::BeginPlay()
 void AMultiplayerCharacter::Destroyed()
 {
 	Super::Destroyed();
-	if (CombatSystem && CombatSystem->EquippedWeapon)
+
+	AAsTheCaosRemainsGameMode* ChaosRemGameMode = Cast<AAsTheCaosRemainsGameMode>(UGameplayStatics::GetGameMode(this));
+	bool bMatchNotInProgress = ChaosRemGameMode && ChaosRemGameMode->GetMatchState() != MatchState::InProgress;
+	if (CombatSystem && CombatSystem->EquippedWeapon && bMatchNotInProgress)
 	{
 		CombatSystem->EquippedWeapon->Destroy();
 	}
@@ -660,6 +664,11 @@ void AMultiplayerCharacter::MulticastElim_Implementation()
 	GetCharacterMovement()->DisableMovement();
 	GetCharacterMovement()->StopMovementImmediately();
 	bDisableGameplay = true;
+
+	if (CombatSystem)
+	{
+		CombatSystem->FireButtonPressed(false);
+	}
 	//Disable Collision
 	GetCapsuleComponent()->SetCollisionEnabled(ECollisionEnabled::NoCollision);
 	GetMesh()->SetCollisionEnabled(ECollisionEnabled::NoCollision);

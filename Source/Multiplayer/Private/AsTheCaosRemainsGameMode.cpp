@@ -7,6 +7,7 @@
 #include "GameFramework/PlayerStart.h"
 #include "Kismet/GameplayStatics.h"
 #include "Multiplayer/Player/ChaosRemPlayerState.h"
+#include "Multiplayer/GameHead/ChaosRemGameState.h"
 
 namespace MatchState
 {
@@ -28,7 +29,7 @@ void AAsTheCaosRemainsGameMode::OnMatchStateSet()
 {
 	Super::OnMatchStateSet();
 
-	for (FConstPlayerControllerIterator It = GetWorld()->GetPlayerControllerIterator(); It; It++)
+	for (FConstPlayerControllerIterator It = GetWorld()->GetPlayerControllerIterator(); It; ++It)
 	{
 		AMultiplayerPlayerController* PlayerController = Cast<AMultiplayerPlayerController>(*It);
 		if (PlayerController)
@@ -49,24 +50,23 @@ void AAsTheCaosRemainsGameMode::Tick(float DeltaSeconds)
 		{
 			StartMatch();
 		}
-		else if (MatchState == MatchState::InProgress)
+	}
+	else if (MatchState == MatchState::InProgress)
 		{
 			CountdownTime = WarmupTime + MatchTime - GetWorld()->GetTimeSeconds() + LevelStartingTime;
 			if (CountdownTime <= 0.f)
-			{
-				SetMatchState(MatchState::Cooldown);
-			}
+    			{
+    				SetMatchState(MatchState::Cooldown);
+    			}
 		}
-		else if (MatchState == MatchState::Cooldown)
+	else if (MatchState == MatchState::Cooldown)
 		{
 			CountdownTime = CooldownTime + WarmupTime + MatchTime - GetWorld()->GetTimeSeconds() + LevelStartingTime;
 			if (CountdownTime <= 0.f)
-			{
-				RestartGame();
-			}
-
+				{
+    				RestartGame();
+    			}
 		}
-	}
 }
 
 void AAsTheCaosRemainsGameMode::PlayerEliminated(class AMultiplayerCharacter* ElimmedCharacter, class AMultiplayerPlayerController* VictimController, AMultiplayerPlayerController* AttackerController)
@@ -75,10 +75,11 @@ void AAsTheCaosRemainsGameMode::PlayerEliminated(class AMultiplayerCharacter* El
 	if (VictimController == nullptr || VictimController->PlayerState == nullptr) return;
 	AChaosRemPlayerState* AttackerPlayerState = AttackerController ? Cast<AChaosRemPlayerState>(AttackerController->PlayerState) : nullptr;
 	AChaosRemPlayerState* VictimPlayerState = VictimController ? Cast<AChaosRemPlayerState>(VictimController->PlayerState) : nullptr;
-
-	if (AttackerPlayerState && AttackerPlayerState != VictimPlayerState)
+	AChaosRemGameState* ChaosRemGameState = GetGameState<AChaosRemGameState>();
+	if (AttackerPlayerState && AttackerPlayerState != VictimPlayerState && ChaosRemGameState)
 	{
 		AttackerPlayerState->AddToScore(1.f);
+		ChaosRemGameState->UpdateTopScore(AttackerPlayerState);
 	}
 	if (VictimPlayerState)
 	{

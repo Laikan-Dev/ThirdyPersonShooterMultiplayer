@@ -16,13 +16,14 @@
 #include "Net/UnrealNetwork.h"
 #include "AsTheCaosRemainsGameMode.h"
 #include "CombatComponent.h"
+#include "Multiplayer/GameHead/ChaosRemGameState.h"
 
 void AMultiplayerPlayerController::CheckTimeSync(float DeltaTime)
 {
 	TimeSyncRunningTime += DeltaTime;
 	if (IsLocalController() && TimeSyncRunningTime > TimeSyncFrequency)
 	{
-		ServerResquestServerTime(GetWorld()->GetTimeSeconds());
+		ServerRequestServerTime(GetWorld()->GetTimeSeconds());
 		TimeSyncFrequency = 0.f;
 	}
 }
@@ -65,12 +66,15 @@ void AMultiplayerPlayerController:: ClientJoinMidGame_Implementation(FName State
 	LevelStartingTime = StartingTime;
 	MatchState = StateMatch;
 	OnMatchStateSet(MatchState);
+	if (MultiplayerHUD && MatchState == MatchState::WaitingToStart)
+	{
+		MultiplayerHUD->AddAnnouncement();
+	}
 }
 
 void AMultiplayerPlayerController::ServerCheckMatchState_Implementation()
 {
 	GameMode = GameMode == nullptr ? Cast<AAsTheCaosRemainsGameMode>(UGameplayStatics::GetGameMode(this)) : GameMode;
-
 	if (GameMode)
 	{
 		WarmupTime = GameMode->WarmupTime;
@@ -79,11 +83,6 @@ void AMultiplayerPlayerController::ServerCheckMatchState_Implementation()
 		LevelStartingTime = GameMode->LevelStartingTime;
 		MatchState = GameMode->GetMatchState();
 		ClientJoinMidGame(MatchState, WarmupTime, MatchTime, CooldownTime, LevelStartingTime);
-
-		if (MultiplayerHUD && MatchState == MatchState::WaitingToStart)
-		{
-			MultiplayerHUD->AddAnnouncement();
-		}
 	}
 }
 
@@ -208,7 +207,7 @@ void AMultiplayerPlayerController::SetHUDMatchCountdown(float CountdownTime)
 	bool bHUDValid = MultiplayerHUD && MultiplayerHUD->CharacterOverlay && MultiplayerHUD->CharacterOverlay->TimerCountdownText;
 	if (bHUDValid)
 	{
-		if (CountdownTime <= 0.f)
+		if (CountdownTime < 0.f)
 		{
 			MultiplayerHUD->CharacterOverlay->TimerCountdownText->SetText(FText());
 			return;
@@ -240,7 +239,7 @@ void AMultiplayerPlayerController::SetHUDAnnouncementCountdown(float CountdownTi
 	bool bHUDValid = MultiplayerHUD && MultiplayerHUD->Announcement && MultiplayerHUD->Announcement->WarmupTime;
 	if (bHUDValid)
 	{
-		if (CountdownTime <= 0.f)
+		if (CountdownTime < 0.f)
 		{
 			MultiplayerHUD->Announcement->WarmupTime->SetText(FText());
 			return;
@@ -265,7 +264,36 @@ void AMultiplayerPlayerController::HandleCooldown()
 			MultiplayerHUD->Announcement->SetVisibility(ESlateVisibility::Visible);
 			FString AnnouncementText("New Match Start In: ");
 			MultiplayerHUD->Announcement->AnnouncementText->SetText(FText::FromString(AnnouncementText));
-			MultiplayerHUD->Announcement->InfoText->SetText(FText());
+
+			AChaosRemGameState* ChaosRemGameState = Cast<AChaosRemGameState>(UGameplayStatics::GetGameState(this));
+			AChaosRemPlayerState* ChaosRemPlayerState = GetPlayerState<AChaosRemPlayerState>();
+			if (ChaosRemGameState && ChaosRemPlayerState)
+			{
+				TArray<AChaosRemPlayerState*> TopPlayers = ChaosRemGameState->TopScoringPlayers;
+				UE_LOG(LogTemp, Warning, TEXT("TopPlayers Num: %d"), TopPlayers.Num());
+				FString InfoTextString;
+				if (TopPlayers.Num() == 0)
+				{
+					InfoTextString = FString("There's no winner.");
+				}
+				else if (TopPlayers.Num() == 1 && TopPlayers[0] == ChaosRemPlayerState)
+				{
+					InfoTextString = FString("You are the winner!");
+				}
+				else if (TopPlayers.Num() == 1)
+				{
+					InfoTextString = FString::Printf(TEXT("Winner: \n%s"), *TopPlayers[0]->GetPlayerName());
+				}
+				else if (TopPlayers.Num() > 1)
+				{
+					InfoTextString = FString("Players tied for the win: \n");
+					for (auto TiedPlayer : TopPlayers)
+					{
+						InfoTextString.Append(FString::Printf(TEXT("%s\n"), *TiedPlayer->GetPlayerName()));
+					}
+				}
+				MultiplayerHUD->Announcement->InfoText->SetText(FText());
+			}
 		}
 	}
 	AMultiplayerCharacter* ChaosCharacter = Cast<AMultiplayerCharacter>(GetPawn());
@@ -286,7 +314,8 @@ void AMultiplayerPlayerController::GetLifetimeReplicatedProps(TArray<class FLife
 
 float AMultiplayerPlayerController::GetServerTime()
 {
-	return GetWorld()->GetTimeSeconds() + ClientServerDelta;
+	if (HasAuthority()) return GetWorld()->GetTimeSeconds();
+	else return GetWorld()->GetTimeSeconds() + ClientServerDelta;
 }
 
 void AMultiplayerPlayerController::ReceivedPlayer()
@@ -295,7 +324,7 @@ void AMultiplayerPlayerController::ReceivedPlayer()
 
 	if (IsLocalController())
 	{
-		ServerResquestServerTime(GetWorld()->GetTimeSeconds());
+		ServerRequestServerTime(GetWorld()->GetTimeSeconds());
 	}
 }
 
@@ -314,9 +343,9 @@ void AMultiplayerPlayerController::OnRep_MatchState()
 void AMultiplayerPlayerController::BeginPlay()
 {
 	Super::BeginPlay();
+	MultiplayerHUD = Cast<AMultiplayerHud>(GetHUD());
 	ServerCheckMatchState();
 	
-	MultiplayerHUD = Cast<AMultiplayerHud>(GetHUD());
 	if (IsLocalController())
 	{
 		if (CaptureFlagWidget)
@@ -324,7 +353,7 @@ void AMultiplayerPlayerController::BeginPlay()
 			UUserWidget* WidgetInstance = CreateWidget<UUserWidget>(this, CaptureFlagWidget);
 			if (WidgetInstance)
 			{
-				WidgetInstance->AddToViewport();
+				//WidgetInstance->AddToViewport();
 			}
 		}
 	}
@@ -354,17 +383,8 @@ void AMultiplayerPlayerController::SetHUDTime()
 	float TimeLeft = 0.f;
 	if (MatchState == MatchState::WaitingToStart) TimeLeft = WarmupTime - GetServerTime() + LevelStartingTime;
 	else if (MatchState == MatchState::InProgress) TimeLeft = WarmupTime + MatchTime - GetServerTime() + LevelStartingTime;
-	else if (MatchState == MatchState::Cooldown) TimeLeft = WarmupTime + MatchTime - GetServerTime() + LevelStartingTime;
-	uint32 SecondLeft = FMath::CeilToInt(MatchTime - GetServerTime());
-
-	if (HasAuthority())
-	{
-		GameMode = GameMode == nullptr ? Cast<AAsTheCaosRemainsGameMode>(UGameplayStatics::GetGameMode(this)) : GameMode;
-		if (GameMode)
-		{
-			SecondLeft = FMath::CeilToInt(GameMode->GetCountdownTime() + LevelStartingTime);
-		}
-	}
+	else if (MatchState == MatchState::Cooldown) TimeLeft = CooldownTime + WarmupTime + MatchTime - GetServerTime() + LevelStartingTime;
+	uint32 SecondLeft = FMath::CeilToInt(TimeLeft);
 	
 	if (CountdownInt != SecondLeft)
 	{
@@ -380,7 +400,7 @@ void AMultiplayerPlayerController::SetHUDTime()
 	CountdownInt = SecondLeft;
 }
 
-void AMultiplayerPlayerController::ServerResquestServerTime_Implementation(float TimeOfClientRequest)
+void AMultiplayerPlayerController::ServerRequestServerTime_Implementation(float TimeOfClientRequest)
 {
 	float ServerTimeOfReceipt = GetWorld()->GetTimeSeconds();
 	ClientReportServerTime(TimeOfClientRequest, ServerTimeOfReceipt);
