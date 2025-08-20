@@ -50,7 +50,7 @@ void AMultiplayerPlayerController::HandleMatchHasStarted()
 	MultiplayerHUD = MultiplayerHUD == nullptr ? Cast<AMultiplayerHud>(GetHUD()) : MultiplayerHUD;
 	if (MultiplayerHUD)
 	{
-		MultiplayerHUD->AddCharacterOverlay();
+		if (MultiplayerHUD->CharacterOverlay == nullptr) MultiplayerHUD->AddCharacterOverlay();
 		if (MultiplayerHUD->Announcement)
 		{
 			MultiplayerHUD->Announcement->SetVisibility(ESlateVisibility::Hidden);

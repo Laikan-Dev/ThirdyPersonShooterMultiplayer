@@ -62,8 +62,10 @@ protected:
 
 	TMap<EWeaponType, int32> CarriedAmmoMap;
 
-	UPROPERTY()
+	UPROPERTY(EditAnywhere)
 	int32 StartARAmmo = 30;
+	UPROPERTY(EditAnywhere)
+	int32 StartRocketAmmo = 0;
 	void InitializeCarriedAmmo();
 	UPROPERTY(ReplicatedUsing = OnRep_CombatState)
 	ECombatState CombatState = ECombatState::ECS_Idle;

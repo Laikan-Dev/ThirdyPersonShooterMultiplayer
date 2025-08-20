@@ -664,6 +664,7 @@ void AMultiplayerCharacter::MulticastElim_Implementation()
 	GetCharacterMovement()->DisableMovement();
 	GetCharacterMovement()->StopMovementImmediately();
 	bDisableGameplay = true;
+	GetCharacterMovement()->DisableMovement();
 
 	if (CombatSystem)
 	{
