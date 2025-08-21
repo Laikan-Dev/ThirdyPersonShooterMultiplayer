@@ -71,6 +71,10 @@ protected:
 	int32 StartSMGAmmo = 0;
 	UPROPERTY(EditAnywhere)
 	int32 StartShotgunAmmo = 0;
+	UPROPERTY(EditAnywhere)
+	int32 StartSniperRifleAmmo = 0;
+	UPROPERTY(EditAnywhere)
+	int32 StartGrenadeLauncherAmmo = 0;
 	void InitializeCarriedAmmo();
 	UPROPERTY(ReplicatedUsing = OnRep_CombatState)
 	ECombatState CombatState = ECombatState::ECS_Idle;

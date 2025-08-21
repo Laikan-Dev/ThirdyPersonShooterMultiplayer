@@ -599,7 +599,7 @@ void AMultiplayerCharacter::SetupPlayerInputComponent(UInputComponent* PlayerInp
 		EnhancedInputComponent->BindAction(LookAction, ETriggerEvent::Triggered, this, &AMultiplayerCharacter::Look);
 
 		//Aiming
-		EnhancedInputComponent->BindAction(AimingInput, ETriggerEvent::Triggered, this, &AMultiplayerCharacter::StartAiming);
+		EnhancedInputComponent->BindAction(AimingInput, ETriggerEvent::Started, this, &AMultiplayerCharacter::StartAiming);
 		EnhancedInputComponent->BindAction(AimingInput, ETriggerEvent::Completed, this, &AMultiplayerCharacter::StopAiming);
 
 		//Firing Projectiles
@@ -673,6 +673,12 @@ void AMultiplayerCharacter::MulticastElim_Implementation()
 	//Disable Collision
 	GetCapsuleComponent()->SetCollisionEnabled(ECollisionEnabled::NoCollision);
 	GetMesh()->SetCollisionEnabled(ECollisionEnabled::NoCollision);
+
+	bool bHideSniperScope = IsLocallyControlled() && CombatSystem && CombatSystem->EquippedWeapon && CombatSystem->EquippedWeapon->GetWeaponType() == EWeaponType::EWT_AssaultRifle;
+	if (bHideSniperScope)
+	{
+		ShowSniperScopeWidget(false);
+	}
 }
 
 void AMultiplayerCharacter::Move(const FInputActionValue& Value)
@@ -738,6 +744,9 @@ void AMultiplayerCharacter::PlayReloadMontage()
 		case EWeaponType::EWT_RocketLauncher:
 			SectionName = FName("Rifle");
 			break;
+		case EWeaponType::EWT_GrenadeLauncher:
+			SectionName = FName("Rifle");
+			break;
 		case EWeaponType::EWT_Pistol:
 			SectionName = FName("Rifle");
 			break;
@@ -745,6 +754,9 @@ void AMultiplayerCharacter::PlayReloadMontage()
 			SectionName = FName("Rifle");
 			break;
 		case EWeaponType::EWT_Shotgun:
+			SectionName = FName("Rifle");
+			break;
+		case EWeaponType::EWT_SniperRifle:
 			SectionName = FName("Rifle");
 			break;
 		default: ;
