@@ -22,6 +22,8 @@ protected:
 
 	void DestroyTimeFinished();
 
+	UPROPERTY(VisibleAnywhere)
+	class URocketMovementComponent* RocketMovementComponent;
 	UPROPERTY()
 	class UNiagaraComponent* TrailSystemComp;
 

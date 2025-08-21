@@ -17,7 +17,7 @@
 ABaseWeapon::ABaseWeapon()
 {
 	bReplicates = true;
-	SetReplicateMovement(true);
+	AActor::SetReplicateMovement(true);
 
 	SkeletalMesh = CreateDefaultSubobject<USkeletalMeshComponent>(TEXT("WeaponMesh"));
 	RootComponent = SkeletalMesh;
@@ -109,12 +109,21 @@ void ABaseWeapon::OnRep_WeaponState()
 			SkeletalMesh->SetSimulatePhysics(false);
 			SkeletalMesh->SetEnableGravity(false);
 			SkeletalMesh->SetCollisionEnabled(ECollisionEnabled::NoCollision);
+			if (WeaponType == EWeaponType::EWT_SubmachinGun)
+			{
+				SkeletalMesh->SetCollisionEnabled(ECollisionEnabled::Type::QueryAndPhysics);
+				SkeletalMesh->SetEnableGravity(true);
+				SkeletalMesh->SetCollisionResponseToAllChannels(ECollisionResponse::ECR_Ignore);
+			}
+			
 	}
 		break;
 	case EWeaponState::EWS_Dropped:
 		SkeletalMesh->SetSimulatePhysics(true);
 		SkeletalMesh->SetEnableGravity(true);
 		SkeletalMesh->SetCollisionEnabled(ECollisionEnabled::QueryAndPhysics);
+		SkeletalMesh->SetCollisionResponseToAllChannels(ECollisionResponse::ECR_Block);
+		SkeletalMesh->SetCollisionResponseToChannel(ECollisionChannel::ECC_Camera, ECollisionResponse::ECR_Ignore);
 		break;
 	case EWeaponState::EWS_MAX:
 		break;
@@ -172,6 +181,12 @@ void ABaseWeapon::SetWeaponState(EWeaponState State)
 			SkeletalMesh->SetSimulatePhysics(false);
 			SkeletalMesh->SetEnableGravity(false);
 			SkeletalMesh->SetCollisionEnabled(ECollisionEnabled::NoCollision);
+			if (WeaponType == EWeaponType::EWT_SubmachinGun)
+			{
+				SkeletalMesh->SetCollisionEnabled(ECollisionEnabled::Type::QueryAndPhysics);
+				SkeletalMesh->SetEnableGravity(true);
+				SkeletalMesh->SetCollisionResponseToAllChannels(ECollisionResponse::ECR_Ignore);
+			}
 	}
 	break;
 	case EWeaponState::EWS_Dropped:
@@ -182,6 +197,10 @@ void ABaseWeapon::SetWeaponState(EWeaponState State)
 		SkeletalMesh->SetSimulatePhysics(true);
 		SkeletalMesh->SetEnableGravity(true);
 		SkeletalMesh->SetCollisionEnabled(ECollisionEnabled::QueryAndPhysics);
+		SkeletalMesh->SetCollisionResponseToAllChannels(ECollisionResponse::ECR_Block);
+		SkeletalMesh->SetCollisionResponseToChannel(ECollisionChannel::ECC_Pawn, ECollisionResponse::ECR_Ignore);
+		SkeletalMesh->SetCollisionResponseToChannel(ECollisionChannel::ECC_Camera, ECollisionResponse::ECR_Ignore);
+
 		break;
 	case EWeaponState::EWS_MAX:
 		break;

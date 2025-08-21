@@ -9,7 +9,6 @@
 #include  "Multiplayer/Player/CombatState.h"
 #include "CombatComponent.generated.h"
 
-#define TRACE_LENGHT 80000.f;
 
 UCLASS( ClassGroup=(Custom), meta=(BlueprintSpawnableComponent) )
 class MULTIPLAYER_API UCombatComponent : public UActorComponent
@@ -66,6 +65,12 @@ protected:
 	int32 StartARAmmo = 30;
 	UPROPERTY(EditAnywhere)
 	int32 StartRocketAmmo = 0;
+	UPROPERTY(EditAnywhere)
+	int32 StartPistolAmmo = 0;
+	UPROPERTY(EditAnywhere)
+	int32 StartSMGAmmo = 0;
+	UPROPERTY(EditAnywhere)
+	int32 StartShotgunAmmo = 0;
 	void InitializeCarriedAmmo();
 	UPROPERTY(ReplicatedUsing = OnRep_CombatState)
 	ECombatState CombatState = ECombatState::ECS_Idle;

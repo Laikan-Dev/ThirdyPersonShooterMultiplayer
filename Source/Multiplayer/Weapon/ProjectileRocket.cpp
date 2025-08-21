@@ -10,6 +10,7 @@
 #include "NiagaraSystemInstanceController.h"
 #include "Sound/SoundCue.h"
 #include "Components/AudioComponent.h"
+#include "RocketMovementComponent.h"
 
 
 // Sets default values
@@ -21,11 +22,15 @@ AProjectileRocket::AProjectileRocket()
 	RocketMesh = CreateDefaultSubobject<UStaticMeshComponent>(FName("RocketMesh"));
 	RocketMesh->SetupAttachment(RootComponent);
 	RocketMesh->SetCollisionEnabled(ECollisionEnabled::NoCollision);
+
+	RocketMovementComponent = CreateDefaultSubobject<URocketMovementComponent>(TEXT("RocketMovementComponent"));
+	RocketMovementComponent->bRotationFollowsVelocity = true;
+	RocketMovementComponent->SetIsReplicated(true); 
+	
 }
 
 void AProjectileRocket::Destroyed()
 {
-	
 }
 
 // Called when the game starts or when spawned
@@ -37,7 +42,7 @@ void AProjectileRocket::BeginPlay()
 	{
 		BoxComponent->OnComponentHit.AddDynamic(this, &AProjectileRocket::OnProjectileImpact);
 	}
-	if (TrailSystemComp)
+	if (TrailSystem)
 	{
 		TrailSystemComp = UNiagaraFunctionLibrary::SpawnSystemAttached(TrailSystem, GetRootComponent(), FName(), GetActorLocation(), GetActorRotation(),
 			EAttachLocation::Type::KeepWorldPosition,  false);
@@ -53,6 +58,7 @@ void AProjectileRocket::BeginPlay()
 void AProjectileRocket::OnProjectileImpact(UPrimitiveComponent* HitComponent, AActor* OtherActor,
 	UPrimitiveComponent* OtherComp, FVector NormalImpulse, const FHitResult& Hit)
 {
+	if (OtherActor == GetOwner()) return;
 	APawn* FiringPawn = GetInstigator();
 	if (FiringPawn && HasAuthority())
 	{
@@ -62,6 +68,7 @@ void AProjectileRocket::OnProjectileImpact(UPrimitiveComponent* HitComponent, AA
 			UGameplayStatics::ApplyRadialDamageWithFalloff(this, Damage, 10.f, GetActorLocation(),
 				200.f, 500.f, 1.f, UDamageType::StaticClass(),
 				TArray<AActor*>(), this, FiringController);
+			GetWorldTimerManager().SetTimer(DestroyTimer, this, &AProjectileRocket::DestroyTimeFinished, DestroyTime);
 
 			if (ImpactParticles)
 			{
@@ -89,8 +96,7 @@ void AProjectileRocket::OnProjectileImpact(UPrimitiveComponent* HitComponent, AA
 			}
 		}
 	}
-
-	GetWorldTimerManager().SetTimer(DestroyTimer, this, &AProjectileRocket::DestroyTimeFinished, DestroyTime);
+	
 }
 
 void AProjectileRocket::DestroyTimeFinished()

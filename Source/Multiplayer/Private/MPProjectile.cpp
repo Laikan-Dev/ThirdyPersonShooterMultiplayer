@@ -3,12 +3,9 @@
 
 #include "MPProjectile.h"
 #include "Components/BoxComponent.h"
-#include "GameFramework/ProjectileMovementComponent.h"
 #include "GameFramework/DamageType.h"
 #include "Particles/ParticleSystem.h"
-#include "Particles/ParticleSystemComponent.h"
 #include "Kismet/GameplayStatics.h"
-#include "Engine/Engine.h"
 #include "Multiplayer/MultiplayerCharacter.h"
 #include "UObject/ConstructorHelpers.h"
 #include "Sound/SoundCue.h"
@@ -38,12 +35,14 @@ AMPProjectile::AMPProjectile()
 	}
 
 	//Definition for the ProjectileMovement Component.
+	/**
 	ProjectileMovementComponent = CreateDefaultSubobject<UProjectileMovementComponent>(TEXT("ProjectileMovement"));
 	ProjectileMovementComponent->SetUpdatedComponent(BoxComponent);
 	ProjectileMovementComponent->InitialSpeed = 15000.0f;
 	ProjectileMovementComponent->MaxSpeed = 15000.0f;
 	ProjectileMovementComponent->bRotationFollowsVelocity = true;
 	ProjectileMovementComponent->ProjectileGravityScale = 0.0f;
+	**/
 
 	DamageType = UDamageType::StaticClass();
 	Damage = 10.0f;
