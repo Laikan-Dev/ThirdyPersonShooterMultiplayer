@@ -20,6 +20,9 @@ protected:
 	// Called when the game starts or when spawned
 	virtual void BeginPlay() override;
 
+	UPROPERTY(VisibleAnywhere)
+	UStaticMeshComponent* ProjectileMesh;
+
 public:	
 	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = "Components")
 	class UBoxComponent* BoxComponent;
@@ -54,5 +57,25 @@ protected:
 	virtual void OnProjectileImpact(UPrimitiveComponent* HitComponent, AActor* OtherActor, UPrimitiveComponent* OtherComp, FVector NormalImpulse, const FHitResult& Hit);
 	UFUNCTION()
 	bool TeamCheck(AMultiplayerCharacter* TargetPlayer, ETeam TargetTeam);
+	void StartDestroyTimer();
+	void DestroyTimeFinished();
+	void ExplodeDamage();
+	
+	UPROPERTY(EditAnywhere, Category = "Damage")
+	float DamageInnerRadius = 200.f;
+	UPROPERTY(EditAnywhere, Category = "Damage")
+	float DamageOuterRadius = 500.f;
+
+	void SpawnTrailSystem();
+	UPROPERTY(EditAnywhere)
+	class UNiagaraSystem* TrailSystem;
+	UPROPERTY()
+	class UNiagaraComponent* TrailSystemComp;
+
+private:
+	FTimerHandle DestroyTimer;
+
+	UPROPERTY(EditAnywhere)
+	float DestroyTime = 3.f;
 
 };

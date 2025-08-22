@@ -20,12 +20,10 @@ protected:
 	virtual void BeginPlay() override;
 	virtual void OnProjectileImpact(UPrimitiveComponent* HitComponent, AActor* OtherActor, UPrimitiveComponent* OtherComp, FVector NormalImpulse, const FHitResult& Hit) override;
 
-	void DestroyTimeFinished();
 
 	UPROPERTY(VisibleAnywhere)
 	class URocketMovementComponent* RocketMovementComponent;
-	UPROPERTY()
-	class UNiagaraComponent* TrailSystemComp;
+	
 
 	UPROPERTY(EditAnywhere)
 	USoundCue* ProjectileLoop;
@@ -36,19 +34,11 @@ protected:
 	UPROPERTY(EditAnywhere)
 	USoundAttenuation* LoopingSoundAttenuation;
 	
-	UPROPERTY(EditAnywhere)
-	class UNiagaraSystem* TrailSystem;
 public:
 	// Called every frame
 	virtual void Tick(float DeltaTime) override;
 	
 
 private:
-	UPROPERTY(VisibleAnywhere)
-	UStaticMeshComponent* RocketMesh;
 
-	FTimerHandle DestroyTimer;
-
-	UPROPERTY(EditAnywhere)
-	float DestroyTime = 3.f;
 };

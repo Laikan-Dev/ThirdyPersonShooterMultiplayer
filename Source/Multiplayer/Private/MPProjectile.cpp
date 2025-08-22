@@ -2,6 +2,8 @@
 
 
 #include "MPProjectile.h"
+
+#include "NiagaraFunctionLibrary.h"
 #include "Components/BoxComponent.h"
 #include "GameFramework/DamageType.h"
 #include "Particles/ParticleSystem.h"
@@ -16,7 +18,7 @@
 AMPProjectile::AMPProjectile()
 {
 	bReplicates = true;
-	SetReplicateMovement(true);
+	AActor::SetReplicateMovement(true);
 
 	BoxComponent = CreateDefaultSubobject<UBoxComponent>(TEXT("RootComponent"));
 	BoxComponent->SetCollisionProfileName(TEXT("BlockAllDynamic"));
@@ -112,4 +114,36 @@ bool AMPProjectile::TeamCheck(AMultiplayerCharacter* TargetPlayer, ETeam TargetT
 	return false;
 }
 
+void AMPProjectile::StartDestroyTimer()
+{
+	GetWorldTimerManager().SetTimer(DestroyTimer, this, &AMPProjectile::DestroyTimeFinished, DestroyTime);
+}
 
+void AMPProjectile::DestroyTimeFinished()
+{
+	Destroy();
+}
+
+void AMPProjectile::ExplodeDamage()
+{
+	APawn* FiringPawn = GetInstigator();
+	if (FiringPawn && HasAuthority())
+	{
+		AController* FiringController = FiringPawn->GetController();
+		if (FiringController)
+		{
+			UGameplayStatics::ApplyRadialDamageWithFalloff(this, Damage, 10.f, GetActorLocation(),
+				DamageInnerRadius, DamageOuterRadius, 1.f, UDamageType::StaticClass(),
+				TArray<AActor*>(), this, FiringController);
+		}
+	}
+}
+
+void AMPProjectile::SpawnTrailSystem()
+{
+	if (TrailSystem)
+	{
+		TrailSystemComp = UNiagaraFunctionLibrary::SpawnSystemAttached(TrailSystem, GetRootComponent(), FName(), GetActorLocation(), GetActorRotation(),
+			EAttachLocation::Type::KeepWorldPosition,  false);
+	}
+}
