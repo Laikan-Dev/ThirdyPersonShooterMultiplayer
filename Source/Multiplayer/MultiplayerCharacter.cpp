@@ -127,6 +127,12 @@ AMultiplayerCharacter::AMultiplayerCharacter()
 	GetMesh()->SetCollisionResponseToChannel(ECollisionChannel::ECC_Visibility, ECollisionResponse::ECR_Block);
 
 	TurningInPlace = ETurningInPlace::ETIP_NotTurning;
+	SetNetUpdateFrequency(66.f);
+	SetMinNetUpdateFrequency(33.f);
+
+	AttachedGrenade = CreateDefaultSubobject<UStaticMeshComponent>(TEXT("AttachedGrenade"));
+	AttachedGrenade->SetupAttachment(GetMesh(), FName("GrenadeSocket"));
+	AttachedGrenade->SetCollisionEnabled(ECollisionEnabled::NoCollision);
 	// Note: The skeletal mesh and anim blueprint references on the Mesh component (inherited from Character) 
 	// are set in the derived blueprint asset named ThirdPersonCharacter (to avoid direct content references in C++)
 }
@@ -182,6 +188,14 @@ void AMultiplayerCharacter::PlayDeathMontage()
 	}
 }
 
+void AMultiplayerCharacter::GrenadeButtonPressed()
+{
+	if (CombatSystem)
+	{
+		CombatSystem->ThrowGrenade();
+	}
+}
+
 void AMultiplayerCharacter::ReceiveDamage(AActor* DamagedActor, float Damage, const UDamageType* DamageType, class AController* InstigatorController, class AActor* DamageCauser)
 {
 	CurrentHealth = FMath::Clamp(CurrentHealth - Damage, 0.0f, MaxHealth);
@@ -218,6 +232,10 @@ void AMultiplayerCharacter::BeginPlay()
 	if (HasAuthority())
 	{
 		OnTakeAnyDamage.AddDynamic(this, &AMultiplayerCharacter::ReceiveDamage);
+	}
+	if (AttachedGrenade)
+	{
+		AttachedGrenade->SetVisibility(false);
 	}
 	SelectTeam();
 	bUseControllerRotationYaw = true;
@@ -613,6 +631,9 @@ void AMultiplayerCharacter::SetupPlayerInputComponent(UInputComponent* PlayerInp
 		
 		//PickupItem
 		EnhancedInputComponent->BindAction(PickUpInput, ETriggerEvent::Started, this, &AMultiplayerCharacter::EquipItem);
+
+		//Grenade
+		EnhancedInputComponent->BindAction(ThrowGrenadeAction, ETriggerEvent::Triggered, this, &AMultiplayerCharacter::GrenadeButtonPressed);
 	}
 	else
 	{
@@ -748,13 +769,13 @@ void AMultiplayerCharacter::PlayReloadMontage()
 			SectionName = FName("Rifle");
 			break;
 		case EWeaponType::EWT_Pistol:
-			SectionName = FName("Rifle");
+			SectionName = FName("Pistol");
 			break;
 		case EWeaponType::EWT_SubmachinGun:
-			SectionName = FName("Rifle");
+			SectionName = FName("Pistol");
 			break;
 		case EWeaponType::EWT_Shotgun:
-			SectionName = FName("Rifle");
+			SectionName = FName("Shotgun");
 			break;
 		case EWeaponType::EWT_SniperRifle:
 			SectionName = FName("Rifle");
@@ -762,6 +783,15 @@ void AMultiplayerCharacter::PlayReloadMontage()
 		default: ;
 		}
 		AnimInstanceRef->Montage_JumpToSection(SectionName);
+	}
+}
+
+void AMultiplayerCharacter::PlayThrowGrenadeMontage()
+{
+	UAnimInstance* AnimInstanceRef = GetMesh()->GetAnimInstance();
+	if (AnimInstanceRef && ThrowGrenadeMontage)
+	{
+		AnimInstance->Montage_Play(ThrowGrenadeMontage);
 	}
 }
 

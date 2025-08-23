@@ -30,6 +30,16 @@ public:
 	void UpdateAmmoValues();
 	void FireButtonPressed(bool bPressed);
 
+	void ThrowGrenade();
+	void ShowAttachedGrenade(bool bShowGrenade);
+	UFUNCTION(BlueprintCallable, Category = "Combat")
+	void LaunchGrenade();
+
+	UFUNCTION(Server, Reliable)
+	void ServerThrowGrenade();
+	UFUNCTION(BlueprintCallable)
+	void ThrowGrenadeFinished();
+
 protected:
 	// Called when the game starts
 	virtual void BeginPlay() override;

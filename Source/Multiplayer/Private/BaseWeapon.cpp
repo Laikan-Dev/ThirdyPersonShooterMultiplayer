@@ -25,6 +25,10 @@ ABaseWeapon::ABaseWeapon()
 	SkeletalMesh->SetCollisionResponseToAllChannels(ECollisionResponse::ECR_Block);
 	SkeletalMesh->SetCollisionResponseToChannel(ECollisionChannel::ECC_Pawn, ECollisionResponse::ECR_Ignore);
 	SkeletalMesh->SetCollisionEnabled(ECollisionEnabled::NoCollision);
+	SkeletalMesh->SetCustomDepthStencilValue(CUSTOM_DEPTH_PURPLE);
+	SkeletalMesh->MarkRenderStateDirty();
+	EnableCustomDepth(true);
+
 
 	SphereComponent = CreateDefaultSubobject<USphereComponent>(TEXT("SphereComponent"));
 	SphereComponent->SetupAttachment(RootComponent);
@@ -33,9 +37,6 @@ ABaseWeapon::ABaseWeapon()
 	{
 		SkeletalMesh->SetSkeletalMesh(WeaponData->GetWeaponStats().Mesh);
 	}
-
-	
-
 
 	PickupWidget = CreateDefaultSubobject<UWidgetComponent>(TEXT("PickupWidget"));
 	PickupWidget->SetupAttachment(RootComponent);
@@ -91,6 +92,14 @@ void ABaseWeapon::SetHUDAmmo()
 	}
 }
 
+void ABaseWeapon::EnableCustomDepth(bool bEnable)
+{
+	if (SkeletalMesh)
+	{
+		SkeletalMesh->SetRenderCustomDepth(bEnable);
+	}
+}
+
 void ABaseWeapon::SpendRound()
 {
 	Ammo = FMath::Clamp(Ammo - 1, 0, MagCapacity);
@@ -115,6 +124,7 @@ void ABaseWeapon::OnRep_WeaponState()
 				SkeletalMesh->SetEnableGravity(true);
 				SkeletalMesh->SetCollisionResponseToAllChannels(ECollisionResponse::ECR_Ignore);
 			}
+			EnableCustomDepth(false);
 			
 	}
 		break;
@@ -124,6 +134,9 @@ void ABaseWeapon::OnRep_WeaponState()
 		SkeletalMesh->SetCollisionEnabled(ECollisionEnabled::QueryAndPhysics);
 		SkeletalMesh->SetCollisionResponseToAllChannels(ECollisionResponse::ECR_Block);
 		SkeletalMesh->SetCollisionResponseToChannel(ECollisionChannel::ECC_Camera, ECollisionResponse::ECR_Ignore);
+		SkeletalMesh->SetCustomDepthStencilValue(CUSTOM_DEPTH_BLUE);
+		SkeletalMesh->MarkRenderStateDirty();
+		EnableCustomDepth(true);
 		break;
 	case EWeaponState::EWS_MAX:
 		break;
@@ -187,6 +200,7 @@ void ABaseWeapon::SetWeaponState(EWeaponState State)
 				SkeletalMesh->SetEnableGravity(true);
 				SkeletalMesh->SetCollisionResponseToAllChannels(ECollisionResponse::ECR_Ignore);
 			}
+			EnableCustomDepth(false);
 	}
 	break;
 	case EWeaponState::EWS_Dropped:
@@ -200,6 +214,9 @@ void ABaseWeapon::SetWeaponState(EWeaponState State)
 		SkeletalMesh->SetCollisionResponseToAllChannels(ECollisionResponse::ECR_Block);
 		SkeletalMesh->SetCollisionResponseToChannel(ECollisionChannel::ECC_Pawn, ECollisionResponse::ECR_Ignore);
 		SkeletalMesh->SetCollisionResponseToChannel(ECollisionChannel::ECC_Camera, ECollisionResponse::ECR_Ignore);
+		SkeletalMesh->SetCustomDepthStencilValue(CUSTOM_DEPTH_PURPLE);
+		SkeletalMesh->MarkRenderStateDirty();
+		EnableCustomDepth(true);
 
 		break;
 	case EWeaponState::EWS_MAX:
@@ -212,6 +229,11 @@ void ABaseWeapon::SetWeaponState(EWeaponState State)
 bool ABaseWeapon::IsEmpty()
 {
 	return Ammo <= 0;
+}
+
+bool ABaseWeapon::IsFull()
+{
+	return Ammo == MagCapacity;
 }
 
 void ABaseWeapon::Fire(const FVector& HitTarget)

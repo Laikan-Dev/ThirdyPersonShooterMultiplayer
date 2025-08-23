@@ -29,6 +29,11 @@ UCombatComponent::UCombatComponent()
 	// ...
 }
 
+void UCombatComponent::ThrowGrenadeFinished()
+{
+	CombatState = ECombatState::ECS_Idle;
+}
+
 // Called when the game starts
 void UCombatComponent::BeginPlay()
 {
@@ -37,7 +42,6 @@ void UCombatComponent::BeginPlay()
 	if (Character)
 	{
 		Character->GetCharacterMovement()->MaxWalkSpeed = BaseWalkSpeed;
-
 		if (Character->GetFollowCamera())
 		{
 			DefaultFOV = Character->GetFollowCamera()->FieldOfView;
@@ -74,6 +78,44 @@ void UCombatComponent::FireButtonPressed(bool bPressed)
 	if (bFireButtonPressed)
 	{
 		Fire();
+	}
+}
+
+void UCombatComponent::ThrowGrenade()
+{
+	if (CombatState != ECombatState::ECS_Idle) return;
+	CombatState = ECombatState::ECS_ThrowingGrenade;
+	if (Character)
+	{
+		Character->PlayThrowGrenadeMontage();
+		ShowAttachedGrenade(true);
+	}
+	if (Character && !Character->HasAuthority())
+	{
+		ServerThrowGrenade();
+	}
+}
+
+void UCombatComponent::ShowAttachedGrenade(bool bShowGrenade)
+{
+	if (Character && Character->GetAttachedGrenade())
+	{
+		Character->GetAttachedGrenade()->SetVisibility(bShowGrenade);
+	}
+}
+
+void UCombatComponent::LaunchGrenade()
+{
+	ShowAttachedGrenade(false);
+}
+
+void UCombatComponent::ServerThrowGrenade_Implementation()
+{
+	CombatState = ECombatState::ECS_ThrowingGrenade;
+	if (Character)
+	{
+		Character->PlayThrowGrenadeMontage();
+		ShowAttachedGrenade(true);
 	}
 }
 
@@ -127,6 +169,13 @@ void UCombatComponent::OnRep_CombatState()
 		if (bFireButtonPressed)
 		{
 			Fire();
+		}
+		break;
+	case ECombatState::ECS_ThrowingGrenade:
+		if (Character && !Character->IsLocallyControlled())
+		{
+			Character->PlayThrowGrenadeMontage();
+			ShowAttachedGrenade(true);
 		}
 		break;
 	default:
@@ -328,6 +377,7 @@ void UCombatComponent::GetLifetimeReplicatedProps(TArray<FLifetimeProperty>& Out
 void UCombatComponent::EquipWeapon(ABaseWeapon* WeaponToEquip)
 {
 	if (Character == nullptr || WeaponToEquip == nullptr) return;
+	if (CombatState != ECombatState::ECS_Idle) return;
 	if (EquippedWeapon)
 	{
 		EquippedWeapon->Dropped();
@@ -365,7 +415,7 @@ void UCombatComponent::EquipWeapon(ABaseWeapon* WeaponToEquip)
 
 void UCombatComponent::Reload()
 {
-	if (CarriedAmmo > 0 && CombatState != ECombatState::ECS_Reloading)
+	if (CarriedAmmo > 0 && CombatState == ECombatState::ECS_Idle && EquippedWeapon && !EquippedWeapon->IsFull())
 	{
 		ServerReload();
 	}

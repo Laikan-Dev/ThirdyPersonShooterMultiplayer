@@ -83,8 +83,13 @@ class AMultiplayerCharacter : public ACharacter, public IInteractWithCrosshairs
 	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = Input, meta = (AllowPrivateAccess = "true"))
 	UInputAction* LookAction;
 	
+	//Reload
 	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = Input, meta = (AllowPrivateAccess = "true"))
 	UInputAction* ReloadAction;
+
+	//Grenade
+	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = Input, meta = (AllowPrivateAccess = "true"))
+	UInputAction* ThrowGrenadeAction;
 	//FireInputs
 	UPROPERTY(EditDefaultsOnly, Category = "Input")
 	UInputAction* FireInput;
@@ -102,6 +107,7 @@ public:
 
 	void PlayFireMontage(bool bAiming);
 	void PlayReloadMontage();
+	void PlayThrowGrenadeMontage();
 	virtual void OnRep_ReplicatedMovement() override;
 
 	void Elim();
@@ -127,6 +133,9 @@ protected:
 	//HitReact
 	void PlayHitReactMontage();
 	void PlayDeathMontage();
+	
+	//Grenade
+	void GrenadeButtonPressed();
 
 	//Damage
 	UFUNCTION()
@@ -294,8 +303,12 @@ protected:
 	UMaterialInstanceDynamic* DynamicDissolveMaterialInstance1;
 	UPROPERTY(VisibleAnywhere)
 	UMaterialInstanceDynamic* DynamicDissolveMaterialInstance2;
-
+	UPROPERTY()
 	class AChaosRemPlayerState* PossessedPlayerState;
+
+	//Grenade
+	UPROPERTY(VisibleAnywhere)
+	UStaticMeshComponent* AttachedGrenade;
 	
 	// Material instance set on blueprints, used with the dynamic material instance
 	UPROPERTY(EditAnywhere)
@@ -433,6 +446,8 @@ public:
 	UAnimMontage* ShootingMontage;
 	UPROPERTY(EditDefaultsOnly, Category = "Montages")
 	UAnimMontage* ReloadMontage;
+	UPROPERTY(EditDefaultsOnly, Category = "Montages")
+	UAnimMontage* ThrowGrenadeMontage;
 	
 	//VFX
 	UFUNCTION()
@@ -447,6 +462,8 @@ public:
 	FVector GetHitTarget() const;
 
 	ECombatState GetCombatState() const;
+
+	FORCEINLINE UStaticMeshComponent* GetAttachedGrenade() const { return AttachedGrenade; }
 };
 
 

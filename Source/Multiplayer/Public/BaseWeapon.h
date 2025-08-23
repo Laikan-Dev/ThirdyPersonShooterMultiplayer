@@ -83,6 +83,8 @@ public:
 	virtual void GetLifetimeReplicatedProps(TArray<FLifetimeProperty>& OutLifetimeProps) const override;
 	virtual void OnRep_Owner() override;
 	void SetHUDAmmo();
+
+	void EnableCustomDepth(bool bEnable);
 	
 
 	UPROPERTY(VisibleAnywhere, Category = "Weapon Properties")
@@ -167,6 +169,7 @@ public:
 	FORCEINLINE int32 GetAmmo() const {return Ammo;};
 	FORCEINLINE int32 GetMagCapacity() const {return MagCapacity;};
 	bool IsEmpty();
+	bool IsFull();
 
 public:
 
