@@ -21,6 +21,10 @@ public:
 	// Called every frame
 	virtual void TickComponent(float DeltaTime, ELevelTick TickType, FActorComponentTickFunction* ThisTickFunction) override;
 	void GetLifetimeReplicatedProps(TArray<FLifetimeProperty>& OutLifetimeProps) const override;
+	void DropEquippedWeapon();
+	void UpdateCarriedAmmo();
+	void PlayEquipWeaponSound();
+	void ReloadEmptyWeapon();
 	friend class AMultiplayerCharacter;
 
 	void EquipWeapon(class ABaseWeapon* WeaponToEquip);
@@ -28,12 +32,23 @@ public:
 	UFUNCTION(BlueprintCallable, Category = "Combat")
 	void FinishReload();
 	void UpdateAmmoValues();
+
+	void UpdateShotgunAmmoValues();
+	void JumpToShotgunEnd();
+	
 	void FireButtonPressed(bool bPressed);
+	UFUNCTION(BlueprintCallable, Category = "Combat/Shotgun")
+	void ShotgunShelReload();
 
 	void ThrowGrenade();
 	void ShowAttachedGrenade(bool bShowGrenade);
 	UFUNCTION(BlueprintCallable, Category = "Combat")
 	void LaunchGrenade();
+
+	UFUNCTION(Server, Reliable)
+	void ServerLaunchGrenade(const FVector_NetQuantize& Target);
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Combat")
+	TSubclassOf<class AMPProjectile> GrenadeClass;
 
 	UFUNCTION(Server, Reliable)
 	void ServerThrowGrenade();
@@ -55,7 +70,15 @@ protected:
 
 	void HandleReload();
 
-	
+	UPROPERTY(EditAnywhere, ReplicatedUsing=OnRep_Grenades)
+	int32 Grenades = 4;
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Combat")
+	int32 MaxGrenades = 4;
+
+	void UpdateHUDGrenades();
+
+	UFUNCTION()
+	void OnRep_Grenades();
 	void Fire();
 
 	FTimerHandle FireTimer;
@@ -143,7 +166,7 @@ private:
 
 	void InterpFOV(float DeltaTime);
 public:	
-	
+	FORCEINLINE int32 GetGrenades() const { return Grenades; }
 
 		
 };

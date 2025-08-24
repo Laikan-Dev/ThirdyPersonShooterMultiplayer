@@ -12,7 +12,7 @@
 #include "Components/SkeletalMeshComponent.h"
 #include "Multiplayer/Public/DataAsset/WeaponsDataAsset.h"
 #include "MultiplayerPlayerController.h"
-
+#include "CombatComponent.h"
 // Sets default values
 ABaseWeapon::ABaseWeapon()
 {
@@ -75,7 +75,11 @@ void ABaseWeapon::ShowPickupWidget(bool bShowWidget)
 
 void ABaseWeapon::OnRep_Ammo()
 {
-	--Ammo;
+	OwnerCharacter = OwnerController == nullptr ? Cast<AMultiplayerCharacter>(GetOwner()) : OwnerCharacter;
+	if (OwnerCharacter && OwnerCharacter->GetCombatSystem() && IsFull())
+	{
+		OwnerCharacter->GetCombatSystem()->JumpToShotgunEnd();
+	}
 	SetHUDAmmo();
 }
 

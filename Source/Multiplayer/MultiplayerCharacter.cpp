@@ -198,6 +198,7 @@ void AMultiplayerCharacter::GrenadeButtonPressed()
 
 void AMultiplayerCharacter::ReceiveDamage(AActor* DamagedActor, float Damage, const UDamageType* DamageType, class AController* InstigatorController, class AActor* DamageCauser)
 {
+	if (bElimmed) return;
 	CurrentHealth = FMath::Clamp(CurrentHealth - Damage, 0.0f, MaxHealth);
 	PlayHitReactMontage();
 	UpdateHUDHealth();

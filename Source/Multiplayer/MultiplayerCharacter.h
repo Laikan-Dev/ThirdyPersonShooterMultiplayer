@@ -464,6 +464,7 @@ public:
 	ECombatState GetCombatState() const;
 
 	FORCEINLINE UStaticMeshComponent* GetAttachedGrenade() const { return AttachedGrenade; }
+	FORCEINLINE UAnimMontage* GetReloadMontage() const { return ReloadMontage; }
 };
 
 

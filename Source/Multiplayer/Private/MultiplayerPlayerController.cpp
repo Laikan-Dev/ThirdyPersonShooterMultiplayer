@@ -40,6 +40,11 @@ void AMultiplayerPlayerController::PollInit()
 				SetHudHealth(HUDHealth, HUDMaxHealth);
 				SetHUDScore(HUDScore);
 				SetHUDDefeats(HUDDefeats);
+				AMultiplayerCharacter* CharacterRef = Cast<AMultiplayerCharacter>(GetPawn());
+				if (CharacterRef && CharacterRef->GetCombatSystem())
+				{
+					SetHUDGrenades(CharacterRef->GetCombatSystem()->GetGrenades());
+				}
 			}
 		}
 	}
@@ -216,6 +221,21 @@ void AMultiplayerPlayerController::SetHUDMatchCountdown(float CountdownTime)
 		int32 Seconds = CountdownTime - Minutes * 60.0f;
 		FString CountdownText = FString::Printf(TEXT("%02d:%02d"), Minutes, Seconds);
 		MultiplayerHUD->CharacterOverlay->TimerCountdownText->SetText(FText::FromString(CountdownText));
+	}
+}
+
+void AMultiplayerPlayerController::SetHUDGrenades(int32 Grenades)
+{
+	MultiplayerHUD = MultiplayerHUD == nullptr ? Cast<AMultiplayerHud>(GetHUD()) : MultiplayerHUD;
+	bool bHUDValid = MultiplayerHUD && MultiplayerHUD->CharacterOverlay && MultiplayerHUD->CharacterOverlay->GrenadesText;
+	if (bHUDValid)
+	{
+		FString GrenadesText = FString::Printf(TEXT("%d"), Grenades);
+		MultiplayerHUD->CharacterOverlay->GrenadesText->SetText(FText::FromString(GrenadesText));
+	}
+	else
+	{
+		HUDGrenades = Grenades;
 	}
 }
 
