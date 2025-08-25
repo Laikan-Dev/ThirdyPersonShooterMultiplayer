@@ -17,7 +17,10 @@ public:
 	friend class AMultiplayerCharacter;
 	void Heal(float HealAmmount, float HealingTime);
 	void BuffSpeed(float BuffBaseSpeed, float BuffCrouchSpeed, float BuffTime);
+	void BuffJump(float BuffJumpVelocity, float BuffTime);
 	void SetInitialSpeeds(float BaseSpeed, float ChrouchSpeed);
+	void SetInitialJumpVelocity(float Velocity);
+	float InitialJumpVelocity;
 
 protected:
 	// Called when the game starts
@@ -39,6 +42,12 @@ private:
 	float InitialCrouchSpeed;
 	UFUNCTION(NetMulticast, Reliable)
 	void MulticastSpeedBuff(float BaseSpeed, float CrouchSpeed);
+
+	//Jump Buff
+	FTimerHandle JumpBuffTimer;
+	void ResetJumpBuffTimer();
+	UFUNCTION(NetMulticast, Reliable)
+	void MulticastJumpBuff(float JumpVelocity);
 
 public:
 	// Called every frame
