@@ -113,6 +113,7 @@ public:
 	void Elim();
 	UFUNCTION(NetMulticast, Reliable)
 	void MulticastElim();
+	void UpdateHUDHealth();
 
 	UPROPERTY(Replicated)
 	bool bDisableGameplay = false;
@@ -140,7 +141,7 @@ protected:
 	//Damage
 	UFUNCTION()
 	void ReceiveDamage(AActor* DamagedActor, float Damage, const UDamageType* DamageType, class AController* InstigatedController, class AActor* DamageCauser);
-	void UpdateHUDHealth();
+
 	//Aiming
 	UFUNCTION()
 	void StartAiming();
@@ -225,8 +226,10 @@ protected:
 private:
 	void RotateInPlace(float DeltaTime);
 	
-	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = Camera, meta = (AllowPrivateAccess = "true"))
+	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = Components, meta = (AllowPrivateAccess = "true"))
 	class UCombatComponent* CombatSystem;
+	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = Components, meta = (AllowPrivateAccess = "true"))
+	class UBuffComponent* BuffComponent;
 	UFUNCTION(Server, Reliable)
 	void ServerEquipItem();
 	void HideCameraIfCharacterClose();
@@ -331,7 +334,7 @@ protected:
 	void ServerSetRuning_Implementation(bool bIsRunning);
 //FunctionRep for Health
 	UFUNCTION()
-	void OnRep_CurrentHealth();
+	void OnRep_CurrentHealth(float LastHealth);
 
 	//FunctionRep
 	UFUNCTION()
@@ -348,8 +351,10 @@ public:
 	FORCEINLINE float GetMaxHealth() const { return MaxHealth; }
 
 	//Getter for current health
-	UFUNCTION(BlueprintPure, Category = "Health")
 	FORCEINLINE float GetCurrentHealth() const { return CurrentHealth; }
+
+	//Setter For Health
+	FORCEINLINE void SetHealth(float Ammount) {CurrentHealth = Ammount;}
 
 	UFUNCTION(BlueprintCallable, Category = "Health")
 	void SetCurrentHealth(float healthValue);
@@ -465,6 +470,7 @@ public:
 
 	FORCEINLINE UStaticMeshComponent* GetAttachedGrenade() const { return AttachedGrenade; }
 	FORCEINLINE UAnimMontage* GetReloadMontage() const { return ReloadMontage; }
+	FORCEINLINE UBuffComponent* GetBuffComponent() const { return BuffComponent; }
 };
 
 

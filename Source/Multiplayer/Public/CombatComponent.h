@@ -55,6 +55,9 @@ public:
 	UFUNCTION(BlueprintCallable)
 	void ThrowGrenadeFinished();
 
+	//Pickup
+	void PickupAmmo(EWeaponType WeaponType, int32 AmmoAmount);
+
 protected:
 	// Called when the game starts
 	virtual void BeginPlay() override;
@@ -88,6 +91,8 @@ protected:
 	// Carried ammo for the currently-equipped weapon
 	UPROPERTY(ReplicatedUsing = OnRep_CarriedAmmo)
 	int32 CarriedAmmo;
+	UPROPERTY(EditAnywhere)
+	int32 MaxCarriedAmmo = 500;
 	
 	UFUNCTION()
 	void OnRep_CarriedAmmo();

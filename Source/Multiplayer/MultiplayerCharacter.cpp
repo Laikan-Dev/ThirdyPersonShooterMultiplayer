@@ -28,6 +28,7 @@
 #include "AsTheCaosRemainsGameMode.h"
 #include "Windows/AllowWindowsPlatformTypes.h"
 #include "TimerManager.h"
+#include "Components/BuffComponent.h"
 #include "Kismet/GameplayStatics.h"
 #include "Player/ChaosRemPlayerState.h"
 #include "Multiplayer/Weapon/WeaponTypes.h"
@@ -119,6 +120,10 @@ AMultiplayerCharacter::AMultiplayerCharacter()
 	CombatSystem = CreateDefaultSubobject<UCombatComponent>(TEXT("CombatComponent"));
 	CombatSystem->SetIsReplicated(true);
 
+	//Create BuffComponent
+	BuffComponent = CreateDefaultSubobject<UBuffComponent>(TEXT("BuffComponent"));
+	BuffComponent->SetIsReplicated(true);
+
 	//Capsule Comp
 	GetCapsuleComponent()->SetCollisionResponseToChannel(ECollisionChannel::ECC_Camera, ECollisionResponse::ECR_Ignore);
 	//Mesh
@@ -143,6 +148,11 @@ void AMultiplayerCharacter::PostInitializeComponents()
 	if (CombatSystem)
 	{
 		CombatSystem->Character = this;
+	}
+	if (BuffComponent)
+	{
+		BuffComponent->Character = this;
+		BuffComponent->SetInitialSpeeds(GetCharacterMovement()->MaxWalkSpeed, GetCharacterMovement()->MaxWalkSpeedCrouched);
 	}
 	
 }
@@ -352,10 +362,13 @@ bool AMultiplayerCharacter::IWeaponEquipped()
 	return (CombatSystem && CombatSystem->EquippedWeapon);
 }
 
-void AMultiplayerCharacter::OnRep_CurrentHealth()
+void AMultiplayerCharacter::OnRep_CurrentHealth(float LastHealth)
 {
 	UpdateHUDHealth();
-	PlayHitReactMontage();
+	if (CurrentHealth < LastHealth)
+	{
+		PlayHitReactMontage();
+	}
 }
 void AMultiplayerCharacter::OnRep_PlayerTeam()
 {
