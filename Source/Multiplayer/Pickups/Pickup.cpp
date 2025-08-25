@@ -52,14 +52,21 @@ void APickup::Destroyed()
 	}
 }
 
+void APickup::BindOverlapTimerFinished()
+{
+	if (HasAuthority())
+	{
+		OverlapSphere->OnComponentBeginOverlap.AddDynamic(this, &APickup::OnSphereOverlap);
+	}
+}
+
 // Called when the game starts or when spawned
 void APickup::BeginPlay()
 {
 	Super::BeginPlay();
-
 	if (HasAuthority())
 	{
-		OverlapSphere->OnComponentBeginOverlap.AddDynamic(this, &APickup::OnSphereOverlap);
+		GetWorldTimerManager().SetTimer(BindOverlapTimer, this, &APickup::BindOverlapTimerFinished, BindOverlapTime);
 	}
 }
 

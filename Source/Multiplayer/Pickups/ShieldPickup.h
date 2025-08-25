@@ -28,5 +28,5 @@ private:
 	UPROPERTY(EditAnywhere)
 	float ShieldReplenishAmount = 100.f;
 	UPROPERTY(EditAnywhere)
-	float ShieldingReplenishTime = 5.f;
+	float ShieldingReplenishTime = 1.f;
 };

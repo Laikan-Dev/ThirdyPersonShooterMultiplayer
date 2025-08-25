@@ -267,6 +267,7 @@ void AMultiplayerCharacter::BeginPlay()
 	Super::BeginPlay();
 
 	UpdateHUDHealth();
+	UpdateHUDShield();
 	if (HasAuthority())
 	{
 		OnTakeAnyDamage.AddDynamic(this, &AMultiplayerCharacter::ReceiveDamage);

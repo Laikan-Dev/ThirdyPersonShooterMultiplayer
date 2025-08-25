@@ -31,7 +31,7 @@ void AShieldPickup::OnSphereOverlap(UPrimitiveComponent* OverlappedComponent, AA
 		UBuffComponent* BuffComponent = PlayerCharacter->GetBuffComponent();
 		if (BuffComponent)
 		{
-			BuffComponent->ReplenishShield(ShieldReplenishAmount, ShieldReplenishAmount);
+			BuffComponent->ReplenishShield(ShieldReplenishAmount, ShieldingReplenishTime);
 		}
 	}
 	Destroy();

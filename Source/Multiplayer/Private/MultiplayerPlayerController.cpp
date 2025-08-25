@@ -408,6 +408,7 @@ void AMultiplayerPlayerController::OnPossess(APawn* inPawn)
 	if (Player)
 	{
 		SetHudHealth(PlayerCharacter->GetCurrentHealth(), PlayerCharacter->GetMaxHealth());
+		SetHudShield(PlayerCharacter->GetCurrentShield(), PlayerCharacter->GetMaxShield());
 	}
 }
 
