@@ -114,6 +114,7 @@ public:
 	UFUNCTION(NetMulticast, Reliable)
 	void MulticastElim();
 	void UpdateHUDHealth();
+	void UpdateHUDShield();
 
 	UPROPERTY(Replicated)
 	bool bDisableGameplay = false;
@@ -283,6 +284,11 @@ protected:
 	UPROPERTY(VisibleAnywhere, ReplicatedUsing = OnRep_CurrentHealth, Category = PlayerStats)
 	float CurrentHealth;
 
+	//Shield
+	UPROPERTY(EditDefaultsOnly, Category = "PlayerStats")
+	float MaxShield = 100.f;
+	UPROPERTY(VisibleAnywhere, ReplicatedUsing = OnRep_CurrentShield, Category = PlayerStats)
+	float CurrentShield = 0.f;
 	bool bIsDead = false;
 
 	UPROPERTY()
@@ -335,6 +341,8 @@ protected:
 //FunctionRep for Health
 	UFUNCTION()
 	void OnRep_CurrentHealth(float LastHealth);
+	UFUNCTION()
+	void OnRep_CurrentShield(float LastShield);
 
 	//FunctionRep
 	UFUNCTION()
@@ -355,6 +363,15 @@ public:
 
 	//Setter For Health
 	FORCEINLINE void SetHealth(float Ammount) {CurrentHealth = Ammount;}
+
+	//Setter For Shield
+	FORCEINLINE void SetShield(float Ammount) {CurrentShield = Ammount;}
+
+	//Getter for max Shield
+	FORCEINLINE float GetMaxShield() const { return MaxShield; }
+
+	//Getter for current Shield
+	FORCEINLINE float GetCurrentShield() const { return CurrentShield; }
 
 	UFUNCTION(BlueprintCallable, Category = "Health")
 	void SetCurrentHealth(float healthValue);

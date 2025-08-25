@@ -55,6 +55,7 @@ public:
 	void AddMatchResultWidget(ETeam VictoriusTeam);
 
 	void SetHudHealth(float CurrentHealth, float MaxHealth);
+	void SetHudShield(float CurrentShield, float MaxShield);
 	void SetHUDScore(float Score);
 	void SetHUDDefeats(int32 Defeats);
 	void SetHUDWeaponAmmo(int32 Ammo);
@@ -94,10 +95,17 @@ private:
 	bool InitializeCharacterOverlay = false;
 
 	float HUDHealth;
+	bool bInitializedHealth = false;
 	float HUDMaxHealth;
+	float HUDShield;
+	bool bInitializedShield = false;
+	float HUDMaxShield;
 	float HUDScore;
+	bool bInitializedScore = false;
 	int32 HUDDefeats;
+	bool bInitializedDefeats = false;
 	int32 HUDGrenades;
+	bool bInitializedGrenades = false;
 	
 
 	

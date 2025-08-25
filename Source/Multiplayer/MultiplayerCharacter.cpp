@@ -210,9 +210,26 @@ void AMultiplayerCharacter::GrenadeButtonPressed()
 void AMultiplayerCharacter::ReceiveDamage(AActor* DamagedActor, float Damage, const UDamageType* DamageType, class AController* InstigatorController, class AActor* DamageCauser)
 {
 	if (bElimmed) return;
-	CurrentHealth = FMath::Clamp(CurrentHealth - Damage, 0.0f, MaxHealth);
+	float DamageToHealth = Damage;
+	if (CurrentShield > 0.f)
+	{
+		if (CurrentShield >= Damage)
+		{
+			CurrentShield = FMath::Clamp(CurrentShield - Damage, 0.f, MaxShield);
+			DamageToHealth = 0.f;
+		}
+		else
+		{
+			CurrentShield = 0.f;
+			DamageToHealth  = FMath::Clamp(DamageToHealth - CurrentShield, 0.f, Damage);
+		}
+	}
+	
+	CurrentHealth = FMath::Clamp(CurrentHealth - DamageToHealth, 0.0f, MaxHealth);
+	
 	PlayHitReactMontage();
 	UpdateHUDHealth();
+	UpdateHUDShield();
 
 	if (CurrentHealth <= 0)
 	{
@@ -232,6 +249,15 @@ void AMultiplayerCharacter::UpdateHUDHealth()
 	if (MultiplayerPlayerController)
 	{
 		MultiplayerPlayerController->SetHudHealth(CurrentHealth, MaxHealth);
+	}
+}
+
+void AMultiplayerCharacter::UpdateHUDShield()
+{
+	MultiplayerPlayerController = MultiplayerPlayerController == nullptr ? Cast<AMultiplayerPlayerController>(Controller) : MultiplayerPlayerController;
+	if (MultiplayerPlayerController)
+	{
+		MultiplayerPlayerController->SetHudShield(CurrentShield, MaxShield);
 	}
 }
 
@@ -371,6 +397,16 @@ void AMultiplayerCharacter::OnRep_CurrentHealth(float LastHealth)
 		PlayHitReactMontage();
 	}
 }
+
+void AMultiplayerCharacter::OnRep_CurrentShield(float LastShield)
+{
+	UpdateHUDShield();
+	if (CurrentHealth < LastShield)
+	{
+		PlayHitReactMontage();
+	}
+}
+
 void AMultiplayerCharacter::OnRep_PlayerTeam()
 {
 	if (CurrentTeam == ETeam::ET_RedTeam && Red)
@@ -390,11 +426,13 @@ void AMultiplayerCharacter::GetLifetimeReplicatedProps(TArray<FLifetimeProperty>
 
 
 	DOREPLIFETIME(AMultiplayerCharacter, CurrentHealth); 	//Replicate Current Health
+	DOREPLIFETIME(AMultiplayerCharacter, CurrentShield); 	//Replicate Current Shield
 	DOREPLIFETIME(AMultiplayerCharacter, CurrentTeam);	    //Replicate Current Team//Replicate boolean Death for ABP
 	DOREPLIFETIME(AMultiplayerCharacter, CurrentState);
 	DOREPLIFETIME(AMultiplayerCharacter, WeaponData);
 	DOREPLIFETIME(AMultiplayerCharacter, bDisableGameplay);
 	DOREPLIFETIME_CONDITION(AMultiplayerCharacter, OverlappingWeapon, COND_OwnerOnly);
+	//AGn
 }
 
 void AMultiplayerCharacter::OnRep_CurrentWeapon()

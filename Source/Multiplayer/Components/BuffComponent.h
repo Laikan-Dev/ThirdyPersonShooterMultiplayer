@@ -16,6 +16,7 @@ public:
 	UBuffComponent();
 	friend class AMultiplayerCharacter;
 	void Heal(float HealAmmount, float HealingTime);
+	void ReplenishShield(float ShieldAmount, float ShielReplenishTime);
 	void BuffSpeed(float BuffBaseSpeed, float BuffCrouchSpeed, float BuffTime);
 	void BuffJump(float BuffJumpVelocity, float BuffTime);
 	void SetInitialSpeeds(float BaseSpeed, float ChrouchSpeed);
@@ -25,7 +26,8 @@ public:
 protected:
 	// Called when the game starts
 	virtual void BeginPlay() override;
-	void HealRampUp(float DelatTime);
+	void HealRampUp(float DeataTime);
+	void ShieldRampUp(float DeltaTime);
 	
 private:
 	UPROPERTY()
@@ -34,6 +36,10 @@ private:
 	bool bIsHealing = false;
 	float HealingRate = 0;
 	float AmountToHeal = 0.f;
+
+	bool bIsReplenishingShield = false;
+	float ReplenishingShieldRate = 0;
+	float AmountToReplenishShield = 0.f;
 
 	//Speed
 	FTimerHandle SpeedBuffTimer;

@@ -19,6 +19,10 @@ public:
 	UPROPERTY(meta = (BindWidget))
 	class UTextBlock* HPText;
 	UPROPERTY(meta = (BindWidget))
+	UProgressBar* ShieldBar;
+	UPROPERTY(meta = (BindWidget))
+	UTextBlock* ShieldText;
+	UPROPERTY(meta = (BindWidget))
 	UTextBlock* ScoreAmount;
 	UPROPERTY(meta = (BindWidget))
 	UTextBlock* DefeatsAmount;
