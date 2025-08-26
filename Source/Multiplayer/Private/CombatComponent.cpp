@@ -66,8 +66,6 @@ void UCombatComponent::BeginPlay()
 			InitializeCarriedAmmo();
 		}
 	}
-	// ...
-	
 }
 
 void UCombatComponent::SetAiming(bool bIsAiming)

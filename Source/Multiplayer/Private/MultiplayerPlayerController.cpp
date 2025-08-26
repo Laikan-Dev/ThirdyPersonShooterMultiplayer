@@ -159,7 +159,7 @@ void AMultiplayerPlayerController::SetHudHealth(float CurrentHealth, float MaxHe
 
 void AMultiplayerPlayerController::SetHudShield(float CurrentShield, float MaxShield)
 {
-	MultiplayerHUD = MultiplayerHUD ==nullptr ? Cast<AMultiplayerHud>(GetHUD()) : MultiplayerHUD;
+	MultiplayerHUD = MultiplayerHUD == nullptr ? Cast<AMultiplayerHud>(GetHUD()) : MultiplayerHUD;
 	bool bHUDValid = MultiplayerHUD && MultiplayerHUD->CharacterOverlay && MultiplayerHUD->CharacterOverlay->ShieldBar && MultiplayerHUD->CharacterOverlay->ShieldText;
 	if (bHUDValid)
 	{
