@@ -61,7 +61,11 @@ void ABaseWeapon::OnRep_Owner()
 	}
 	else
 	{
-		SetHUDAmmo();
+		OwnerCharacter = OwnerCharacter == nullptr ? Cast<AMultiplayerCharacter>(Owner) : OwnerCharacter;
+		if (OwnerCharacter && OwnerCharacter->GetEquippedWeapon() && OwnerCharacter->GetEquippedWeapon() == this)
+		{
+			SetHUDAmmo();
+		}
 	}
 }
 
@@ -128,8 +132,6 @@ void ABaseWeapon::OnRep_WeaponState()
 				SkeletalMesh->SetEnableGravity(true);
 				SkeletalMesh->SetCollisionResponseToAllChannels(ECollisionResponse::ECR_Ignore);
 			}
-			EnableCustomDepth(false);
-			
 	}
 		break;
 	case EWeaponState::EWS_Dropped:
@@ -204,7 +206,6 @@ void ABaseWeapon::SetWeaponState(EWeaponState State)
 				SkeletalMesh->SetEnableGravity(true);
 				SkeletalMesh->SetCollisionResponseToAllChannels(ECollisionResponse::ECR_Ignore);
 			}
-			EnableCustomDepth(false);
 	}
 	break;
 	case EWeaponState::EWS_Dropped:

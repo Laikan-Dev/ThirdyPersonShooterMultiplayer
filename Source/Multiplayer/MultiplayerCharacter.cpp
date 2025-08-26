@@ -1207,15 +1207,7 @@ void AMultiplayerCharacter::EquipItem()
 	if(bDisableGameplay) return;
 	if (CombatSystem)
 	{
-		if (HasAuthority())
-		{
-			CombatSystem->EquipWeapon(OverlappingWeapon);
-		}
-		else
-		{
-			ServerEquipItem();
-		}
-		
+		ServerEquipItem();	
 	}
 }
 void AMultiplayerCharacter::ServerEquipItem_Implementation()

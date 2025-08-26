@@ -10,6 +10,8 @@
 #include "CombatComponent.generated.h"
 
 
+class ABaseWeapon;
+
 UCLASS( ClassGroup=(Custom), meta=(BlueprintSpawnableComponent) )
 class MULTIPLAYER_API UCombatComponent : public UActorComponent
 {
@@ -23,7 +25,7 @@ public:
 	void GetLifetimeReplicatedProps(TArray<FLifetimeProperty>& OutLifetimeProps) const override;
 	void DropEquippedWeapon();
 	void UpdateCarriedAmmo();
-	void PlayEquipWeaponSound();
+	void PlayEquipWeaponSound(ABaseWeapon* WeaponToEquip);
 	void ReloadEmptyWeapon();
 	friend class AMultiplayerCharacter;
 
@@ -66,6 +68,14 @@ protected:
 	void Server_SetAiming(bool bIsAiming);
 	UFUNCTION()
 	void OnRep_EquippedWeapon();
+
+	UFUNCTION()
+	void OnRep_SecondaryWeapon();
+
+	void EquipPrimaryWeapon(ABaseWeapon* WeaponToEquip);
+	void EquipSecondaryWeapon(ABaseWeapon* WeaponToEquip);
+	void AttachActorToBackpack(AActor* ActorToAttach);
+
 	UFUNCTION(Server, Reliable)
 	void ServerReload();
 
@@ -133,6 +143,10 @@ private:
 	FHUDPackage HUDPackage;
 	UPROPERTY(ReplicatedUsing = OnRep_EquippedWeapon)
 	ABaseWeapon* EquippedWeapon;
+
+	UPROPERTY(ReplicatedUsing = OnRep_SecondaryWeapon)
+	ABaseWeapon* SecondaryWeapon;
+	
 	UPROPERTY(Replicated)
 	bool bAiming;
 	UPROPERTY(EditDefaultsOnly)
