@@ -30,6 +30,7 @@ public:
 	friend class AMultiplayerCharacter;
 
 	void EquipWeapon(class ABaseWeapon* WeaponToEquip);
+	void SwapWeapons();
 	void Reload();
 	UFUNCTION(BlueprintCallable, Category = "Combat")
 	void FinishReload();
@@ -186,6 +187,7 @@ private:
 	void InterpFOV(float DeltaTime);
 public:	
 	FORCEINLINE int32 GetGrenades() const { return Grenades; }
+	bool ShouldSwapWeapons();
 
 		
 };

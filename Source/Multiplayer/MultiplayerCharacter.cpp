@@ -207,6 +207,42 @@ void AMultiplayerCharacter::GrenadeButtonPressed()
 	}
 }
 
+void AMultiplayerCharacter::DropOrDestroyWeapon(ABaseWeapon* Weapon)
+{
+	if (Weapon == nullptr) return;
+	if (Weapon->bDestroyWeapon)
+	{
+		Weapon->Destroy();
+	}
+	else
+	{
+		Weapon->Dropped();
+	}
+	if (CombatSystem->EquippedWeapon->bDestroyWeapon)
+	{
+		CombatSystem->EquippedWeapon->Destroy();
+	}
+	else
+	{
+		CombatSystem->EquippedWeapon->Dropped();
+	}
+}
+
+void AMultiplayerCharacter::DropOrDestroyWeapons()
+{
+	if (CombatSystem)
+	{
+		if (CombatSystem->EquippedWeapon)
+		{
+			DropOrDestroyWeapon(CombatSystem->EquippedWeapon);
+		}
+		if (CombatSystem->SecondaryWeapon)
+		{
+			DropOrDestroyWeapon(CombatSystem->SecondaryWeapon);
+		}
+	}
+}
+
 void AMultiplayerCharacter::ReceiveDamage(AActor* DamagedActor, float Damage, const UDamageType* DamageType, class AController* InstigatorController, class AActor* DamageCauser)
 {
 	if (bElimmed) return;
@@ -731,17 +767,7 @@ void AMultiplayerCharacter::OnRep_ReplicatedMovement()
 
 void AMultiplayerCharacter::Elim()
 {
-	if (CombatSystem && CombatSystem->EquippedWeapon)
-	{
-		if (CombatSystem->EquippedWeapon->bDestroyWeapon)
-		{
-			CombatSystem->EquippedWeapon->Destroy();
-		}
-		else
-		{
-			CombatSystem->EquippedWeapon->Dropped();
-		}
-	}
+	DropOrDestroyWeapons();
 	MulticastElim();
 	GetWorldTimerManager().SetTimer(ElimTimer, this, &AMultiplayerCharacter::ElimTimerFinished, ElimDelay);
 }
@@ -1214,7 +1240,14 @@ void AMultiplayerCharacter::ServerEquipItem_Implementation()
 {
 	if (CombatSystem)
 	{
-		CombatSystem->EquipWeapon(OverlappingWeapon);
+		if (OverlappingWeapon)
+		{
+			CombatSystem->EquipWeapon(OverlappingWeapon);
+		}
+		else if (CombatSystem->ShouldSwapWeapons())
+		{
+			CombatSystem->SwapWeapons();
+		}
 	}
 }
 

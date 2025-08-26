@@ -140,6 +140,10 @@ protected:
 	//Grenade
 	void GrenadeButtonPressed();
 
+	void DropOrDestroyWeapon(ABaseWeapon* Weapon);
+
+	void DropOrDestroyWeapons();
+
 	//Damage
 	UFUNCTION()
 	void ReceiveDamage(AActor* DamagedActor, float Damage, const UDamageType* DamageType, class AController* InstigatedController, class AActor* DamageCauser);

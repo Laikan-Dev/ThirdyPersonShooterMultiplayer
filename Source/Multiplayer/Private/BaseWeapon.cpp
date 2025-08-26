@@ -114,43 +114,6 @@ void ABaseWeapon::SpendRound()
 	SetHUDAmmo();
 }
 
-void ABaseWeapon::OnRep_WeaponState()
-{
-	switch (WeaponState)
-	{
-	case EWeaponState::EWS_Initial:
-		break;
-	case EWeaponState::EWS_Equipped:
-	{
-		ShowPickupWidget(false);
-			SkeletalMesh->SetSimulatePhysics(false);
-			SkeletalMesh->SetEnableGravity(false);
-			SkeletalMesh->SetCollisionEnabled(ECollisionEnabled::NoCollision);
-			if (WeaponType == EWeaponType::EWT_SubmachinGun)
-			{
-				SkeletalMesh->SetCollisionEnabled(ECollisionEnabled::Type::QueryAndPhysics);
-				SkeletalMesh->SetEnableGravity(true);
-				SkeletalMesh->SetCollisionResponseToAllChannels(ECollisionResponse::ECR_Ignore);
-			}
-	}
-		break;
-	case EWeaponState::EWS_Dropped:
-		SkeletalMesh->SetSimulatePhysics(true);
-		SkeletalMesh->SetEnableGravity(true);
-		SkeletalMesh->SetCollisionEnabled(ECollisionEnabled::QueryAndPhysics);
-		SkeletalMesh->SetCollisionResponseToAllChannels(ECollisionResponse::ECR_Block);
-		SkeletalMesh->SetCollisionResponseToChannel(ECollisionChannel::ECC_Camera, ECollisionResponse::ECR_Ignore);
-		SkeletalMesh->SetCustomDepthStencilValue(CUSTOM_DEPTH_BLUE);
-		SkeletalMesh->MarkRenderStateDirty();
-		EnableCustomDepth(true);
-		break;
-	case EWeaponState::EWS_MAX:
-		break;
-	default:
-		break;
-	}
-}
-
 // Called when the game starts or when spawned
 void ABaseWeapon::BeginPlay()
 {
@@ -186,49 +149,92 @@ void ABaseWeapon::PickUp_Implementation(AMultiplayerCharacter* Player)
 	
 }
 
-void ABaseWeapon::SetWeaponState(EWeaponState State)
+void ABaseWeapon::OnRep_WeaponState()
 {
-	WeaponState = State;
+	OnWeaponStateSet();
+}
+
+void ABaseWeapon::OnWeaponStateSet()
+{
 	switch (WeaponState)
 	{
 	case EWeaponState::EWS_Initial:
 		break;
 	case EWeaponState::EWS_Equipped:
-	{
-		ShowPickupWidget(false);
-		SphereComponent->SetCollisionEnabled(ECollisionEnabled::NoCollision);
-			SkeletalMesh->SetSimulatePhysics(false);
-			SkeletalMesh->SetEnableGravity(false);
-			SkeletalMesh->SetCollisionEnabled(ECollisionEnabled::NoCollision);
-			if (WeaponType == EWeaponType::EWT_SubmachinGun)
-			{
-				SkeletalMesh->SetCollisionEnabled(ECollisionEnabled::Type::QueryAndPhysics);
-				SkeletalMesh->SetEnableGravity(true);
-				SkeletalMesh->SetCollisionResponseToAllChannels(ECollisionResponse::ECR_Ignore);
-			}
-	}
-	break;
+		OnEquipped();
+		break;
+	case EWeaponState::EWS_EquippedSecondary:
+		OnEquippedSecondary();
+		break;
 	case EWeaponState::EWS_Dropped:
-		if (HasAuthority())
-		{
-			SphereComponent->SetCollisionEnabled(ECollisionEnabled::QueryOnly);
-		}
-		SkeletalMesh->SetSimulatePhysics(true);
-		SkeletalMesh->SetEnableGravity(true);
-		SkeletalMesh->SetCollisionEnabled(ECollisionEnabled::QueryAndPhysics);
-		SkeletalMesh->SetCollisionResponseToAllChannels(ECollisionResponse::ECR_Block);
-		SkeletalMesh->SetCollisionResponseToChannel(ECollisionChannel::ECC_Pawn, ECollisionResponse::ECR_Ignore);
-		SkeletalMesh->SetCollisionResponseToChannel(ECollisionChannel::ECC_Camera, ECollisionResponse::ECR_Ignore);
-		SkeletalMesh->SetCustomDepthStencilValue(CUSTOM_DEPTH_PURPLE);
-		SkeletalMesh->MarkRenderStateDirty();
-		EnableCustomDepth(true);
-
+		OnDropped();
 		break;
 	case EWeaponState::EWS_MAX:
 		break;
 	default:
 		break;
 	}
+}
+
+void ABaseWeapon::OnEquipped()
+{
+	ShowPickupWidget(false);
+	SphereComponent->SetCollisionEnabled(ECollisionEnabled::NoCollision);
+	SkeletalMesh->SetSimulatePhysics(false);
+	SkeletalMesh->SetEnableGravity(false);
+	SkeletalMesh->SetCollisionEnabled(ECollisionEnabled::NoCollision);
+	if (WeaponType == EWeaponType::EWT_SubmachinGun)
+	{
+		SkeletalMesh->SetCollisionEnabled(ECollisionEnabled::Type::QueryAndPhysics);
+		SkeletalMesh->SetEnableGravity(true);
+		SkeletalMesh->SetCollisionResponseToAllChannels(ECollisionResponse::ECR_Ignore);
+	}
+	EnableCustomDepth(false);
+}
+
+void ABaseWeapon::OnEquippedSecondary()
+{
+	ShowPickupWidget(false);
+	SphereComponent->SetCollisionEnabled(ECollisionEnabled::NoCollision);
+	SkeletalMesh->SetSimulatePhysics(false);
+	SkeletalMesh->SetEnableGravity(false);
+	SkeletalMesh->SetCollisionEnabled(ECollisionEnabled::NoCollision);
+	if (WeaponType == EWeaponType::EWT_SubmachinGun)
+	{
+		SkeletalMesh->SetCollisionEnabled(ECollisionEnabled::Type::QueryAndPhysics);
+		SkeletalMesh->SetEnableGravity(true);
+		SkeletalMesh->SetCollisionResponseToAllChannels(ECollisionResponse::ECR_Ignore);
+	}
+	EnableCustomDepth(true);
+	if (SkeletalMesh)
+	{
+		GetWeaponMesh()->SetCustomDepthStencilValue(CUSTOM_DEPTH_TAN);
+		GetWeaponMesh()->MarkRenderStateDirty();
+	}
+}
+
+void ABaseWeapon::OnDropped()
+{
+	if (HasAuthority())
+	{
+		SphereComponent->SetCollisionEnabled(ECollisionEnabled::QueryOnly);
+	}
+	SkeletalMesh->SetSimulatePhysics(true);
+	SkeletalMesh->SetEnableGravity(true);
+	SkeletalMesh->SetCollisionEnabled(ECollisionEnabled::QueryAndPhysics);
+	SkeletalMesh->SetCollisionResponseToAllChannels(ECollisionResponse::ECR_Block);
+	SkeletalMesh->SetCollisionResponseToChannel(ECollisionChannel::ECC_Pawn, ECollisionResponse::ECR_Ignore);
+	SkeletalMesh->SetCollisionResponseToChannel(ECollisionChannel::ECC_Camera, ECollisionResponse::ECR_Ignore);
+	SkeletalMesh->SetCustomDepthStencilValue(CUSTOM_DEPTH_PURPLE);
+	SkeletalMesh->MarkRenderStateDirty();
+	EnableCustomDepth(true);
+
+}
+
+void ABaseWeapon::SetWeaponState(EWeaponState State)
+{
+	WeaponState = State;
+	OnWeaponStateSet();
 }
 
 bool ABaseWeapon::IsEmpty()
