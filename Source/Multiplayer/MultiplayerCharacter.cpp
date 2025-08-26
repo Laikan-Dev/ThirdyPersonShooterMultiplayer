@@ -261,11 +261,23 @@ void AMultiplayerCharacter::UpdateHUDShield()
 	}
 }
 
+void AMultiplayerCharacter::UpdateHUDAmmo()
+{
+	MultiplayerPlayerController = MultiplayerPlayerController == nullptr ? Cast<AMultiplayerPlayerController>(Controller) : MultiplayerPlayerController;
+	if (MultiplayerPlayerController && CombatSystem && CombatSystem->EquippedWeapon)
+	{
+		MultiplayerPlayerController->SetHUDCarriedAmmo(CombatSystem->CarriedAmmo);
+		MultiplayerPlayerController->SetHUDWeaponAmmo(CombatSystem->EquippedWeapon->GetAmmo());
+	}
+}
+
 void AMultiplayerCharacter::BeginPlay()
 {
 	// Call the base class  
 	Super::BeginPlay();
-
+	SpawnDefaultWeapon();
+	UpdateHUDAmmo();
+	
 	UpdateHUDHealth();
 	UpdateHUDShield();
 	if (HasAuthority())
@@ -388,6 +400,21 @@ void AMultiplayerCharacter::OnRep_OverlappingWeapon(ABaseWeapon* LastWeapon)
 bool AMultiplayerCharacter::IWeaponEquipped()
 {
 	return (CombatSystem && CombatSystem->EquippedWeapon);
+}
+
+void AMultiplayerCharacter::SpawnDefaultWeapon()
+{
+	AAsTheCaosRemainsGameMode* ChaosRemGameMode = Cast<AAsTheCaosRemainsGameMode>(UGameplayStatics::GetGameMode(this));
+	UWorld* World = GetWorld();
+	if (ChaosRemGameMode && World && !bElimmed && DefaultWeaponClass)
+	{
+		ABaseWeapon* StartingWeapon = World->SpawnActor<ABaseWeapon>(DefaultWeaponClass);
+		StartingWeapon->bDestroyWeapon = true;
+		if (CombatSystem)
+		{
+			CombatSystem->EquipWeapon(StartingWeapon);
+		}
+	}
 }
 
 void AMultiplayerCharacter::OnRep_CurrentHealth(float LastHealth)
@@ -706,7 +733,14 @@ void AMultiplayerCharacter::Elim()
 {
 	if (CombatSystem && CombatSystem->EquippedWeapon)
 	{
-		CombatSystem->EquippedWeapon->Dropped();
+		if (CombatSystem->EquippedWeapon->bDestroyWeapon)
+		{
+			CombatSystem->EquippedWeapon->Destroy();
+		}
+		else
+		{
+			CombatSystem->EquippedWeapon->Dropped();
+		}
 	}
 	MulticastElim();
 	GetWorldTimerManager().SetTimer(ElimTimer, this, &AMultiplayerCharacter::ElimTimerFinished, ElimDelay);

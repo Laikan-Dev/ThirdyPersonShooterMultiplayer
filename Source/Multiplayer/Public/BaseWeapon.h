@@ -85,6 +85,8 @@ public:
 	void SetHUDAmmo();
 
 	void EnableCustomDepth(bool bEnable);
+
+	bool bDestroyWeapon = false;
 	
 
 	UPROPERTY(VisibleAnywhere, Category = "Weapon Properties")

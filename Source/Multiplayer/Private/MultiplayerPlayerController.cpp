@@ -41,6 +41,8 @@ void AMultiplayerPlayerController::PollInit()
 				if (bInitializedShield) SetHudShield(HUDShield, HUDMaxShield);
 				if (bInitializedScore) SetHUDScore(HUDScore);
 				if (bInitializedDefeats )SetHUDDefeats(HUDDefeats);
+				if (bInitializedWeaponAmmo) SetHUDWeaponAmmo(HUDWeaponAmmo);
+				if (bInitializedCarriedAmmo) SetHUDCarriedAmmo(HUDCarriedAmmo);
 				AMultiplayerCharacter* CharacterRef = Cast<AMultiplayerCharacter>(GetPawn());
 				if (CharacterRef && CharacterRef->GetCombatSystem())
 				{
@@ -213,6 +215,11 @@ void AMultiplayerPlayerController::SetHUDWeaponAmmo(int32 Ammo)
 		FString AmmoText = FString::Printf(TEXT("%d"), Ammo);
 		MultiplayerHUD->CharacterOverlay->WeaponAmmoAmount->SetText(FText::FromString(AmmoText));
 	}
+	else
+	{
+		bInitializedWeaponAmmo = true;
+		HUDWeaponAmmo = Ammo;
+	}
 }
 
 void AMultiplayerPlayerController::SetHUDCarriedAmmo(int32 Ammo)
@@ -223,6 +230,11 @@ void AMultiplayerPlayerController::SetHUDCarriedAmmo(int32 Ammo)
 	{
 		FString AmmoText = FString::Printf(TEXT("%d"), Ammo);
 		MultiplayerHUD->CharacterOverlay->CarriedAmmoAmount->SetText(FText::FromString(AmmoText));
+	}
+	else
+	{
+		bInitializedCarriedAmmo = true;
+		HUDCarriedAmmo = Ammo;
 	}
 }
 

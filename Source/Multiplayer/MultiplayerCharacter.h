@@ -115,6 +115,7 @@ public:
 	void MulticastElim();
 	void UpdateHUDHealth();
 	void UpdateHUDShield();
+	void UpdateHUDAmmo();
 
 	UPROPERTY(Replicated)
 	bool bDisableGameplay = false;
@@ -162,6 +163,8 @@ protected:
 
 	//Poll for ani relevant class spawning
 	void PollInit();
+
+	
 	//Select Team
 	UFUNCTION(BlueprintCallable)
 	void ChoseRed();
@@ -276,6 +279,8 @@ public:
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, ReplicatedUsing = OnRep_CurrentWeapon)
 	class UWeaponsDataAsset* WeaponData;
 
+	void SpawnDefaultWeapon();
+
 protected:
 //ReplicatedProperties
 	//Health
@@ -318,6 +323,10 @@ protected:
 	//Grenade
 	UPROPERTY(VisibleAnywhere)
 	UStaticMeshComponent* AttachedGrenade;
+
+	//DefaultWeapon
+	UPROPERTY(EditAnywhere)
+	TSubclassOf<ABaseWeapon> DefaultWeaponClass;
 	
 	// Material instance set on blueprints, used with the dynamic material instance
 	UPROPERTY(EditAnywhere)
