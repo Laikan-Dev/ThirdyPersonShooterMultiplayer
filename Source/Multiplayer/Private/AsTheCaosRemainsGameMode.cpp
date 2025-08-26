@@ -87,7 +87,7 @@ void AAsTheCaosRemainsGameMode::PlayerEliminated(class AMultiplayerCharacter* El
 	}
 	if (ElimmedCharacter)
 	{
-		ElimmedCharacter->Elim();
+		ElimmedCharacter->Elim(false);
 	}
 }
 
@@ -104,5 +104,20 @@ void AAsTheCaosRemainsGameMode::RequestRespawn(class ACharacter* ElimmedCharacte
 		UGameplayStatics::GetAllActorsOfClass(this, APlayerStart::StaticClass(), PlayerStarts);
 		int32 Selection = FMath::RandRange(0, PlayerStarts.Num() - 1);
 		RestartPlayerAtPlayerStart(ElimmedController, PlayerStarts[Selection]);
+	}
+}
+
+void AAsTheCaosRemainsGameMode::PlayerLeftGame(AChaosRemPlayerState* PlayerLeaving)
+{
+	if (PlayerLeaving == nullptr) return;
+	AChaosRemGameState* ChaosRemGameState = GetGameState<AChaosRemGameState>();
+	if (ChaosRemGameState && ChaosRemGameState->TopScoringPlayers.Contains(PlayerLeaving))
+	{
+		ChaosRemGameState->TopScoringPlayers.Remove(PlayerLeaving);
+	}
+	AMultiplayerCharacter* CharacterLeaving = Cast<AMultiplayerCharacter>(PlayerLeaving->GetPawn());
+	if (CharacterLeaving)
+	{
+		CharacterLeaving->Elim(true);
 	}
 }

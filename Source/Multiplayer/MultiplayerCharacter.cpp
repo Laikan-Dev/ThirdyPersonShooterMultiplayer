@@ -765,15 +765,15 @@ void AMultiplayerCharacter::OnRep_ReplicatedMovement()
 	TimeSinceLastMovementReplication = 0.f;
 }
 
-void AMultiplayerCharacter::Elim()
+void AMultiplayerCharacter::Elim(bool bPlayerLeftGame)
 {
 	DropOrDestroyWeapons();
-	MulticastElim();
-	GetWorldTimerManager().SetTimer(ElimTimer, this, &AMultiplayerCharacter::ElimTimerFinished, ElimDelay);
+	MulticastElim(bPlayerLeftGame);
 }
 
-void AMultiplayerCharacter::MulticastElim_Implementation()
+void AMultiplayerCharacter::MulticastElim_Implementation(bool bPlayerLeftGame)
 {
+	bLeftGame = bPlayerLeftGame;
 	if (MultiplayerPlayerController)
 	{
 		MultiplayerPlayerController->SetHUDWeaponAmmo(0);
@@ -809,11 +809,12 @@ void AMultiplayerCharacter::MulticastElim_Implementation()
 	GetCapsuleComponent()->SetCollisionEnabled(ECollisionEnabled::NoCollision);
 	GetMesh()->SetCollisionEnabled(ECollisionEnabled::NoCollision);
 
-	bool bHideSniperScope = IsLocallyControlled() && CombatSystem && CombatSystem->EquippedWeapon && CombatSystem->EquippedWeapon->GetWeaponType() == EWeaponType::EWT_AssaultRifle;
+	bool bHideSniperScope = IsLocallyControlled() && CombatSystem && CombatSystem->EquippedWeapon && CombatSystem->EquippedWeapon->GetWeaponType() == EWeaponType::EWT_SniperRifle;
 	if (bHideSniperScope)
 	{
 		ShowSniperScopeWidget(false);
 	}
+	GetWorldTimerManager().SetTimer(ElimTimer, this, &AMultiplayerCharacter::ElimTimerFinished, ElimDelay);
 }
 
 void AMultiplayerCharacter::Move(const FInputActionValue& Value)
@@ -926,9 +927,23 @@ void AMultiplayerCharacter::ServerSetRuning_Implementation(bool bIsRunning)
 void AMultiplayerCharacter::ElimTimerFinished()
 {
 	AAsTheCaosRemainsGameMode* GameMode = GetWorld()->GetAuthGameMode<AAsTheCaosRemainsGameMode>();
-	if (GameMode)
+	if (GameMode && !bLeftGame)
 	{
 		GameMode->RequestRespawn(this, Controller);
+	}
+	if (bLeftGame && IsLocallyControlled())
+	{
+		OnLeftGame.Broadcast();
+	}
+}
+
+void AMultiplayerCharacter::ServerLeaveGame_Implementation()
+{
+	AAsTheCaosRemainsGameMode* GameMode = GetWorld()->GetAuthGameMode<AAsTheCaosRemainsGameMode>();
+	PossessedPlayerState = PossessedPlayerState == nullptr ?  GetPlayerState<AChaosRemPlayerState>() : PossessedPlayerState;
+	if (GameMode && PossessedPlayerState)
+	{
+		GameMode->PlayerLeftGame(PossessedPlayerState);
 	}
 }
 

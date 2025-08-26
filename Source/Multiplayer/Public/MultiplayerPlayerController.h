@@ -18,6 +18,7 @@ protected:
 	virtual void BeginPlay();
 	virtual void OnPossess(APawn *inPawn) override;
 	virtual void Tick(float DeltaTime) override;
+	virtual void SetupInputComponent() override;
 	void SetHUDTime();
 	UFUNCTION(Server, Reliable)
 	void ServerRequestServerTime(float TimeOfClientRequest);
@@ -65,6 +66,7 @@ public:
 	void OnMatchStateSet(FName State);
 	void SetHUDAnnouncementCountdown(float CountdownTime);
 	void HandleCooldown();
+	void ShowReturnToMainMenu();
 	
 	virtual void GetLifetimeReplicatedProps(TArray<class FLifetimeProperty>& OutLifetimeProps) const override;
 
@@ -77,6 +79,14 @@ private:
 
 	UPROPERTY()
 	class AAsTheCaosRemainsGameMode* GameMode;
+
+	UPROPERTY(EditAnywhere, Category = "HUD")
+	TSubclassOf<class UUserWidget> ReturnToMainMenuWidget;
+
+	UPROPERTY()
+	class UReturnToMainMenu* ReturnToMainMenu;
+
+	bool bReturnToMainMenuOpen = false;
 
 	float LevelStartingTime = 0.f;
 	float MatchTime = 0.f;

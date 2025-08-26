@@ -37,6 +37,8 @@ enum class ECharMovDirection : uint8
 
 DECLARE_LOG_CATEGORY_EXTERN(LogTemplateCharacter, Log, All);
 
+DECLARE_DYNAMIC_MULTICAST_DELEGATE(FOnLeftGame);
+
 UCLASS(config=Game)
 class AMultiplayerCharacter : public ACharacter, public IInteractWithCrosshairs
 {
@@ -110,9 +112,9 @@ public:
 	void PlayThrowGrenadeMontage();
 	virtual void OnRep_ReplicatedMovement() override;
 
-	void Elim();
+	void Elim(bool PlayerLeftGame);
 	UFUNCTION(NetMulticast, Reliable)
-	void MulticastElim();
+	void MulticastElim(bool PlayerLeftGame);
 	void UpdateHUDHealth();
 	void UpdateHUDShield();
 	void UpdateHUDAmmo();
@@ -284,6 +286,13 @@ public:
 	class UWeaponsDataAsset* WeaponData;
 
 	void SpawnDefaultWeapon();
+	UFUNCTION(Server, Reliable)
+	void ServerLeaveGame();
+	FOnLeftGame	OnLeftGame;
+
+	UPROPERTY()
+	class AChaosRemPlayerState* PossessedPlayerState;
+
 
 protected:
 //ReplicatedProperties
@@ -310,6 +319,8 @@ protected:
 	UPROPERTY(EditDefaultsOnly)
 	float ElimDelay = 3.f;
 
+	bool bLeftGame = false;
+	
 	//DissolveEffect
 	UPROPERTY(VisibleAnywhere)
 	UTimelineComponent* DissolveTimeline;
@@ -321,8 +332,7 @@ protected:
 	UMaterialInstanceDynamic* DynamicDissolveMaterialInstance1;
 	UPROPERTY(VisibleAnywhere)
 	UMaterialInstanceDynamic* DynamicDissolveMaterialInstance2;
-	UPROPERTY()
-	class AChaosRemPlayerState* PossessedPlayerState;
+	
 
 	//Grenade
 	UPROPERTY(VisibleAnywhere)
@@ -501,6 +511,7 @@ public:
 	FORCEINLINE UStaticMeshComponent* GetAttachedGrenade() const { return AttachedGrenade; }
 	FORCEINLINE UAnimMontage* GetReloadMontage() const { return ReloadMontage; }
 	FORCEINLINE UBuffComponent* GetBuffComponent() const { return BuffComponent; }
+	FORCEINLINE UInputMappingContext* GetMappingContext() const { return DefaultMappingContext; }
 };
 
 

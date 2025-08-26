@@ -16,7 +16,9 @@
 #include "Net/UnrealNetwork.h"
 #include "AsTheCaosRemainsGameMode.h"
 #include "CombatComponent.h"
+#include "EnhancedInputSubsystems.h"
 #include "Multiplayer/GameHead/ChaosRemGameState.h"
+#include "Multiplayer/HUD/ReturnToMainMenu.h"
 
 void AMultiplayerPlayerController::CheckTimeSync(float DeltaTime)
 {
@@ -358,6 +360,27 @@ void AMultiplayerPlayerController::HandleCooldown()
 	}
 }
 
+void AMultiplayerPlayerController::ShowReturnToMainMenu()
+{
+	if (ReturnToMainMenuWidget == nullptr) return;
+	if (ReturnToMainMenu == nullptr)
+	{
+		ReturnToMainMenu = CreateWidget<UReturnToMainMenu>(this, ReturnToMainMenuWidget);
+	}
+	if (ReturnToMainMenu)
+	{
+		bReturnToMainMenuOpen = !bReturnToMainMenuOpen;
+		if (bReturnToMainMenuOpen)
+		{
+			ReturnToMainMenu->MenuSetup();
+		}
+		else
+		{
+			ReturnToMainMenu->MenuTearDown();
+		}
+	}
+}
+
 void AMultiplayerPlayerController::GetLifetimeReplicatedProps(TArray<class FLifetimeProperty>& OutLifetimeProps) const
 {
 	Super::GetLifetimeReplicatedProps(OutLifetimeProps);
@@ -430,6 +453,14 @@ void AMultiplayerPlayerController::Tick(float DeltaTime)
 	SetHUDTime();
 	CheckTimeSync(DeltaTime);
 	PollInit();
+}
+
+void AMultiplayerPlayerController::SetupInputComponent()
+{
+	Super::SetupInputComponent();
+	if (InputComponent == nullptr) return;
+	InputComponent->BindAction("Quit", IE_Pressed, this, &AMultiplayerPlayerController::ShowReturnToMainMenu);
+	
 }
 
 void AMultiplayerPlayerController::SetHUDTime()
