@@ -78,8 +78,32 @@ void AAsTheCaosRemainsGameMode::PlayerEliminated(class AMultiplayerCharacter* El
 	AChaosRemGameState* ChaosRemGameState = GetGameState<AChaosRemGameState>();
 	if (AttackerPlayerState && AttackerPlayerState != VictimPlayerState && ChaosRemGameState)
 	{
+		TArray<AChaosRemPlayerState*> PlayerCurrentlyInTheLead;
+		for (auto LeadPlayer : ChaosRemGameState->TopScoringPlayers)
+		{
+			PlayerCurrentlyInTheLead.Add(LeadPlayer);
+		}
 		AttackerPlayerState->AddToScore(1.f);
 		ChaosRemGameState->UpdateTopScore(AttackerPlayerState);
+		if (ChaosRemGameState->TopScoringPlayers.Contains(AttackerPlayerState))
+		{
+			AMultiplayerCharacter* Leader = Cast<AMultiplayerCharacter>(AttackerPlayerState->GetPawn());
+			if (Leader)
+			{
+				Leader->MulticastGainedTheLead();
+			}
+		}
+		for (int32 i = 0; i < PlayerCurrentlyInTheLead.Num(); i++)
+		{
+			if (!ChaosRemGameState->TopScoringPlayers.Contains(PlayerCurrentlyInTheLead[i]))
+			{
+				AMultiplayerCharacter* Loser = Cast<AMultiplayerCharacter>(PlayerCurrentlyInTheLead[i]->GetPawn());
+				if (Loser)
+				{
+					Loser->MulticastLostTheLead();
+				}
+			}
+		}
 	}
 	if (VictimPlayerState)
 	{
@@ -88,6 +112,14 @@ void AAsTheCaosRemainsGameMode::PlayerEliminated(class AMultiplayerCharacter* El
 	if (ElimmedCharacter)
 	{
 		ElimmedCharacter->Elim(false);
+	}
+	for (FConstPlayerControllerIterator It = GetWorld()->GetPlayerControllerIterator(); It; ++It)
+	{
+		AMultiplayerPlayerController* PlayerController = Cast<AMultiplayerPlayerController>(*It);
+		if (PlayerController && AttackerPlayerState && VictimPlayerState)
+		{
+			PlayerController->BroadcastElim(AttackerPlayerState, VictimPlayerState);
+		}
 	}
 }
 

@@ -68,6 +68,44 @@ void AMultiplayerPlayerController::HandleMatchHasStarted()
 	}
 }
 
+void AMultiplayerPlayerController::ClientElimAnnouncement_Implementation(APlayerState* Attacker, APlayerState* Victim)
+{
+	APlayerState* Self = GetPlayerState<APlayerState>();
+	if (Attacker && Victim && Self)
+	{
+		MultiplayerHUD = MultiplayerHUD == nullptr ? Cast<AMultiplayerHud>(GetHUD()) : MultiplayerHUD;
+		if (MultiplayerHUD)
+		{
+			if (Attacker == Self && Victim != Self)
+			{
+				MultiplayerHUD->AddElimAnnouncement("You", Victim->GetPlayerName());
+				return;
+			}
+			if (Victim == Self && Attacker != Self)
+			{
+				MultiplayerHUD->AddElimAnnouncement(Attacker->GetPlayerName(), "you");
+				return;
+			}
+			if (Attacker == Victim && Attacker == Self)
+			{
+				MultiplayerHUD->AddElimAnnouncement("You", "yourself");
+				return;
+			}
+			if (Attacker == Victim && Attacker != Self)
+			{
+				MultiplayerHUD->AddElimAnnouncement(Attacker->GetPlayerName(), "themselves");
+				return;
+			}
+			MultiplayerHUD->AddElimAnnouncement(Attacker->GetPlayerName(), Victim->GetPlayerName());
+		}
+	}
+}
+
+void AMultiplayerPlayerController::BroadcastElim(APlayerState* Attacker, APlayerState* Victim)
+{
+	ClientElimAnnouncement(Attacker, Victim);
+}
+
 void AMultiplayerPlayerController:: ClientJoinMidGame_Implementation(FName StateMatch, float Warmup, float Match, float Cooldown,float StartingTime)
 {
 	WarmupTime = Warmup;
@@ -380,6 +418,8 @@ void AMultiplayerPlayerController::ShowReturnToMainMenu()
 		}
 	}
 }
+
+
 
 void AMultiplayerPlayerController::GetLifetimeReplicatedProps(TArray<class FLifetimeProperty>& OutLifetimeProps) const
 {

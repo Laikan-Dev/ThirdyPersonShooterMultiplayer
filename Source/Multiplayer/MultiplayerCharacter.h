@@ -290,8 +290,18 @@ public:
 	void ServerLeaveGame();
 	FOnLeftGame	OnLeftGame;
 
+	UFUNCTION(NetMulticast, Reliable)
+	void MulticastGainedTheLead();
+	UFUNCTION(NetMulticast, Reliable)
+	void MulticastLostTheLead();
+
 	UPROPERTY()
 	class AChaosRemPlayerState* PossessedPlayerState;
+	UPROPERTY(EditAnywhere)
+	class UNiagaraSystem* CrownSystem;
+
+	UPROPERTY()
+	class UNiagaraComponent* CrownComponent;
 
 
 protected:

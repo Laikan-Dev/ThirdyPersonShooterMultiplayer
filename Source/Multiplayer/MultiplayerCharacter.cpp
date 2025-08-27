@@ -21,6 +21,7 @@
 #include "Multiplayer.h"
 #include "Multiplayer/Public/MultiplayerCharAnimInstance.h"
 #include "Niagara/Public/NiagaraComponent.h"
+#include "NiagaraFunctionLibrary.h"
 #include "Components/WidgetComponent.h"
 #include "Kismet/KismetMathLibrary.h"
 #include "Components/SceneCaptureComponent2D.h"
@@ -29,6 +30,7 @@
 #include "Windows/AllowWindowsPlatformTypes.h"
 #include "TimerManager.h"
 #include "Components/BuffComponent.h"
+#include "GameHead/ChaosRemGameState.h"
 #include "Kismet/GameplayStatics.h"
 #include "Player/ChaosRemPlayerState.h"
 #include "Multiplayer/Weapon/WeaponTypes.h"
@@ -324,10 +326,8 @@ void AMultiplayerCharacter::BeginPlay()
 	{
 		AttachedGrenade->SetVisibility(false);
 	}
-	SelectTeam();
 	bUseControllerRotationYaw = true;
 	GetCharacterMovement()->bOrientRotationToMovement = false;
-	
 	GetCharacterMovement()->RotationRate = FRotator(0.f, 720.f, 0.f);
 	AnimInstance = Cast<UMultiplayerCharAnimInstance>(GetMesh()->GetAnimInstance());
 }
@@ -387,6 +387,10 @@ void AMultiplayerCharacter::HideCameraIfCharacterClose()
 		{
 			CombatSystem->EquippedWeapon->GetWeaponMesh()->bOwnerNoSee = true;
 		}
+		if (CombatSystem && CombatSystem->SecondaryWeapon && CombatSystem->SecondaryWeapon->GetWeaponMesh())
+		{
+			CombatSystem->SecondaryWeapon->GetWeaponMesh()->bOwnerNoSee = true;
+		}
 	}
 	else
 	{
@@ -394,6 +398,10 @@ void AMultiplayerCharacter::HideCameraIfCharacterClose()
 		if (CombatSystem && CombatSystem->EquippedWeapon && CombatSystem->EquippedWeapon->GetWeaponMesh())
 		{
 			CombatSystem->EquippedWeapon->GetWeaponMesh()->bOwnerNoSee = false;
+		}
+		if (CombatSystem && CombatSystem->SecondaryWeapon && CombatSystem->SecondaryWeapon->GetWeaponMesh())
+		{
+			CombatSystem->SecondaryWeapon->GetWeaponMesh()->bOwnerNoSee = true;
 		}
 	}
 }
@@ -450,6 +458,29 @@ void AMultiplayerCharacter::SpawnDefaultWeapon()
 		{
 			CombatSystem->EquipWeapon(StartingWeapon);
 		}
+	}
+}
+
+void AMultiplayerCharacter::MulticastLostTheLead_Implementation()
+{
+	if (CrownComponent)
+	{
+		CrownComponent->DestroyComponent();
+	}
+}
+
+void AMultiplayerCharacter::MulticastGainedTheLead_Implementation()
+{
+	if (CrownSystem == nullptr) return;
+	if (CrownComponent == nullptr)
+	{
+		CrownComponent = UNiagaraFunctionLibrary::SpawnSystemAttached(CrownSystem, GetCapsuleComponent(), FName(),
+			GetActorLocation() + FVector(0.f, 0.f, 110.f), GetActorRotation(),
+			EAttachLocation::KeepWorldPosition, false);
+	}
+	if (CrownComponent)
+	{
+		CrownComponent->Activate();
 	}
 }
 
@@ -808,11 +839,16 @@ void AMultiplayerCharacter::MulticastElim_Implementation(bool bPlayerLeftGame)
 	//Disable Collision
 	GetCapsuleComponent()->SetCollisionEnabled(ECollisionEnabled::NoCollision);
 	GetMesh()->SetCollisionEnabled(ECollisionEnabled::NoCollision);
+	AttachedGrenade->SetCollisionEnabled(ECollisionEnabled::NoCollision);
 
 	bool bHideSniperScope = IsLocallyControlled() && CombatSystem && CombatSystem->EquippedWeapon && CombatSystem->EquippedWeapon->GetWeaponType() == EWeaponType::EWT_SniperRifle;
 	if (bHideSniperScope)
 	{
 		ShowSniperScopeWidget(false);
+	}
+	if (CrownComponent)
+	{
+		CrownComponent->DestroyComponent();
 	}
 	GetWorldTimerManager().SetTimer(ElimTimer, this, &AMultiplayerCharacter::ElimTimerFinished, ElimDelay);
 }
@@ -1073,6 +1109,13 @@ void AMultiplayerCharacter::PollInit()
 		{
 			PossessedPlayerState->AddToScore(0.f);
 			PossessedPlayerState->AddToDefeats(0);
+
+			AChaosRemGameState* ChaosGameState = Cast<AChaosRemGameState>(UGameplayStatics::GetGameState(this));
+			if (ChaosGameState && ChaosGameState->TopScoringPlayers.Contains(PossessedPlayerState))
+			{
+				MulticastGainedTheLead();
+			}
+	
 		}
 	}
 }

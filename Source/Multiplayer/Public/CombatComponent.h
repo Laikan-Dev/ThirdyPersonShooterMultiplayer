@@ -72,6 +72,7 @@ protected:
 
 	UFUNCTION()
 	void OnRep_SecondaryWeapon();
+	void AttachActorToRightHand(AActor* ActorToAttach);
 
 	void EquipPrimaryWeapon(ABaseWeapon* WeaponToEquip);
 	void EquipSecondaryWeapon(ABaseWeapon* WeaponToEquip);

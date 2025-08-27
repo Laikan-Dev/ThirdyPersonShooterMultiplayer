@@ -40,6 +40,9 @@ protected:
 	UFUNCTION(Client, Reliable)
 	void ClientJoinMidGame(FName StateMatch, float Warmup, float Match, float Cooldown,float StartingTime);
 
+	UFUNCTION(Client, Reliable)
+	void ClientElimAnnouncement(APlayerState* Attacker, APlayerState* Victim);
+
 public:
 	
 	UPROPERTY(EditDefaultsOnly, BlueprintReadOnly)
@@ -67,6 +70,8 @@ public:
 	void SetHUDAnnouncementCountdown(float CountdownTime);
 	void HandleCooldown();
 	void ShowReturnToMainMenu();
+
+	void BroadcastElim(APlayerState* Attacker, APlayerState* Victim);
 	
 	virtual void GetLifetimeReplicatedProps(TArray<class FLifetimeProperty>& OutLifetimeProps) const override;
 
