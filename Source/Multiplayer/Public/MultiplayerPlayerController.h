@@ -32,7 +32,7 @@ protected:
 	float TimeSyncRunningTime = 0.f;
 	void CheckTimeSync(float DeltaTime);
 	void PollInit();
-	void HandleMatchHasStarted();
+	void HandleMatchHasStarted(bool bTeamsMatch = false);
 
 	UFUNCTION(Server, Reliable)
 	void ServerCheckMatchState();
@@ -42,6 +42,14 @@ protected:
 
 	UFUNCTION(Client, Reliable)
 	void ClientElimAnnouncement(APlayerState* Attacker, APlayerState* Victim);
+
+	UPROPERTY(ReplicatedUsing=OnRep_ShowTeamScores)
+	bool bShowTeamScores = false;
+	UFUNCTION()
+	void OnRep_ShowTeamScores();
+
+	FString GetInfoText(const TArray<class AChaosRemPlayerState*>& Players);
+	FString GetTeamsInfoText(class AChaosRemGameState* ChaosGameState);
 
 public:
 	
@@ -66,10 +74,17 @@ public:
 	void SetHUDCarriedAmmo(int32 Ammo);
 	void SetHUDMatchCountdown(float CountdownTime);
 	void SetHUDGrenades(int32 Grenades);
-	void OnMatchStateSet(FName State);
+	void OnMatchStateSet(FName State, bool bTeamsMatch = false);
 	void SetHUDAnnouncementCountdown(float CountdownTime);
 	void HandleCooldown();
 	void ShowReturnToMainMenu();
+	//Teams Func
+	void HideTeamScores();
+	void InitTeamScores();
+	void SetHUDTeamScores();
+	void SetHUDRedTeamScore(int32 RedScore);
+	void SetHUDBlueTeamScore(int32 BlueScore);
+	//Teasm Func
 
 	void BroadcastElim(APlayerState* Attacker, APlayerState* Victim);
 	

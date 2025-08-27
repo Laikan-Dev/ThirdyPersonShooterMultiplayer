@@ -297,11 +297,15 @@ public:
 
 	UPROPERTY()
 	class AChaosRemPlayerState* PossessedPlayerState;
+
+	virtual void OnRep_PlayerState() override;
 	UPROPERTY(EditAnywhere)
 	class UNiagaraSystem* CrownSystem;
 
 	UPROPERTY()
 	class UNiagaraComponent* CrownComponent;
+	UFUNCTION(NetMulticast, Reliable)
+	void SetTeamColor(ETeam Team);
 
 
 protected:
@@ -337,11 +341,37 @@ protected:
 	FOnTimelineFloat DissolveTrack;
 	UPROPERTY(EditDefaultsOnly)
 	UCurveFloat* DissolveCurve;
+	
 	//Dynamic instance that we can change at runtime
-	UPROPERTY(VisibleAnywhere)
+	UPROPERTY(VisibleAnywhere, Category=Color)
 	UMaterialInstanceDynamic* DynamicDissolveMaterialInstance1;
-	UPROPERTY(VisibleAnywhere)
+	UPROPERTY(VisibleAnywhere, Category=Color)
 	UMaterialInstanceDynamic* DynamicDissolveMaterialInstance2;
+
+	//TeamCollors
+	UPROPERTY(EditAnywhere, Category=Color)
+	UMaterialInstance* RedDissolveMatInst1;
+	UPROPERTY(EditAnywhere, Category=Color)
+	UMaterialInstance* RedDissolveMatInst2;
+	UPROPERTY(EditAnywhere, Category=Color)
+	UMaterialInstance* RedMaterial1;
+	UPROPERTY(EditAnywhere, Category=Color)
+	UMaterialInstance* RedMaterial2;
+	
+	UPROPERTY(EditAnywhere, Category=Color)
+	UMaterialInstance* BlueDissolveMatInst1;
+	UPROPERTY(EditAnywhere, Category=Color)
+	UMaterialInstance* BlueDissolveMatInst2;
+
+	UPROPERTY(EditAnywhere, Category=Color)
+	UMaterialInstance* BlueMaterial1;
+	UPROPERTY(EditAnywhere, Category=Color)
+	UMaterialInstance* BlueMaterial2;
+
+	UPROPERTY(EditAnywhere, Category=Color)
+	UMaterialInstance* OriginMaterial1;
+	UPROPERTY(EditAnywhere, Category=Color)
+	UMaterialInstance* OriginMaterial2;
 	
 
 	//Grenade
@@ -351,6 +381,10 @@ protected:
 	//DefaultWeapon
 	UPROPERTY(EditAnywhere)
 	TSubclassOf<ABaseWeapon> DefaultWeaponClass;
+
+	//GameMode
+	UPROPERTY()
+	class AAsTheCaosRemainsGameMode* ChaosGameMode;
 	
 	// Material instance set on blueprints, used with the dynamic material instance
 	UPROPERTY(EditAnywhere)

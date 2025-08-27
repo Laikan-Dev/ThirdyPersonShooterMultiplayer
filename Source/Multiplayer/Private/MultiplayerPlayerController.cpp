@@ -2,7 +2,7 @@
 
 
 #include "MultiplayerPlayerController.h"
-
+#include "Multiplayer/Enums/Announcement.h"
 #include "MultiplayerHud.h"
 #include "Blueprint/UserWidget.h"
 #include "Blueprint/WidgetBlueprintLibrary.h"
@@ -55,8 +55,9 @@ void AMultiplayerPlayerController::PollInit()
 	}
 }
 
-void AMultiplayerPlayerController::HandleMatchHasStarted()
+void AMultiplayerPlayerController::HandleMatchHasStarted(bool bTeamsMatch)
 {
+	if (HasAuthority()) bShowTeamScores = bTeamsMatch;
 	MultiplayerHUD = MultiplayerHUD == nullptr ? Cast<AMultiplayerHud>(GetHUD()) : MultiplayerHUD;
 	if (MultiplayerHUD)
 	{
@@ -64,6 +65,15 @@ void AMultiplayerPlayerController::HandleMatchHasStarted()
 		if (MultiplayerHUD->Announcement)
 		{
 			MultiplayerHUD->Announcement->SetVisibility(ESlateVisibility::Hidden);
+		}
+		if (!HasAuthority()) return;
+		if (bTeamsMatch)
+		{
+			InitTeamScores();
+		}
+		else
+		{
+			HideTeamScores();
 		}
 	}
 }
@@ -132,6 +142,84 @@ void AMultiplayerPlayerController::ServerCheckMatchState_Implementation()
 		MatchState = GameMode->GetMatchState();
 		ClientJoinMidGame(MatchState, WarmupTime, MatchTime, CooldownTime, LevelStartingTime);
 	}
+}
+
+void AMultiplayerPlayerController::OnRep_ShowTeamScores()
+{
+	if (bShowTeamScores)
+	{
+		InitTeamScores();
+	}
+	else
+	{
+		HideTeamScores();
+	}
+}
+
+FString AMultiplayerPlayerController::GetInfoText(const TArray<class AChaosRemPlayerState*>& Players)
+{
+	AChaosRemPlayerState* ChaosRemPlayerState = GetPlayerState<AChaosRemPlayerState>();
+	if (ChaosRemPlayerState == nullptr) return FString();
+	FString InfoTextString;
+	if (Players.Num() == 0)
+	{
+		InfoTextString = Annoucement::ThereIsNoWinner;
+	}
+	else if (Players.Num() == 1 && Players[0] == ChaosRemPlayerState)
+	{
+		InfoTextString = Annoucement::YouAreTheWinner;
+	}
+	else if (Players.Num() == 1)
+	{
+		InfoTextString = FString::Printf(TEXT("Winner: \n%s"), *Players[0]->GetPlayerName());
+	}
+	else if (Players.Num() > 1)
+	{
+		InfoTextString = Annoucement::PlayerTiedForTheWin;
+		InfoTextString.Append(FString::Printf(TEXT("\n")));
+		for (auto TiedPlayer : Players)
+		{
+			InfoTextString.Append(FString::Printf(TEXT("%s\n"), *TiedPlayer->GetPlayerName()));
+		}
+	}
+	return InfoTextString;
+}
+
+FString AMultiplayerPlayerController::GetTeamsInfoText(class AChaosRemGameState* ChaosGameState)
+{
+	if (ChaosGameState == nullptr) return FString();
+	FString InfoTextString;
+	const int32 RedTeamScore = ChaosGameState->RedTeamScore;
+	const int32 BlueTeamScore = ChaosGameState->BlueTeamScore;
+
+	if (RedTeamScore == 0 && BlueTeamScore == 0)
+	{
+		InfoTextString = Annoucement::ThereIsNoWinner;
+	}
+	else if (RedTeamScore == BlueTeamScore)
+	{
+		InfoTextString = FString::Printf(TEXT("%s\n"), *Annoucement::TeamsTiedForTheWin);
+		InfoTextString.Append(Annoucement::RedTeam);
+		InfoTextString.Append(TEXT("\n"));
+		InfoTextString.Append(Annoucement::BlueTeam);
+		InfoTextString.Append(TEXT("\n"));
+	}
+	else if (RedTeamScore > BlueTeamScore)
+	{
+		InfoTextString = Annoucement::RedTeamWins;
+		InfoTextString.Append(TEXT("\n"));
+		InfoTextString.Append(FString::Printf(TEXT("%s: %d\n"), *Annoucement::RedTeam, RedTeamScore));
+		InfoTextString.Append(FString::Printf(TEXT("%s: %d\n"), *Annoucement::BlueTeam, BlueTeamScore));
+	}
+	else if (BlueTeamScore > RedTeamScore)
+	{
+		InfoTextString = Annoucement::BlueTeamWins;
+		InfoTextString.Append(TEXT("\n"));
+		InfoTextString.Append(FString::Printf(TEXT("%s: %d\n"), *Annoucement::BlueTeam, BlueTeamScore));
+		InfoTextString.Append(FString::Printf(TEXT("%s: %d\n"), *Annoucement::RedTeam, RedTeamScore));
+	}
+	
+	return InfoTextString;
 }
 
 void AMultiplayerPlayerController::AddCaptureFlagWidget(TSubclassOf<UUserWidget> CurrentWidget)
@@ -312,13 +400,13 @@ void AMultiplayerPlayerController::SetHUDGrenades(int32 Grenades)
 	}
 }
 
-void AMultiplayerPlayerController::OnMatchStateSet(FName State)
+void AMultiplayerPlayerController::OnMatchStateSet(FName State, bool bTeamsMatch)
 {
 	MatchState = State;
 
 	if (MatchState == MatchState::InProgress)
 	{
-		HandleMatchHasStarted();
+		HandleMatchHasStarted(bTeamsMatch);
 	}
 	else if (MatchState == MatchState::Cooldown)
 	{
@@ -355,7 +443,7 @@ void AMultiplayerPlayerController::HandleCooldown()
 		if (bHUDValid)
 		{
 			MultiplayerHUD->Announcement->SetVisibility(ESlateVisibility::Visible);
-			FString AnnouncementText("New Match Start In: ");
+			FString AnnouncementText = Annoucement::NewMatchStartsIn;
 			MultiplayerHUD->Announcement->AnnouncementText->SetText(FText::FromString(AnnouncementText));
 
 			AChaosRemGameState* ChaosRemGameState = Cast<AChaosRemGameState>(UGameplayStatics::GetGameState(this));
@@ -363,29 +451,9 @@ void AMultiplayerPlayerController::HandleCooldown()
 			if (ChaosRemGameState && ChaosRemPlayerState)
 			{
 				TArray<AChaosRemPlayerState*> TopPlayers = ChaosRemGameState->TopScoringPlayers;
-				UE_LOG(LogTemp, Warning, TEXT("TopPlayers Num: %d"), TopPlayers.Num());
-				FString InfoTextString;
-				if (TopPlayers.Num() == 0)
-				{
-					InfoTextString = FString("There's no winner.");
-				}
-				else if (TopPlayers.Num() == 1 && TopPlayers[0] == ChaosRemPlayerState)
-				{
-					InfoTextString = FString("You are the winner!");
-				}
-				else if (TopPlayers.Num() == 1)
-				{
-					InfoTextString = FString::Printf(TEXT("Winner: \n%s"), *TopPlayers[0]->GetPlayerName());
-				}
-				else if (TopPlayers.Num() > 1)
-				{
-					InfoTextString = FString("Players tied for the win: \n");
-					for (auto TiedPlayer : TopPlayers)
-					{
-						InfoTextString.Append(FString::Printf(TEXT("%s\n"), *TiedPlayer->GetPlayerName()));
-					}
-				}
-				MultiplayerHUD->Announcement->InfoText->SetText(FText());
+				FString InfoTextString = bShowTeamScores ? GetTeamsInfoText(ChaosRemGameState) : GetInfoText(TopPlayers);
+				
+				MultiplayerHUD->Announcement->InfoText->SetText(FText::FromString(InfoTextString));
 			}
 		}
 	}
@@ -418,7 +486,75 @@ void AMultiplayerPlayerController::ShowReturnToMainMenu()
 		}
 	}
 }
+//Teams Section
+void AMultiplayerPlayerController::HideTeamScores()
+{
+	MultiplayerHUD = MultiplayerHUD == nullptr ? Cast<AMultiplayerHud>(GetHUD()) : MultiplayerHUD;
+	if (MultiplayerHUD)
+	{
+		bool bHUDValid = MultiplayerHUD->CharacterOverlay && MultiplayerHUD->CharacterOverlay->RedTeamScore &&
+			MultiplayerHUD->CharacterOverlay->BlueTeamScore && MultiplayerHUD->CharacterOverlay->ScoreSpacerText;
+		if (bHUDValid)
+		{
+			MultiplayerHUD->CharacterOverlay->RedTeamScore->SetText(FText());
+			MultiplayerHUD->CharacterOverlay->BlueTeamScore->SetText(FText());
+			MultiplayerHUD->CharacterOverlay->ScoreSpacerText->SetText(FText());
 
+
+		}
+	}
+}
+
+void AMultiplayerPlayerController::InitTeamScores()
+{
+	MultiplayerHUD = MultiplayerHUD == nullptr ? Cast<AMultiplayerHud>(GetHUD()) : MultiplayerHUD;
+	if (MultiplayerHUD)
+	{
+		bool bHUDValid = MultiplayerHUD->CharacterOverlay && MultiplayerHUD->CharacterOverlay->RedTeamScore &&
+			MultiplayerHUD->CharacterOverlay->BlueTeamScore && MultiplayerHUD->CharacterOverlay->ScoreSpacerText;
+		if (bHUDValid)
+		{
+			FString Zero("0");
+			FString Spacer("|");
+			MultiplayerHUD->CharacterOverlay->RedTeamScore->SetText(FText::FromString(Zero));
+			MultiplayerHUD->CharacterOverlay->BlueTeamScore->SetText(FText::FromString(Zero));
+			MultiplayerHUD->CharacterOverlay->ScoreSpacerText->SetText(FText::FromString(Spacer));
+		}
+	}
+}
+
+void AMultiplayerPlayerController::SetHUDTeamScores()
+{
+}
+
+void AMultiplayerPlayerController::SetHUDRedTeamScore(int32 RedScore)
+{
+	MultiplayerHUD = MultiplayerHUD == nullptr ? Cast<AMultiplayerHud>(GetHUD()) : MultiplayerHUD;
+	if (MultiplayerHUD)
+	{
+		bool bHUDValid = MultiplayerHUD->CharacterOverlay && MultiplayerHUD->CharacterOverlay->RedTeamScore;
+		if (bHUDValid)
+		{
+			FString ScoreText = FString::Printf(TEXT("%d"), RedScore);
+			MultiplayerHUD->CharacterOverlay->RedTeamScore->SetText(FText::FromString(ScoreText));
+		}
+	}
+}
+
+void AMultiplayerPlayerController::SetHUDBlueTeamScore(int32 BlueScore)
+{
+	MultiplayerHUD = MultiplayerHUD == nullptr ? Cast<AMultiplayerHud>(GetHUD()) : MultiplayerHUD;
+	if (MultiplayerHUD)
+	{
+		bool bHUDValid = MultiplayerHUD->CharacterOverlay && MultiplayerHUD->CharacterOverlay->BlueTeamScore;
+		if (bHUDValid)
+		{
+			FString ScoreText = FString::Printf(TEXT("%d"), BlueScore);
+			MultiplayerHUD->CharacterOverlay->BlueTeamScore->SetText(FText::FromString(ScoreText));
+		}
+	}
+}
+//Teams Section
 
 
 void AMultiplayerPlayerController::GetLifetimeReplicatedProps(TArray<class FLifetimeProperty>& OutLifetimeProps) const
@@ -426,6 +562,7 @@ void AMultiplayerPlayerController::GetLifetimeReplicatedProps(TArray<class FLife
 	Super::GetLifetimeReplicatedProps(OutLifetimeProps);
 
 	DOREPLIFETIME(AMultiplayerPlayerController, MatchState);
+	DOREPLIFETIME(AMultiplayerPlayerController, bShowTeamScores);
 }
 
 float AMultiplayerPlayerController::GetServerTime()

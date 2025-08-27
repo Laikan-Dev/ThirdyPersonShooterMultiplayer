@@ -4,7 +4,13 @@
 #include "TeamGameMode.h"
 
 #include "ChaosRemGameState.h"
+#include "MultiplayerPlayerController.h"
 #include "Kismet/GameplayStatics.h"
+
+ATeamGameMode::ATeamGameMode()
+{
+	bTeamsMatch = true;
+}
 
 void ATeamGameMode::PostLogin(APlayerController* NewPlayer)
 {
@@ -44,9 +50,40 @@ void ATeamGameMode::Logout(AController* ExitedPlayer)
 		{
 			ChaosGameState->BlueTeam.Remove(ChaosPlayerState);
 		}
-		
 	}
+}
+
+void ATeamGameMode::PlayerEliminated(class AMultiplayerCharacter* ElimmedCharacter,
+	class AMultiplayerPlayerController* VictimController, AMultiplayerPlayerController* AttackerController)
+{
+	Super::PlayerEliminated(ElimmedCharacter, VictimController, AttackerController);
+	AChaosRemGameState* ChaosGameState = Cast<AChaosRemGameState>(UGameplayStatics::GetGameState(this));
+	AChaosRemPlayerState* AttackerPlayerState = AttackerController ? Cast<AChaosRemPlayerState>(AttackerController->PlayerState) : nullptr;
+	if (ChaosGameState && AttackerPlayerState)
+	{
+		if (AttackerPlayerState->GetTeam() == ETeam::ET_BlueTeam)
+		{
+			ChaosGameState->BlueTeamScores();
+		}
+		if (AttackerPlayerState->GetTeam() == ETeam::ET_RedTeam)
+		{
+			ChaosGameState->RedTeamScores();
+		}
+	}
+
 	
+}
+
+float ATeamGameMode::CalculateDamage(AController* Attacker, AController* Victim, float BaseDamage)
+{
+	AChaosRemPlayerState* AttackerPState = Attacker->GetPlayerState<AChaosRemPlayerState>();
+	AChaosRemPlayerState* VictimPState = Victim->GetPlayerState<AChaosRemPlayerState>();
+
+	if (AttackerPState == nullptr || VictimPState == nullptr) return BaseDamage;
+	if (VictimPState == AttackerPState) return BaseDamage;
+	if (AttackerPState->GetTeam() == VictimPState->GetTeam()) return 0.f;
+	
+	return BaseDamage;
 }
 
 void ATeamGameMode::HandleMatchHasStarted()

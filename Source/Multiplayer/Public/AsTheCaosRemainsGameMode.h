@@ -26,6 +26,7 @@ public:
 	virtual void PlayerEliminated(class AMultiplayerCharacter* ElimmedCharacter, class AMultiplayerPlayerController* VictimController, AMultiplayerPlayerController* AttackerController);
 	virtual void RequestRespawn(class ACharacter* ElimmedCharacter, AController* ElimmedController );
 	void PlayerLeftGame(class AChaosRemPlayerState* PlayerLeaving);
+	virtual float CalculateDamage(AController* Attacker, AController* Victim, float BaseDamage);
 	UPROPERTY(EditDefaultsOnly)
 	float WarmupTime = 10.f;
 
@@ -36,6 +37,7 @@ public:
 
 	float LevelStartingTime;
 
+	bool bTeamsMatch = false;
 protected:
 	virtual void BeginPlay() override;
 	virtual void OnMatchStateSet() override;

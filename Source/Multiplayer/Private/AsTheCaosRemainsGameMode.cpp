@@ -34,7 +34,7 @@ void AAsTheCaosRemainsGameMode::OnMatchStateSet()
 		AMultiplayerPlayerController* PlayerController = Cast<AMultiplayerPlayerController>(*It);
 		if (PlayerController)
 		{
-			PlayerController->OnMatchStateSet(MatchState);
+			PlayerController->OnMatchStateSet(MatchState, bTeamsMatch);
 		}
 	}
 }
@@ -152,4 +152,9 @@ void AAsTheCaosRemainsGameMode::PlayerLeftGame(AChaosRemPlayerState* PlayerLeavi
 	{
 		CharacterLeaving->Elim(true);
 	}
+}
+
+float AAsTheCaosRemainsGameMode::CalculateDamage(AController* Attacker, AController* Victim, float BaseDamage)
+{
+	return BaseDamage;
 }

@@ -66,3 +66,22 @@ void AChaosRemPlayerState::OnRep_Defeats()
 		}
 	}
 }
+
+void AChaosRemPlayerState::OnRep_Team()
+{
+	AMultiplayerCharacter* ChaosCharacter = Cast<AMultiplayerCharacter>(GetPawn());
+	if (ChaosCharacter)
+	{
+		ChaosCharacter->SetTeamColor(Team);
+	}
+}
+
+void AChaosRemPlayerState::SetTeam(ETeam NewTeam)
+{
+	Team = NewTeam;
+	AMultiplayerCharacter* ChaosCharacter = Cast<AMultiplayerCharacter>(GetPawn());
+	if (ChaosCharacter)
+	{
+		ChaosCharacter->SetTeamColor(Team);
+	}
+}

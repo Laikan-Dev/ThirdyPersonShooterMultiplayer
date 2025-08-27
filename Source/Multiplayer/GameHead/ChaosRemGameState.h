@@ -23,6 +23,9 @@ public:
 
 
 	//TEAM
+	void RedTeamScores();
+	void BlueTeamScores();
+	
 	UPROPERTY()
 	TArray<AChaosRemPlayerState*> RedTeam;
 	UPROPERTY()

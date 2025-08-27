@@ -2,6 +2,8 @@
 
 
 #include "ChaosRemGameState.h"
+
+#include "MultiplayerPlayerController.h"
 #include "Net/UnrealNetwork.h"
 #include "Multiplayer/Player/ChaosRemPlayerState.h"
 
@@ -33,12 +35,40 @@ void AChaosRemGameState::UpdateTopScore(class AChaosRemPlayerState* ScoringPlaye
 	}
 }
 
+void AChaosRemGameState::RedTeamScores()
+{
+	++RedTeamScore;
+	AMultiplayerPlayerController* PlayerController = Cast<AMultiplayerPlayerController>(GetWorld()->GetFirstPlayerController());
+	if (PlayerController)
+	{
+		PlayerController->SetHUDRedTeamScore(RedTeamScore);
+	}
+}
+
+void AChaosRemGameState::BlueTeamScores()
+{
+	++BlueTeamScore;
+	AMultiplayerPlayerController* PlayerController = Cast<AMultiplayerPlayerController>(GetWorld()->GetFirstPlayerController());
+	if (PlayerController)
+	{
+		PlayerController->SetHUDBlueTeamScore(BlueTeamScore);
+	}
+}
+
 void AChaosRemGameState::OnRep_RedTeamScore()
 {
-	
+	AMultiplayerPlayerController* PlayerController = Cast<AMultiplayerPlayerController>(GetWorld()->GetFirstPlayerController());
+	if (PlayerController)
+	{
+		PlayerController->SetHUDRedTeamScore(RedTeamScore);
+	}
 }
 
 void AChaosRemGameState::OnRep_BlueTeamScore()
 {
-	
+	AMultiplayerPlayerController* PlayerController = Cast<AMultiplayerPlayerController>(GetWorld()->GetFirstPlayerController());
+	if (PlayerController)
+	{
+		PlayerController->SetHUDBlueTeamScore(BlueTeamScore);
+	}
 }

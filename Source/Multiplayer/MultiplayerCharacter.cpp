@@ -247,7 +247,10 @@ void AMultiplayerCharacter::DropOrDestroyWeapons()
 
 void AMultiplayerCharacter::ReceiveDamage(AActor* DamagedActor, float Damage, const UDamageType* DamageType, class AController* InstigatorController, class AActor* DamageCauser)
 {
-	if (bElimmed) return;
+	ChaosGameMode = ChaosGameMode == nullptr ? GetWorld()->GetAuthGameMode<AAsTheCaosRemainsGameMode>() : ChaosGameMode;
+	if (bElimmed || ChaosGameMode == nullptr) return;
+	Damage = ChaosGameMode->CalculateDamage(InstigatorController, Controller, Damage);
+
 	float DamageToHealth = Damage;
 	if (CurrentShield > 0.f)
 	{
@@ -271,12 +274,11 @@ void AMultiplayerCharacter::ReceiveDamage(AActor* DamagedActor, float Damage, co
 
 	if (CurrentHealth <= 0)
 	{
-		AAsTheCaosRemainsGameMode* GameMode = GetWorld()->GetAuthGameMode<AAsTheCaosRemainsGameMode>();
-		if (GameMode)
+		if (ChaosGameMode)
 		{
 			MultiplayerPlayerController = MultiplayerPlayerController == nullptr ? Cast<AMultiplayerPlayerController>(Controller) : MultiplayerPlayerController;
 			AMultiplayerPlayerController* AttackerController = Cast<AMultiplayerPlayerController>(InstigatorController);
-			GameMode->PlayerEliminated(this, MultiplayerPlayerController, AttackerController);
+			ChaosGameMode->PlayerEliminated(this, MultiplayerPlayerController, AttackerController);
 		}
 	}
 }
@@ -314,6 +316,11 @@ void AMultiplayerCharacter::BeginPlay()
 	// Call the base class  
 	Super::BeginPlay();
 	SpawnDefaultWeapon();
+	PossessedPlayerState = GetPlayerState<AChaosRemPlayerState>();
+	if (PossessedPlayerState)
+	{
+		SetTeamColor(PossessedPlayerState->GetTeam());
+	}
 	UpdateHUDAmmo();
 	
 	UpdateHUDHealth();
@@ -336,8 +343,8 @@ void AMultiplayerCharacter::Destroyed()
 {
 	Super::Destroyed();
 
-	AAsTheCaosRemainsGameMode* ChaosRemGameMode = Cast<AAsTheCaosRemainsGameMode>(UGameplayStatics::GetGameMode(this));
-	bool bMatchNotInProgress = ChaosRemGameMode && ChaosRemGameMode->GetMatchState() != MatchState::InProgress;
+	ChaosGameMode = ChaosGameMode == nullptr ? Cast<AAsTheCaosRemainsGameMode>(UGameplayStatics::GetGameMode(this)) : ChaosGameMode;
+	bool bMatchNotInProgress = ChaosGameMode && ChaosGameMode->GetMatchState() != MatchState::InProgress;
 	if (CombatSystem && CombatSystem->EquippedWeapon && bMatchNotInProgress)
 	{
 		CombatSystem->EquippedWeapon->Destroy();
@@ -401,7 +408,7 @@ void AMultiplayerCharacter::HideCameraIfCharacterClose()
 		}
 		if (CombatSystem && CombatSystem->SecondaryWeapon && CombatSystem->SecondaryWeapon->GetWeaponMesh())
 		{
-			CombatSystem->SecondaryWeapon->GetWeaponMesh()->bOwnerNoSee = true;
+			CombatSystem->SecondaryWeapon->GetWeaponMesh()->bOwnerNoSee = false;
 		}
 	}
 }
@@ -448,9 +455,9 @@ bool AMultiplayerCharacter::IWeaponEquipped()
 
 void AMultiplayerCharacter::SpawnDefaultWeapon()
 {
-	AAsTheCaosRemainsGameMode* ChaosRemGameMode = Cast<AAsTheCaosRemainsGameMode>(UGameplayStatics::GetGameMode(this));
+	ChaosGameMode = ChaosGameMode == nullptr ? Cast<AAsTheCaosRemainsGameMode>(UGameplayStatics::GetGameMode(this)) : ChaosGameMode;
 	UWorld* World = GetWorld();
-	if (ChaosRemGameMode && World && !bElimmed && DefaultWeaponClass)
+	if (ChaosGameMode && World && !bElimmed && DefaultWeaponClass)
 	{
 		ABaseWeapon* StartingWeapon = World->SpawnActor<ABaseWeapon>(DefaultWeaponClass);
 		StartingWeapon->bDestroyWeapon = true;
@@ -458,6 +465,42 @@ void AMultiplayerCharacter::SpawnDefaultWeapon()
 		{
 			CombatSystem->EquipWeapon(StartingWeapon);
 		}
+	}
+}
+
+void AMultiplayerCharacter::OnRep_PlayerState()
+{
+	Super::OnRep_PlayerState();
+	PossessedPlayerState = GetPlayerState<AChaosRemPlayerState>();
+	if (PossessedPlayerState)
+	{
+		SetTeamColor(PossessedPlayerState->GetTeam());
+	}
+}
+
+void AMultiplayerCharacter::SetTeamColor_Implementation(ETeam Team)
+{
+	if (GetMesh() == nullptr) return;
+	switch (Team)
+	{
+	case ETeam::ET_NoTeam:
+		GetMesh()->SetMaterial(0, OriginMaterial1);
+		DissolveMaterialInstance1 = BlueDissolveMatInst1;
+		DissolveMaterialInstance2 = BlueDissolveMatInst2;
+		break;
+	case ETeam::ET_BlueTeam:
+		GetMesh()->SetMaterial(0, BlueMaterial1);
+		GetMesh()->SetMaterial(1, BlueMaterial2);
+		DissolveMaterialInstance1 = BlueDissolveMatInst1;
+		DissolveMaterialInstance2 = BlueDissolveMatInst2;
+		break;
+	case ETeam::ET_RedTeam:
+		GetMesh()->SetMaterial(0, RedMaterial1);
+		GetMesh()->SetMaterial(1, RedMaterial2);
+		DissolveMaterialInstance1 = RedDissolveMatInst1;
+		DissolveMaterialInstance2 = RedDissolveMatInst2;
+		break;
+		
 	}
 }
 
@@ -474,7 +517,7 @@ void AMultiplayerCharacter::MulticastGainedTheLead_Implementation()
 	if (CrownSystem == nullptr) return;
 	if (CrownComponent == nullptr)
 	{
-		CrownComponent = UNiagaraFunctionLibrary::SpawnSystemAttached(CrownSystem, GetCapsuleComponent(), FName(),
+		CrownComponent = UNiagaraFunctionLibrary::SpawnSystemAttached(CrownSystem, GetMesh(), FName(),
 			GetActorLocation() + FVector(0.f, 0.f, 110.f), GetActorRotation(),
 			EAttachLocation::KeepWorldPosition, false);
 	}
@@ -962,10 +1005,10 @@ void AMultiplayerCharacter::ServerSetRuning_Implementation(bool bIsRunning)
 
 void AMultiplayerCharacter::ElimTimerFinished()
 {
-	AAsTheCaosRemainsGameMode* GameMode = GetWorld()->GetAuthGameMode<AAsTheCaosRemainsGameMode>();
-	if (GameMode && !bLeftGame)
+	ChaosGameMode = ChaosGameMode == nullptr ? GetWorld()->GetAuthGameMode<AAsTheCaosRemainsGameMode>() : ChaosGameMode;
+	if (ChaosGameMode && !bLeftGame)
 	{
-		GameMode->RequestRespawn(this, Controller);
+		ChaosGameMode->RequestRespawn(this, Controller);
 	}
 	if (bLeftGame && IsLocallyControlled())
 	{
@@ -975,11 +1018,11 @@ void AMultiplayerCharacter::ElimTimerFinished()
 
 void AMultiplayerCharacter::ServerLeaveGame_Implementation()
 {
-	AAsTheCaosRemainsGameMode* GameMode = GetWorld()->GetAuthGameMode<AAsTheCaosRemainsGameMode>();
+	ChaosGameMode = ChaosGameMode == nullptr ? GetWorld()->GetAuthGameMode<AAsTheCaosRemainsGameMode>() : ChaosGameMode;
 	PossessedPlayerState = PossessedPlayerState == nullptr ?  GetPlayerState<AChaosRemPlayerState>() : PossessedPlayerState;
-	if (GameMode && PossessedPlayerState)
+	if (ChaosGameMode && PossessedPlayerState)
 	{
-		GameMode->PlayerLeftGame(PossessedPlayerState);
+		ChaosGameMode->PlayerLeftGame(PossessedPlayerState);
 	}
 }
 
@@ -1109,13 +1152,13 @@ void AMultiplayerCharacter::PollInit()
 		{
 			PossessedPlayerState->AddToScore(0.f);
 			PossessedPlayerState->AddToDefeats(0);
+			SetTeamColor(PossessedPlayerState->GetTeam());
 
 			AChaosRemGameState* ChaosGameState = Cast<AChaosRemGameState>(UGameplayStatics::GetGameState(this));
 			if (ChaosGameState && ChaosGameState->TopScoringPlayers.Contains(PossessedPlayerState))
 			{
 				MulticastGainedTheLead();
 			}
-	
 		}
 	}
 }
