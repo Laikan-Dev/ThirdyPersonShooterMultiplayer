@@ -35,7 +35,8 @@ void AHitScanWeapon::Fire(const FVector& HitTarget)
 		AMultiplayerCharacter* PlayerCharacter = Cast<AMultiplayerCharacter>(FireHit.GetActor());
 		if (PlayerCharacter && HasAuthority() && InstigatorController)
 		{
-			UGameplayStatics::ApplyDamage(PlayerCharacter, Damage,InstigatorController, this ,UDamageType::StaticClass());
+			const float DamageToCause = FireHit.BoneName.ToString() == FString("head") ? GetHeadShotDamage() : Damage;
+			UGameplayStatics::ApplyDamage(PlayerCharacter, DamageToCause,InstigatorController, this ,UDamageType::StaticClass());
 		}
 		if (ImpactParticles)
 		{
@@ -95,6 +96,10 @@ void AHitScanWeapon::WeaponTraceHit(const FVector& TraceStart, const FVector& Hi
 		if (OutHit.bBlockingHit)
 		{
 			BeamEnd = OutHit.ImpactPoint;
+		}
+		else
+		{
+			OutHit.ImpactPoint = End;
 		}
 		if (BeamParticles)
 		{

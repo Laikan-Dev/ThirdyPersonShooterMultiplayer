@@ -50,6 +50,8 @@ public:
 
 	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = "Damage")
 	float Damage = 10.f;
+	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = "Damage")
+	float HeadShotDamage = 10.f;
 
 protected:
 	virtual void Destroyed() override;

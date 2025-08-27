@@ -3,9 +3,11 @@
 
 #include "ProjectileBullet.h"
 
+#include "MultiplayerPlayerController.h"
 #include "GameFramework/Character.h"
 #include "GameFramework/ProjectileMovementComponent.h"
 #include "Kismet/GameplayStatics.h"
+#include "Multiplayer/MultiplayerCharacter.h"
 
 
 // Sets default values
@@ -28,16 +30,20 @@ void AProjectileBullet::BeginPlay()
 
 void AProjectileBullet::OnProjectileImpact(UPrimitiveComponent* HitComponent, AActor* OtherActor, UPrimitiveComponent* OtherComp, FVector NormalImpulse, const FHitResult& Hit)
 {
-	ACharacter* OwnerCharacter = Cast<ACharacter>(GetOwner());
+	AMultiplayerCharacter* OwnerCharacter = Cast<AMultiplayerCharacter>(GetOwner());
 	if (OwnerCharacter)
 	{
-		AController* OwnerController = OwnerCharacter->Controller;
+		AMultiplayerPlayerController* OwnerController = Cast<AMultiplayerPlayerController>(OwnerCharacter->Controller);
 		if (OwnerController)
 		{
-			UGameplayStatics::ApplyDamage(OtherActor, Damage, OwnerController, this, DamageType);
+			if (OwnerCharacter->HasAuthority())
+			{
+				const float DamageToCause = Hit.BoneName.ToString() == FString("head") ? HeadShotDamage : Damage;
+				UGameplayStatics::ApplyDamage(OtherActor, DamageToCause, OwnerController, this, DamageType);
+				Super::OnProjectileImpact(HitComponent, OtherActor, OtherComp, NormalImpulse, Hit);
+			}
 		}
 	}
-	
 	Super::OnProjectileImpact(HitComponent, OtherActor, OtherComp, NormalImpulse, Hit);
 }
 

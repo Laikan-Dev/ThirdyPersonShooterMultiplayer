@@ -3,8 +3,8 @@
 #pragma once
 
 #include "CoreMinimal.h"
-#include "Engine/DataAsset.h"
 #include "BaseWeapon.h"
+#include "Engine/DataAsset.h"
 #include "WeaponsDataAsset.generated.h"
 
 /**

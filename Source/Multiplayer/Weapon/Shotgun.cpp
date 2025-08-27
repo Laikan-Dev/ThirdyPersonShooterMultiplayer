@@ -44,6 +44,7 @@ void AShotgun::Fire(const FVector& HitTarget)
 		FVector Start = SocketTransform.GetLocation();
 		uint32 Hits = 0;
 		TMap<AMultiplayerCharacter*, uint32> HitMap;
+		TMap<AMultiplayerCharacter*, uint32> HeadShotHitMap;
 		for ( uint32 i = 0; i < NumberOfPellets; i++)
 		{
 			FHitResult FireHit;
@@ -52,14 +53,19 @@ void AShotgun::Fire(const FVector& HitTarget)
 			AMultiplayerCharacter* MultiplayerCharacter = Cast<AMultiplayerCharacter>(FireHit.GetActor());
 			if (MultiplayerCharacter && HasAuthority() && InstigatorController)
 			{
-				if (HitMap.Contains(MultiplayerCharacter))
+				const bool bHeadShot = FireHit.BoneName.ToString() == FString("head");
+				if (bHeadShot)
 				{
-					HitMap[MultiplayerCharacter]++;
+					if (HeadShotHitMap.Contains(MultiplayerCharacter))HeadShotHitMap[MultiplayerCharacter]++;
+					else HeadShotHitMap.Emplace(MultiplayerCharacter, 1);
 				}
 				else
 				{
-					HitMap.Emplace(MultiplayerCharacter, 1);
+					if (HitMap.Contains(MultiplayerCharacter))HitMap[MultiplayerCharacter]++;
+					else HitMap.Emplace(MultiplayerCharacter, 1);
 				}
+
+				
 			}
 			if (ImpactParticles)
 			{
@@ -71,13 +77,40 @@ void AShotgun::Fire(const FVector& HitTarget)
 					FMath::FRandRange(-.5f, .5f));
 			}
 		}
+		TArray<AMultiplayerCharacter*> HitCharacters;
+
+		//Character hit to total damage
+		TMap<AMultiplayerCharacter*, float> DamageMap;
+
+		// Calculate body shot damage by multiplying times hit x Damage
 		for (auto HitPair : HitMap)
 		{
-			if (InstigatorController)
+			if (HitPair.Key && HasAuthority() && InstigatorController)
 			{
-				if (HitPair.Key && HasAuthority() && InstigatorController)
+				DamageMap.Emplace(HitPair.Key, HitPair.Value * Damage);
+				HitCharacters.AddUnique(HitPair.Key);
+			}
+		}
+
+		// Calculate head shot damage by multiplying times hit x HeadShotDamage - store in damagemap
+		for (auto HeadShotHitPair : HeadShotHitMap)
+		{
+			if (HeadShotHitPair.Key && HasAuthority() && InstigatorController)
+			{
+				if (DamageMap.Contains(HeadShotHitPair.Key)) DamageMap[HeadShotHitPair.Key] += HeadShotHitPair.Value * GetHeadShotDamage();
+				else DamageMap.Emplace(HeadShotHitPair.Key, HeadShotHitPair.Value * GetHeadShotDamage());
+				HitCharacters.AddUnique(HeadShotHitPair.Key);
+			}
+		}
+		// Loop through DamageMap to get total damage for each character
+		for (auto DamagePair : DamageMap)
+		{
+			if (DamagePair.Key && InstigatorController)
+			{
+				bool bCauseAuthDamage = OwnerPawn->IsLocallyControlled();
+				if (HasAuthority() && bCauseAuthDamage)
 				{
-					UGameplayStatics::ApplyDamage(HitPair.Key, Damage * HitPair.Value, InstigatorController,
+					UGameplayStatics::ApplyDamage(DamagePair.Key, DamagePair.Value, InstigatorController,
 						this, UDamageType::StaticClass());
 				}
 			}

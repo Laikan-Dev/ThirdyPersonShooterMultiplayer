@@ -54,6 +54,8 @@ struct FWeaponInformation
 	UPROPERTY(EditAnywhere, BlueprintReadWrite)
 	float Damage;
 	UPROPERTY(EditAnywhere, BlueprintReadWrite)
+	float HeadShotDamage;
+	UPROPERTY(EditAnywhere, BlueprintReadWrite)
 	int32 AmmoCap;
 	UPROPERTY(EditAnywhere, BlueprintReadWrite)
 	TSubclassOf<class ACasing> CasingClass;
@@ -88,6 +90,10 @@ public:
 	void EnableCustomDepth(bool bEnable);
 
 	bool bDestroyWeapon = false;
+	UPROPERTY(EditAnywhere, Category=Damage)
+	float Damage;
+	UPROPERTY(EditAnywhere, Category=Damage)
+	float HeadShotDamage;
 	
 
 	UPROPERTY(VisibleAnywhere, Category = "Weapon Properties")
@@ -176,6 +182,8 @@ public:
 	FORCEINLINE EWeaponType GetWeaponType() const { return WeaponType;}
 	FORCEINLINE int32 GetAmmo() const {return Ammo;};
 	FORCEINLINE int32 GetMagCapacity() const {return MagCapacity;};
+	FORCEINLINE float GetDamage() const {return Damage; }
+	FORCEINLINE float GetHeadShotDamage() const { return HeadShotDamage; }
 	bool IsEmpty();
 	bool IsFull();
 
